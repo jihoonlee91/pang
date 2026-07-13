@@ -1,32 +1,66 @@
-# React + TypeScript + Vite
+# PANG
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+클래식 "팽(Pang)" / 버스터 브라더스 스타일 아케이드 게임입니다. 발사체로 화면의 공을 맞춰 계속 작은 공으로 분열시키다가 완전히 제거하면 스테이지를 클리어합니다.
 
-Currently, two official plugins are available:
+## 게임플레이
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- 플레이어는 화면 하단에서 좌우로 이동하며 위쪽으로 발사체를 쏩니다.
+- 발사체는 한 번에 하나만 존재할 수 있고, 화면에 남아있는 동안에는 재발사할 수 없습니다.
+- 발사체가 공에 맞으면 그 공은 제거되고, 아직 가장 작은 크기가 아니라면 한 단계 작은 공 두 개로 분열합니다. 가장 작은 크기의 공은 맞으면 분열 없이 완전히 사라집니다.
+- 공에 부딪히면 즉사하지 않고 HP가 1 감소하며, 이후 잠깐 무적 시간이 주어집니다. HP가 0이 되면 게임 오버입니다.
+- 화면의 모든 공을 제거하면 스테이지 클리어입니다. 총 5개 스테이지(후지산 → 계림 → 에메랄드사원 → 앙코르와트 → 에어즈록 테마)를 순서대로 클리어하면 게임 클리어입니다.
+- 짧은 시간 안에 연속으로 공을 맞히면 콤보가 쌓여 점수 배율이 올라갑니다.
+- 화면 중앙의 줄무늬 발판 장애물은 발사체를 막고 공은 튕겨냅니다.
+- 최고 점수는 브라우저 `localStorage`에 저장되어 게임 종료 화면에서 함께 표시됩니다.
 
-## React Compiler
+## 조작법
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| 키 | 동작 |
+| --- | --- |
+| `←` `→` 또는 `A` `D` | 좌우 이동 |
+| `Space` | 발사 (동시에 발사체 1개만 유지) |
 
-## Expanding the Oxlint configuration
+## 개발
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+### 요구사항
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+- Node.js, npm
+
+### 명령어
+
+```bash
+npm install       # 의존성 설치
+npm run dev       # 개발 서버 실행 (기본 포트 5173)
+npm run build     # 타입 체크(tsc -b) 후 프로덕션 빌드
+npm run lint      # oxlint 실행
+npm run preview   # 빌드 결과물 로컬 미리보기
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## 기술 스택
+
+- **React 19** + **TypeScript**, **Vite 8** 기반 빌드
+- 게임 렌더링/루프: Canvas 2D API (`src/GamePlay.tsx`)
+- 물리/충돌/분열 로직: `src/game/engine.ts`
+- 효과음·BGM: 외부 음원 없이 **Web Audio API** 오실레이터로 직접 합성 (`src/game/audio.ts`)
+- 폰트: **Galmuri11** (한글을 지원하는 레트로 픽셀 폰트, OFL 라이선스, CDN으로 로드)
+- 린트: **Oxlint**
+
+## 프로젝트 구조
+
+```
+src/
+  App.tsx        화면 전환(메인 → 선택 → 플레이 → 종료) 상태 관리
+  GamePlay.tsx   게임 캔버스 렌더링, 입력 처리, 게임 루프
+  game/
+    constants.ts 캔버스/물리/점수 등 게임 상수
+    types.ts     공/발사체 등 타입 정의
+    engine.ts    스테이지 생성, 공 물리, 충돌 판정, 분열 로직
+    audio.ts     Web Audio 기반 효과음/BGM
+docs/
+  PRD.md         게임 요구사항 개요
+  PLAN.md        Phase별 개발 계획
+  design/        Phase별 세부 설계 문서
+  FEATURES/      화면·규칙별 기능 명세
+```
+
+기획/설계 변경은 코드보다 먼저 `docs/` 문서에 반영하는 것을 원칙으로 합니다. 자세한 개발 규칙은 `CLAUDE.md`를 참고하세요.
