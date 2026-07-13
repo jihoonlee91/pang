@@ -50,16 +50,16 @@ import {
 
 const BALL_COLORS = ['#fb7185', '#facc15', '#38bdf8']
 const GROUND_Y = CANVAS_HEIGHT - 90
-const STAGE_NAMES = ['후지산(일본)', '계림(중국)', '에메랄드사원(태국)', '앙코르와트(캄보디아)', '에어즈록(호주)']
+const STAGE_NAMES = ['Mt. Fuji (Japan)', 'Guilin (China)', 'Emerald Temple (Thailand)', 'Angkor Wat (Cambodia)', 'Ayers Rock (Australia)']
 
 const HINTS = [
-  '← → 또는 A / D : 이동',
-  'Space : 발사 (발사체는 기본 하나만 유지, 더블 와이어 획득 시 2개)',
-  '공을 맞히면 작아지며 둘로 분열, 가장 작을 때 맞히면 제거',
-  '줄무늬 발판은 발사체를 막고 공을 튕겨냅니다',
-  '짧은 시간 안에 연속으로 맞히면 콤보 점수 배율 증가',
-  '공에 닿으면 HP 1 감소, 이후 잠깐 무적 시간이 주어집니다',
-  '가끔 공을 맞히면 아이템이 떨어집니다 — 닿으면 즉시 효과 발동',
+  '← → or A / D: move',
+  'Space: fire (only 1 harpoon by default, 2 with double wire)',
+  'Hitting a ball shrinks and splits it in two; hitting the smallest removes it',
+  'The striped platform blocks harpoons and bounces balls off',
+  'Consecutive hits within a short time increase the combo score multiplier',
+  'Touching a ball reduces HP by 1, followed by a brief invulnerability period',
+  'Hitting balls occasionally drops items — touch one for an instant effect',
 ]
 
 const ITEM_LABELS: Record<ItemType, string> = {
@@ -81,9 +81,9 @@ const ITEM_COLORS: Record<ItemType, string> = {
 }
 
 const BUFF_LABELS: Record<'doubleWire' | 'clock' | 'hourglass', string> = {
-  doubleWire: '더블 와이어',
-  clock: '시계(정지)',
-  hourglass: '모래시계(감속)',
+  doubleWire: 'Double Wire',
+  clock: 'Clock (Stop)',
+  hourglass: 'Hourglass (Slow)',
 }
 
 type Particle = {
@@ -879,7 +879,7 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
   return (
     <div className="gameplay">
       <div className="gameplay-hud">
-        <span className="hud-stage">스테이지 {stageIndex + 1}</span>
+        <span className="hud-stage">Stage {stageIndex + 1}</span>
         <div className="hp-bar">
           {Array.from({ length: MAX_HP }, (_, i) => (
             <span
@@ -888,7 +888,7 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
             />
           ))}
         </div>
-        <span className="hud-score">점수 {score}</span>
+        <span className="hud-score">Score {score}</span>
       </div>
       <div className="gameplay-body">
         <canvas
@@ -899,7 +899,7 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
         />
         <aside className="hint-panel">
           <div>
-            <h3>진행 상황</h3>
+            <h3>Progress</h3>
             <ol className="stage-roster">
               {STAGE_NAMES.slice(0, STAGE_COUNT).map((name, i) => (
                 <li
@@ -919,7 +919,7 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
             </ol>
           </div>
           <div>
-            <h3>버프</h3>
+            <h3>Buffs</h3>
             <ul className="hint-list buff-list">
               {(['doubleWire', 'clock', 'hourglass'] as const)
                 .filter((key) => buffs[key] > 0)
@@ -928,15 +928,15 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
                     {BUFF_LABELS[key]} {buffs[key]}s
                   </li>
                 ))}
-              {buffs.barrier > 0 && <li>배리어 x{buffs.barrier}</li>}
+              {buffs.barrier > 0 && <li>Barrier x{buffs.barrier}</li>}
               {buffs.doubleWire === 0 &&
                 buffs.clock === 0 &&
                 buffs.hourglass === 0 &&
-                buffs.barrier === 0 && <li>없음</li>}
+                buffs.barrier === 0 && <li>None</li>}
             </ul>
           </div>
           <div>
-            <h3>도움말</h3>
+            <h3>Help</h3>
             <ul className="hint-list">
               {HINTS.map((hint) => (
                 <li key={hint}>{hint}</li>

@@ -54,7 +54,7 @@ function App() {
       <div className="screen">
         <h1>PANG</h1>
         <button type="button" className="screen-button" onClick={startGame}>
-          시작하기
+          Start
         </button>
       </div>
     )
@@ -72,16 +72,16 @@ function App() {
 
   return (
     <div className="screen">
-      <h1>{result === 'clear' ? '게임 클리어' : '게임 오버'}</h1>
-      <p className="result-score">점수 {finalScore}</p>
-      <p className="result-high-score">역대 {rank}위</p>
+      <h1>{result === 'clear' ? 'Game Clear' : 'Game Over'}</h1>
+      <p className="result-score">Score {finalScore}</p>
+      <p className="result-high-score">All-time #{rank}</p>
       <p className="result-detail">
         {result === 'clear'
-          ? '전체 클리어'
-          : `${stageIndex + 1}번째 스테이지에서 종료`}
+          ? 'Fully Cleared'
+          : `Ended at stage ${stageIndex + 1}`}
       </p>
       <p className="result-detail">
-        {new Date().toLocaleString('ko-KR', {
+        {new Date().toLocaleString('en-US', {
           year: 'numeric',
           month: '2-digit',
           day: '2-digit',
@@ -93,16 +93,16 @@ function App() {
         <ol className="score-history">
           {topScores.map((entry, i) => (
             <li key={`${entry.playedAt}-${i}`}>
-              {i + 1}위 · {entry.score}점 ·{' '}
+              #{i + 1} · {entry.score} pts ·{' '}
               {entry.result === 'clear'
-                ? '클리어'
-                : `${entry.stageReached}스테이지`}
+                ? 'Clear'
+                : `Stage ${entry.stageReached}`}
             </li>
           ))}
         </ol>
       )}
       <button type="button" className="screen-button" onClick={() => setScreen('main')}>
-        메인으로
+        Back to Main
       </button>
     </div>
   )
