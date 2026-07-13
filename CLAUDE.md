@@ -34,3 +34,10 @@ npx tsc --noEmit -p tsconfig.app.json
 - 프로젝트 루트의 `tsconfig.json`은 `tsconfig.app.json`(앱 소스용)과 `tsconfig.node.json`(Vite 설정 등 Node 환경용) 두 개의 project reference로 분리되어 있습니다.
 - `vite.config.ts`는 `@vitejs/plugin-react` 플러그인만 사용하는 기본 설정입니다.
 - Oxlint 설정은 `.oxlintrc.json`에 있으며, 타입 인식 린트 규칙(typeAware)은 기본적으로 비활성화되어 있습니다.
+
+## 기획 문서
+
+- `docs/PRD.md` — 게임 전체 요구사항 개요
+- `docs/FEATURES/main.md` — 메인 화면 기능
+- `docs/FEATURES/game_rule.md` — 게임 규칙
+- `docs/FEATURES/mission1.md` — 미션 1 (튜토리얼 스테이지)
