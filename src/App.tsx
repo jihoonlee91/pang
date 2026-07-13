@@ -4,7 +4,7 @@ import GamePlay from './GamePlay'
 import { STAGE_COUNT, HIGH_SCORE_KEY } from './game/constants'
 import type { StageResult } from './game/types'
 
-type Screen = 'main' | 'select' | 'play' | 'end'
+type Screen = 'main' | 'play' | 'end'
 
 function App() {
   const [screen, setScreen] = useState<Screen>('main')
@@ -45,23 +45,8 @@ function App() {
     return (
       <div className="screen">
         <h1>PANG</h1>
-        <button
-          type="button"
-          className="screen-button"
-          onClick={() => setScreen('select')}
-        >
-          게임 선택하기
-        </button>
-      </div>
-    )
-  }
-
-  if (screen === 'select') {
-    return (
-      <div className="screen">
-        <h1>게임 선택</h1>
         <button type="button" className="screen-button" onClick={startGame}>
-          미션 1
+          시작하기
         </button>
       </div>
     )
