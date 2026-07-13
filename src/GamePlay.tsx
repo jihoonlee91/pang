@@ -22,6 +22,33 @@ import {
 } from './game/engine'
 import type { Ball, Harpoon } from './game/types'
 
+const BALL_COLORS = ['#f472b6', '#4ade80', '#60a5fa']
+
+function drawBall(ctx: CanvasRenderingContext2D, ball: Ball) {
+  const r = LEVEL_RADIUS[ball.level]
+  const color = BALL_COLORS[ball.level]
+
+  const gradient = ctx.createRadialGradient(
+    ball.x - r * 0.35,
+    ball.y - r * 0.35,
+    r * 0.1,
+    ball.x,
+    ball.y,
+    r,
+  )
+  gradient.addColorStop(0, '#ffffff')
+  gradient.addColorStop(0.25, color)
+  gradient.addColorStop(1, '#00000055')
+
+  ctx.beginPath()
+  ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2)
+  ctx.fillStyle = gradient
+  ctx.fill()
+  ctx.lineWidth = 1
+  ctx.strokeStyle = '#00000033'
+  ctx.stroke()
+}
+
 type Props = {
   stageIndex: number
   onClear: (score: number) => void
@@ -167,32 +194,64 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
       }
 
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-      ctx.fillStyle = '#16171d'
+
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT)
+      bgGradient.addColorStop(0, '#1f2028')
+      bgGradient.addColorStop(1, '#0b0c10')
+      ctx.fillStyle = bgGradient
       ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
 
-      const isInvuln = time < invulnUntilRef.current
-      ctx.fillStyle = isInvuln ? '#c084fc' : '#aa3bff'
-      ctx.fillRect(
-        playerXRef.current - PLAYER_WIDTH / 2,
-        PLAYER_Y - PLAYER_HEIGHT / 2,
-        PLAYER_WIDTH,
-        PLAYER_HEIGHT,
-      )
+      ctx.strokeStyle = '#2e303a'
+      ctx.beginPath()
+      ctx.moveTo(0, CANVAS_HEIGHT - 4)
+      ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT - 4)
+      ctx.stroke()
 
       if (harpoonRef.current) {
+        ctx.save()
+        ctx.shadowColor = '#c084fc'
+        ctx.shadowBlur = 8
         ctx.strokeStyle = '#f3f4f6'
+        ctx.lineWidth = 2
         ctx.beginPath()
         ctx.moveTo(harpoonRef.current.x, PLAYER_Y)
         ctx.lineTo(harpoonRef.current.x, harpoonRef.current.y)
         ctx.stroke()
+        ctx.restore()
       }
 
-      ctx.fillStyle = '#60a5fa'
       for (const b of ballsRef.current) {
-        ctx.beginPath()
-        ctx.arc(b.x, b.y, LEVEL_RADIUS[b.level], 0, Math.PI * 2)
-        ctx.fill()
+        drawBall(ctx, b)
       }
+
+      const isInvuln = time < invulnUntilRef.current
+      const playerGradient = ctx.createLinearGradient(
+        0,
+        PLAYER_Y - PLAYER_HEIGHT / 2,
+        0,
+        PLAYER_Y + PLAYER_HEIGHT / 2,
+      )
+      playerGradient.addColorStop(0, isInvuln ? '#e9d5ff' : '#c084fc')
+      playerGradient.addColorStop(1, isInvuln ? '#c084fc' : '#7c3aed')
+
+      ctx.save()
+      if (isInvuln) {
+        ctx.shadowColor = '#c084fc'
+        ctx.shadowBlur = 12
+      }
+      ctx.fillStyle = playerGradient
+      const px = playerXRef.current - PLAYER_WIDTH / 2
+      const py = PLAYER_Y - PLAYER_HEIGHT / 2
+      const radius = 4
+      ctx.beginPath()
+      ctx.moveTo(px + radius, py)
+      ctx.arcTo(px + PLAYER_WIDTH, py, px + PLAYER_WIDTH, py + PLAYER_HEIGHT, radius)
+      ctx.arcTo(px + PLAYER_WIDTH, py + PLAYER_HEIGHT, px, py + PLAYER_HEIGHT, radius)
+      ctx.arcTo(px, py + PLAYER_HEIGHT, px, py, radius)
+      ctx.arcTo(px, py, px + PLAYER_WIDTH, py, radius)
+      ctx.closePath()
+      ctx.fill()
+      ctx.restore()
 
       rafId = requestAnimationFrame(loop)
     }
