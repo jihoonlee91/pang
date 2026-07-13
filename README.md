@@ -19,10 +19,10 @@ A classic "Pang" / Buster Bros-style arcade game. Hit the balls on screen with y
 
 ## Controls
 
-| Key | Action |
-| --- | --- |
-| `←` `→` or `A` `D` | Move left/right |
-| `Space` | Fire (only 1 harpoon can be active at a time) |
+| Key                | Action                                        |
+| ------------------ | --------------------------------------------- |
+| `←` `→` or `A` `D` | Move left/right                               |
+| `Space`            | Fire (only 1 harpoon can be active at a time) |
 
 ## Development
 

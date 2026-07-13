@@ -41,7 +41,9 @@ export function createStage(stageIndex: number): Ball[] {
 function reflect(v: number): number {
   const bounced = -v * RESTITUTION
   const sign = bounced < 0 ? -1 : 1
-  return Math.abs(bounced) < MIN_BOUNCE_SPEED ? sign * MIN_BOUNCE_SPEED : bounced
+  return Math.abs(bounced) < MIN_BOUNCE_SPEED
+    ? sign * MIN_BOUNCE_SPEED
+    : bounced
 }
 
 function reflectAway(v: number, towardPositive: boolean): number {
@@ -100,7 +102,10 @@ export function stepBall(ball: Ball, dtSec: number): Ball {
   return { ...ball, x, y, vx, vy }
 }
 
-export function harpoonHitsObstacle(harpoonX: number, harpoonY: number): boolean {
+export function harpoonHitsObstacle(
+  harpoonX: number,
+  harpoonY: number,
+): boolean {
   return (
     harpoonX > OBSTACLE_X &&
     harpoonX < OBSTACLE_X + OBSTACLE_WIDTH &&
@@ -140,10 +145,7 @@ export function ballHitsPlayer(ball: Ball, playerX: number): boolean {
   const halfW = PLAYER_WIDTH / 2
   const halfH = PLAYER_HEIGHT / 2
 
-  const closestX = Math.min(
-    Math.max(ball.x, playerX - halfW),
-    playerX + halfW,
-  )
+  const closestX = Math.min(Math.max(ball.x, playerX - halfW), playerX + halfW)
   const closestY = Math.min(
     Math.max(ball.y, PLAYER_Y - halfH),
     PLAYER_Y + halfH,
@@ -179,7 +181,9 @@ export function explodeToSmallest(balls: Ball[], nextId: () => number): Ball[] {
  * wire / clock / hourglass / barrier are common; 1UP (reward) and dynamite
  * (risk) are intentionally rare.
  */
-export function rollItemDrop(rand: () => number = Math.random): ItemType | null {
+export function rollItemDrop(
+  rand: () => number = Math.random,
+): ItemType | null {
   if (rand() > ITEM_DROP_CHANCE) return null
 
   const total = ITEM_WEIGHTS.reduce((sum, [, weight]) => sum + weight, 0)
@@ -202,7 +206,10 @@ export function itemHitsPlayer(item: Item, playerX: number): boolean {
   const halfH = PLAYER_HEIGHT / 2
 
   const closestX = Math.min(Math.max(item.x, playerX - halfW), playerX + halfW)
-  const closestY = Math.min(Math.max(item.y, PLAYER_Y - halfH), PLAYER_Y + halfH)
+  const closestY = Math.min(
+    Math.max(item.y, PLAYER_Y - halfH),
+    PLAYER_Y + halfH,
+  )
 
   const dx = item.x - closestX
   const dy = item.y - closestY

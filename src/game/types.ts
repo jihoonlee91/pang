@@ -13,12 +13,7 @@ export type Harpoon = {
 }
 
 export type ItemType =
-  | 'doubleWire'
-  | 'clock'
-  | 'hourglass'
-  | 'barrier'
-  | 'oneUp'
-  | 'dynamite'
+  'doubleWire' | 'clock' | 'hourglass' | 'barrier' | 'oneUp' | 'dynamite'
 
 export type Item = {
   id: number

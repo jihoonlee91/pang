@@ -33,9 +33,11 @@ export function loadScoreHistory(): ScoreEntry[] {
   }
 }
 
-export function recordScore(
-  entry: Omit<ScoreEntry, 'name'>,
-): { history: ScoreEntry[]; rank: number; entry: ScoreEntry } {
+export function recordScore(entry: Omit<ScoreEntry, 'name'>): {
+  history: ScoreEntry[]
+  rank: number
+  entry: ScoreEntry
+} {
   const fullEntry: ScoreEntry = { ...entry, name: getPlayerName() }
   const combined = [...loadScoreHistory(), fullEntry].sort(
     (a, b) => b.score - a.score,

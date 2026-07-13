@@ -20,6 +20,7 @@ npm run lint      # run oxlint
 ```
 
 To only run a type check:
+
 ```bash
 npx tsc --noEmit -p tsconfig.app.json
 ```

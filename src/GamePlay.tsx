@@ -50,7 +50,13 @@ import {
 
 const BALL_COLORS = ['#fb7185', '#facc15', '#38bdf8']
 const GROUND_Y = CANVAS_HEIGHT - 90
-const STAGE_NAMES = ['Mt. Fuji (Japan)', 'Guilin (China)', 'Emerald Temple (Thailand)', 'Angkor Wat (Cambodia)', 'Ayers Rock (Australia)']
+const STAGE_NAMES = [
+  'Mt. Fuji (Japan)',
+  'Guilin (China)',
+  'Emerald Temple (Thailand)',
+  'Angkor Wat (Cambodia)',
+  'Ayers Rock (Australia)',
+]
 
 const HINTS = [
   '← → or A / D: move',
@@ -112,7 +118,11 @@ function drawSky(ctx: CanvasRenderingContext2D, top: string, bottom: string) {
   ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y)
 }
 
-function drawGround(ctx: CanvasRenderingContext2D, top: string, bottom: string) {
+function drawGround(
+  ctx: CanvasRenderingContext2D,
+  top: string,
+  bottom: string,
+) {
   const ground = ctx.createLinearGradient(0, GROUND_Y, 0, CANVAS_HEIGHT)
   ground.addColorStop(0, top)
   ground.addColorStop(1, bottom)
@@ -457,7 +467,12 @@ function drawItem(ctx: CanvasRenderingContext2D, item: Item) {
   ctx.textBaseline = 'alphabetic'
 }
 
-function spawnBurst(particles: Particle[], x: number, y: number, color: string) {
+function spawnBurst(
+  particles: Particle[],
+  x: number,
+  y: number,
+  color: string,
+) {
   const count = 10
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count
@@ -487,7 +502,12 @@ type BuffDisplay = {
   barrier: number
 }
 
-const NO_BUFFS: BuffDisplay = { doubleWire: 0, clock: 0, hourglass: 0, barrier: 0 }
+const NO_BUFFS: BuffDisplay = {
+  doubleWire: 0,
+  clock: 0,
+  hourglass: 0,
+  barrier: 0,
+}
 
 function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -610,7 +630,8 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
         }
 
         const isClockActive = time < clockUntilRef.current
-        const isHourglassActive = !isClockActive && time < hourglassUntilRef.current
+        const isHourglassActive =
+          !isClockActive && time < hourglassUntilRef.current
         const maxHarpoons =
           time < doubleWireUntilRef.current
             ? MAX_HARPOONS_DOUBLE_WIRE
@@ -632,7 +653,9 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
           .filter((h) => h.y > 0 && !harpoonHitsObstacle(h.x, h.y))
 
         if (!isClockActive) {
-          const ballDt = isHourglassActive ? dtSec * HOURGLASS_SLOW_FACTOR : dtSec
+          const ballDt = isHourglassActive
+            ? dtSec * HOURGLASS_SLOW_FACTOR
+            : dtSec
           ballsRef.current = ballsRef.current.map((b) => stepBall(b, ballDt))
         }
 
@@ -768,7 +791,10 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
           0,
           Math.ceil((doubleWireUntilRef.current - time) / 1000),
         )
-        const clockSec = Math.max(0, Math.ceil((clockUntilRef.current - time) / 1000))
+        const clockSec = Math.max(
+          0,
+          Math.ceil((clockUntilRef.current - time) / 1000),
+        )
         const hourglassSec = Math.max(
           0,
           Math.ceil((hourglassUntilRef.current - time) / 1000),
@@ -872,8 +898,20 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
       const radius = 4
       ctx.beginPath()
       ctx.moveTo(px + radius, py)
-      ctx.arcTo(px + PLAYER_WIDTH, py, px + PLAYER_WIDTH, py + PLAYER_HEIGHT, radius)
-      ctx.arcTo(px + PLAYER_WIDTH, py + PLAYER_HEIGHT, px, py + PLAYER_HEIGHT, radius)
+      ctx.arcTo(
+        px + PLAYER_WIDTH,
+        py,
+        px + PLAYER_WIDTH,
+        py + PLAYER_HEIGHT,
+        radius,
+      )
+      ctx.arcTo(
+        px + PLAYER_WIDTH,
+        py + PLAYER_HEIGHT,
+        px,
+        py + PLAYER_HEIGHT,
+        radius,
+      )
       ctx.arcTo(px, py + PLAYER_HEIGHT, px, py, radius)
       ctx.arcTo(px, py, px + PLAYER_WIDTH, py, radius)
       ctx.closePath()

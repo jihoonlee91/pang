@@ -1,7 +1,7 @@
 ---
 name: Feature request
 about: Suggest a new feature or gameplay idea for PANG
-title: "[Feature] "
+title: '[Feature] '
 labels: enhancement
 ---
 

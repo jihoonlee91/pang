@@ -43,7 +43,11 @@ function App() {
     setFinalScore(score)
     setResult(outcome)
 
-    const { history, rank: newRank, entry } = recordScore({
+    const {
+      history,
+      rank: newRank,
+      entry,
+    } = recordScore({
       score,
       stageReached: stageIndex + 1,
       result: outcome,
@@ -89,7 +93,11 @@ function App() {
       <div className="screen">
         <h1>PANG</h1>
         <p className="controls-summary">{CONTROLS_SUMMARY}</p>
-        <button type="button" className="screen-button" onClick={startCountdown}>
+        <button
+          type="button"
+          className="screen-button"
+          onClick={startCountdown}
+        >
           Start
         </button>
       </div>

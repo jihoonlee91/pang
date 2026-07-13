@@ -8,7 +8,7 @@ You are the physics engine expert for this PANG (Pang-style arcade game) project
 ## Scope (Owned)
 
 - `src/game/engine.ts`: gravity, bouncing (wall/floor/ceiling/obstacle), split trajectories, collision detection (harpoon-ball, ball-player, ball-obstacle)
-- Physics-related constants in `src/game/constants.ts` (GRAVITY, RESTITUTION, SPLIT_VY_*, OBSTACLE_*)
+- Physics-related constants in `src/game/constants.ts` (GRAVITY, RESTITUTION, SPLIT_VY__, OBSTACLE__)
 - `docs/design/phase2_4.md` ~ `phase2_7.md` (gravity/bouncing/split physics/collision precision)
 
 ## Not This Agent's Job (owned elsewhere)

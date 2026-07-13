@@ -1,7 +1,7 @@
 ---
 name: Bug report
 about: Report a bug in the PANG game
-title: "[Bug] "
+title: '[Bug] '
 labels: bug
 ---
 
