@@ -891,12 +891,70 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
         <span className="hud-score">Score {score}</span>
       </div>
       <div className="gameplay-body">
-        <canvas
-          ref={canvasRef}
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
-          style={{ border: '1px solid #2e303a' }}
-        />
+        <div className="canvas-column">
+          <canvas
+            ref={canvasRef}
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
+            style={{ border: '1px solid #2e303a' }}
+          />
+          <div className="touch-controls">
+            <button
+              type="button"
+              className="touch-button"
+              aria-label="Move left"
+              onPointerDown={(e) => {
+                e.preventDefault()
+                keysRef.current.ArrowLeft = true
+              }}
+              onPointerUp={() => {
+                keysRef.current.ArrowLeft = false
+              }}
+              onPointerLeave={() => {
+                keysRef.current.ArrowLeft = false
+              }}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              ◀
+            </button>
+            <button
+              type="button"
+              className="touch-button"
+              aria-label="Move right"
+              onPointerDown={(e) => {
+                e.preventDefault()
+                keysRef.current.ArrowRight = true
+              }}
+              onPointerUp={() => {
+                keysRef.current.ArrowRight = false
+              }}
+              onPointerLeave={() => {
+                keysRef.current.ArrowRight = false
+              }}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              ▶
+            </button>
+            <button
+              type="button"
+              className="touch-button touch-button-fire"
+              aria-label="Fire"
+              onPointerDown={(e) => {
+                e.preventDefault()
+                keysRef.current[' '] = true
+              }}
+              onPointerUp={() => {
+                keysRef.current[' '] = false
+              }}
+              onPointerLeave={() => {
+                keysRef.current[' '] = false
+              }}
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              FIRE
+            </button>
+          </div>
+        </div>
         <aside className="hint-panel">
           <div>
             <h3>Progress</h3>

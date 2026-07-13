@@ -184,13 +184,69 @@
   width: min(1400px, 96vw);
 }
 
-.gameplay-body canvas {
-  display: block;
+.canvas-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.canvas-column canvas {
+  display: block;
   width: 100%;
   height: auto;
   border-radius: 8px;
+}
+
+.touch-controls {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.touch-button {
+  font-family: var(--font-game);
+  font-size: var(--fs-lg);
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #94a3b8;
+  border-radius: 12px;
+  padding: 16px 20px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.touch-button:active {
+  background: rgba(226, 232, 240, 0.95);
+}
+
+.touch-button-fire {
+  font-size: var(--fs-sm);
+  color: #ffffff;
+  background: linear-gradient(90deg, #ef4444, #b91c1c);
+  border: none;
+  flex: 1 1 auto;
+}
+
+@media (pointer: coarse) {
+  .touch-controls {
+    display: flex;
+  }
+}
+
+@media (max-width: 720px) {
+  .gameplay-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .hint-panel {
+    flex: 1 1 auto;
+    width: 100%;
+  }
 }
 
 .hint-panel {
