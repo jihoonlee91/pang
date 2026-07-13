@@ -503,6 +503,13 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
   const nextIdRef = useRef(1000 * (stageIndex + 1))
   const nextItemIdRef = useRef(1)
   const keysRef = useRef<Record<string, boolean>>({})
+  const dragRef = useRef<{
+    startClientX: number
+    startPlayerX: number
+    moved: boolean
+  } | null>(null)
+  const dragTargetXRef = useRef<number | null>(null)
+  const fireRequestedRef = useRef(false)
   const endedRef = useRef(false)
   const particlesRef = useRef<Particle[]>([])
   const popupsRef = useRef<Popup[]>([])
@@ -593,6 +600,15 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
           CANVAS_WIDTH - PLAYER_WIDTH / 2,
         )
 
+        if (dragTargetXRef.current !== null) {
+          const diff = dragTargetXRef.current - playerXRef.current
+          const maxStep = PLAYER_SPEED * dtSec
+          playerXRef.current =
+            Math.abs(diff) <= maxStep
+              ? dragTargetXRef.current
+              : playerXRef.current + Math.sign(diff) * maxStep
+        }
+
         const isClockActive = time < clockUntilRef.current
         const isHourglassActive = !isClockActive && time < hourglassUntilRef.current
         const maxHarpoons =
@@ -600,12 +616,16 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
             ? MAX_HARPOONS_DOUBLE_WIRE
             : MAX_HARPOONS_DEFAULT
 
-        if (keys[' '] && harpoonsRef.current.length < maxHarpoons) {
+        if (
+          (keys[' '] || fireRequestedRef.current) &&
+          harpoonsRef.current.length < maxHarpoons
+        ) {
           harpoonsRef.current = [
             ...harpoonsRef.current,
             { x: playerXRef.current, y: PLAYER_Y },
           ]
         }
+        fireRequestedRef.current = false
 
         harpoonsRef.current = harpoonsRef.current
           .map((h) => ({ x: h.x, y: h.y - HARPOON_SPEED * dtSec }))
@@ -896,64 +916,41 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
             ref={canvasRef}
             width={CANVAS_WIDTH}
             height={CANVAS_HEIGHT}
-            style={{ border: '1px solid #2e303a' }}
+            style={{ border: '1px solid #2e303a', touchAction: 'none' }}
+            onPointerDown={(e) => {
+              dragRef.current = {
+                startClientX: e.clientX,
+                startPlayerX: playerXRef.current,
+                moved: false,
+              }
+              dragTargetXRef.current = playerXRef.current
+            }}
+            onPointerMove={(e) => {
+              const drag = dragRef.current
+              const canvas = canvasRef.current
+              if (!drag || !canvas) return
+              const rect = canvas.getBoundingClientRect()
+              const scale = CANVAS_WIDTH / rect.width
+              const deltaX = (e.clientX - drag.startClientX) * scale
+              if (Math.abs(deltaX) > 4) drag.moved = true
+              dragTargetXRef.current = Math.min(
+                Math.max(drag.startPlayerX + deltaX, PLAYER_WIDTH / 2),
+                CANVAS_WIDTH - PLAYER_WIDTH / 2,
+              )
+            }}
+            onPointerUp={() => {
+              if (dragRef.current && !dragRef.current.moved) {
+                fireRequestedRef.current = true
+              }
+              dragRef.current = null
+              dragTargetXRef.current = null
+            }}
+            onPointerLeave={() => {
+              dragRef.current = null
+              dragTargetXRef.current = null
+            }}
           />
-          <div className="touch-controls">
-            <button
-              type="button"
-              className="touch-button"
-              aria-label="Move left"
-              onPointerDown={(e) => {
-                e.preventDefault()
-                keysRef.current.ArrowLeft = true
-              }}
-              onPointerUp={() => {
-                keysRef.current.ArrowLeft = false
-              }}
-              onPointerLeave={() => {
-                keysRef.current.ArrowLeft = false
-              }}
-              onContextMenu={(e) => e.preventDefault()}
-            >
-              ◀
-            </button>
-            <button
-              type="button"
-              className="touch-button"
-              aria-label="Move right"
-              onPointerDown={(e) => {
-                e.preventDefault()
-                keysRef.current.ArrowRight = true
-              }}
-              onPointerUp={() => {
-                keysRef.current.ArrowRight = false
-              }}
-              onPointerLeave={() => {
-                keysRef.current.ArrowRight = false
-              }}
-              onContextMenu={(e) => e.preventDefault()}
-            >
-              ▶
-            </button>
-            <button
-              type="button"
-              className="touch-button touch-button-fire"
-              aria-label="Fire"
-              onPointerDown={(e) => {
-                e.preventDefault()
-                keysRef.current[' '] = true
-              }}
-              onPointerUp={() => {
-                keysRef.current[' '] = false
-              }}
-              onPointerLeave={() => {
-                keysRef.current[' '] = false
-              }}
-              onContextMenu={(e) => e.preventDefault()}
-            >
-              FIRE
-            </button>
-          </div>
+          <p className="touch-hint">Drag to move &middot; Tap to fire</p>
         </div>
         <aside className="hint-panel">
           <div>
