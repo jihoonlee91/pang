@@ -2,6 +2,10 @@
 
 A classic "Pang" / Buster Bros-style arcade game. Hit the balls on screen with your harpoon to keep splitting them into smaller balls, and clear the stage once they're all gone.
 
+## Play Now
+
+**[Play in your browser](https://jihoonlee91.github.io/PANG-23020975/)** — no install required. The site is built and deployed automatically from `master` via GitHub Actions (see `.github/workflows/deploy-pages.yml`).
+
 ## Gameplay
 
 - The player moves left and right along the bottom of the screen, firing a harpoon upward.
@@ -49,7 +53,7 @@ npm run preview   # preview the built output locally
 
 ```
 src/
-  App.tsx        manages screen-transition state (main -> select -> play -> end)
+  App.tsx        manages screen-transition state (main -> play -> end)
   GamePlay.tsx   game canvas rendering, input handling, game loop
   game/
     constants.ts game constants: canvas/physics/scoring, etc.
