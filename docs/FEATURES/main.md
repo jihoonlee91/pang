@@ -1,22 +1,22 @@
-# 메인 화면 기능
+# Main Screen Features
 
-## 목적
+## Purpose
 
-게임 진입 시 최초로 보여지는 화면과 흐름을 정의한다.
+Defines the first screen shown when entering the game and its flow.
 
-## 구성 요소
+## Components
 
-- 타이틀(PANG, 그라데이션 shimmer 애니메이션)
-- "게임 선택하기" 버튼
+- Title (PANG, with a gradient shimmer animation)
+- "Select Game" button
 
-## 흐름
+## Flow
 
-미션이 1개뿐이던 초기 설계에서는 시작 버튼 클릭이 곧바로 플레이 화면으로 이어졌으나,
-Phase 1-2에서 별도의 게임 선택 화면이 도입되면서 아래와 같이 확정되었다 (`docs/design/phase1_2.md`,
-`docs/design/phase1_3.md` 참고).
+In the initial design, when there was only one mission, clicking the start button led directly to the
+play screen. But once a separate game-selection screen was introduced in Phase 1-2, the flow was
+finalized as follows (see `docs/design/phase1_2.md`, `docs/design/phase1_3.md`).
 
-1. 게임 접속 시 메인 화면 표시
-2. "게임 선택하기" 버튼 클릭 → 게임 선택 화면으로 전환
-3. 게임 선택 화면에서 "미션 1" 버튼 클릭 → 곧바로 게임 플레이 화면으로 전환 (미션이 1개뿐이므로 선택과 시작이 하나의 동작으로 통합됨)
+1. Show the main screen when the game loads
+2. Click the "Select Game" button -> transition to the game selection screen
+3. Click the "Mission 1" button on the game selection screen -> transition directly to the gameplay screen (since there's only one mission, selecting and starting are combined into a single action)
 
-게임 오버/클리어 후의 종료 화면과 재시작 흐름은 `docs/design/phase1_4.md`에서 다룬다.
+The end screen shown after game over/clear and the restart flow are covered in `docs/design/phase1_4.md`.

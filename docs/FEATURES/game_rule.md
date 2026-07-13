@@ -1,41 +1,44 @@
-# 게임 규칙
+# Game Rules
 
-이 문서는 게임 규칙의 개요이다. 수치와 세부 공식은 `docs/design/phase2_*.md`, `phase3_*.md`,
-`phase4_*.md`에서 관리하므로, 두 문서의 내용이 어긋나면 design 문서 쪽을 최신으로 간주한다.
+This document is an overview of the game rules. Numeric values and detailed formulas are managed in
+`docs/design/phase2_*.md`, `phase3_*.md`, and `phase4_*.md`, so if this document and those disagree,
+treat the design docs as authoritative.
 
-## 기본 규칙
+## Basic Rules
 
-- 플레이어가 발사체를 쏴서 화면의 공을 맞춰 분열시키고 최종적으로 제거한다.
-- 화면의 모든 공을 제거하면 스테이지 클리어, 다음 스테이지로 진행한다. 총 5개 스테이지로 구성되며
-  각 스테이지는 서로 다른 테마 배경(후지산 → 계림 → 에메랄드사원 → 앙코르와트 → 에어즈록)을 가진다
-  (`docs/design/phase3_3.md` 참고).
-- 공에 부딪히면 즉시 사망하지 않고 HP가 1 감소하며, 피격 후 일정 시간(1.2초) 동안 무적 상태가 된다.
-  HP가 0이 되면 게임 오버된다. HP는 숫자가 아닌 채워지는 게이지(세그먼트 바) 형태로 HUD에 표시된다
-  (`docs/design/phase2_3.md` 참고).
+- The player fires a harpoon to hit the balls on screen, splitting them and eventually removing them.
+- Removing all the balls on screen clears the stage and progresses to the next one. There are 5 stages
+  total, each with a different themed background (Mt. Fuji -> Guilin -> Emerald Temple -> Angkor Wat ->
+  Ayers Rock) (see `docs/design/phase3_3.md`).
+- Getting hit by a ball doesn't cause instant death — HP decreases by 1, and after being hit you become
+  invulnerable for a set period (1.2 seconds). Game over occurs when HP reaches 0. HP is shown on the HUD
+  as a filled gauge (segmented bar) rather than a number (see `docs/design/phase2_3.md`).
 
-## 발사체
+## Harpoon
 
-- 발사 시 플레이어 위치에서 화면 천장까지 일직선으로 뻗어나가는 형태다.
-- 공에 닿거나 천장에 닿으면 사라진다.
-- 화면 중앙에 고정된 줄무늬 발판 장애물에 막히면 발사체는 소멸한다. 공은 이 장애물의 위/아래 면에서
-  튕겨 나간다 (`docs/design/phase3_3.md` 참고).
-- 발사체가 화면에 남아있는 동안에는 재발사할 수 없다.
+- When fired, it extends in a straight line from the player's position to the screen's ceiling.
+- It disappears when it touches a ball or the ceiling.
+- If blocked by the striped platform obstacle fixed at the center of the screen, the harpoon despawns.
+  Balls bounce off the top/bottom faces of this obstacle (see `docs/design/phase3_3.md`).
+- You cannot fire again while a harpoon is still on screen.
 
-## 공 분열
+## Ball Splitting
 
-- 공은 3단계 크기(작음/중간/큼)를 가지며, 발사체에 맞으면 제거되고 가장 작은 단계가 아니라면 한 단계
-  작은 공 두 개로 분열한다. 가장 작은 단계의 공이 맞으면 분열 없이 완전히 사라진다
-  (`docs/design/phase2_2.md` 참고).
-- 공은 중력의 영향을 받아 낙하하고, 벽/바닥/천장에서 반사되며, 시간이 지남에 따라 미세하게 감쇠한다
-  (`docs/design/phase2_4.md`, `phase2_5.md` 참고).
+- Balls have 3 size stages (small/medium/large). When hit by a harpoon, they're removed, and if not
+  already the smallest stage, split into two balls one size smaller. If the smallest-stage ball is hit,
+  it disappears completely without splitting (see `docs/design/phase2_2.md`).
+- Balls are affected by gravity and fall, bounce off walls/floor/ceiling, and decay slightly over time
+  (see `docs/design/phase2_4.md`, `phase2_5.md`).
 
-## 스코어
+## Score
 
-- 공을 제거(분열 포함)할 때마다 크기별로 차등된 기본 점수를 획득한다 (작은 공일수록 점수가 높다).
-- 짧은 시간 안에 연속으로 공을 맞히면 콤보가 쌓여 점수 배율이 증가한다 (`docs/design/phase4_1.md` 참고).
-- 최고 점수는 브라우저에 로컬로 저장되어 종료 화면에서 함께 표시된다 (`docs/design/phase4_2.md` 참고).
+- Removing a ball (including via splitting) awards a base score that varies by size (smaller balls are
+  worth more).
+- Hitting balls consecutively within a short time builds up a combo, increasing the score multiplier
+  (see `docs/design/phase4_1.md`).
+- The high score is stored locally in the browser and shown on the end screen (see `docs/design/phase4_2.md`).
 
-## 종료 조건
+## End Conditions
 
-- 게임 오버: HP가 0이 되었을 때
-- 클리어: 마지막 스테이지까지 모든 공을 제거했을 때
+- Game over: when HP reaches 0
+- Clear: when all balls are removed through the final stage

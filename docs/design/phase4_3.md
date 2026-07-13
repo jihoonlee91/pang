@@ -1,12 +1,12 @@
-# Phase 4-3. 랭킹
+# Phase 4-3. Ranking
 
-## 목표
+## Goal
 
-- 로컬 기록 기반의 순위/랭킹 표시 (서버 기반 랭킹은 PRD 비목표라 제외, 로컬 저장 기록만 사용)
+- Show a rank/ranking based on local records (server-based ranking is excluded per the PRD non-goals; use local storage records only)
 
-## 설계
+## Design
 
-- 종료 화면에 이번 판의 순위(예: "역대 3위")를 `docs/design/phase4_2.md`의 기록 배열에서 계산해 표시
-- 이번 판이 도달한 스테이지(예: "3번째 스테이지에서 종료" 또는 클리어 시 "전체 클리어")도 함께 표시
-- 이번 판의 일시(연-월-일 시:분)도 함께 표시
-- (선택) 상위 5개 정도의 로컬 기록 목록을 종료 화면에 간단히 보여줄 수 있음
+- On the end screen, show this run's rank (e.g. "All-time #3") computed from the record array in `docs/design/phase4_2.md`
+- Also show the stage this run reached (e.g. "Ended at stage 3" or "Fully cleared" if it was a clear)
+- Also show this run's timestamp (YYYY-MM-DD HH:MM)
+- (Optional) A short list of the top ~5 local records can be shown on the end screen

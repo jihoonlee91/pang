@@ -1,17 +1,17 @@
-# Phase 2-1. 플레이어 조작 & 발사체
+# Phase 2-1. Player Controls & Harpoon
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 좌우 이동 구현
-- 발사 입력 처리
-- 발사체가 천장까지 직선으로 뻗어나가는 동작 구현
-- 공/천장 접촉 시 소멸, 재발사 제한 구현
+- Implement left/right movement
+- Handle fire input
+- Implement the harpoon traveling in a straight line up to the ceiling
+- Implement despawning on ball/ceiling contact and firing restrictions
 
-## 설계
+## Design
 
-- 캔버스 크기: 960x540 (와이드 화면비)
-- 플레이어: 하단 고정 y, 좌우 이동 가능한 사각형, 이동속도 300px/s (키보드 ←/→ 또는 A/D)
-- 발사: Space 키, 발사체 1개만 동시 존재 가능 (기존 발사체가 사라져야 재발사 가능)
-- 발사체는 플레이어 x 위치에서 위쪽으로 700px/s 속도로 이동, 천장 도달 또는 공과 충돌 시 소멸
+- Canvas size: 960x540 (widescreen aspect ratio)
+- Player: fixed y at the bottom, a rectangle that can move left/right, movement speed 300px/s (keyboard ←/→ or A/D)
+- Fire: Space key, only 1 harpoon can exist at a time (the existing harpoon must disappear before firing again)
+- The harpoon moves upward from the player's x position at 700px/s, and despawns on reaching the ceiling or colliding with a ball

@@ -1,11 +1,11 @@
-# Phase 2-4. 중력 & 낙하
+# Phase 2-4. Gravity & Falling
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 공의 중력 적용
+- Apply gravity to balls
 
-## 설계
+## Design
 
-- 중력 가속도 900px/s²를 공의 수직 속도에 매 프레임 누적
+- Accumulate gravitational acceleration of 900px/s² into each ball's vertical velocity every frame

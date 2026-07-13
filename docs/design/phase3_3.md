@@ -1,14 +1,14 @@
-# Phase 3-3. 배치 패턴
+# Phase 3-3. Layout Patterns
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 다양한 공 배치 패턴 설계로 전략적 플레이 유도
+- Design various ball layout patterns to encourage strategic play
 
-## 설계
+## Design
 
-- 스테이지 시작 공들은 화면 폭에 고르게 분산된 x 위치에서 시작
-- 인접한 공끼리는 서로 반대 방향의 수평 속도를 갖도록 배치해 초반부터 겹치지 않게 함
-- 화면 중앙 높이에 고정된 발판형 장애물을 배치: 공은 위/아래 면에서 튕기고, 발사체는 장애물에 막혀 소멸 (원작 팽의 장애물 요소 참고)
-- 스테이지마다 세계 각지를 테마로 한 배경을 적용, 원작 팡의 실제 스테이지 등장 순서(후지산→계림→에메랄드사원→앙코르와트→에어즈록...)를 참고해 5개로 구성: 1스테이지 후지산(일본), 2스테이지 계림(중국), 3스테이지 에메랄드사원(태국), 4스테이지 앙코르와트(캄보디아), 5스테이지 에어즈록(호주)
+- Stage-starting balls begin at x positions evenly distributed across the screen width
+- Adjacent balls are arranged with horizontal velocities in opposite directions so they don't overlap early on
+- A platform-style obstacle is placed fixed at the center height of the screen: balls bounce off its top/bottom faces, and harpoons are blocked and despawn on it (referencing the obstacle element from the original Pang)
+- Each stage uses a background themed around a different world landmark. Referencing the original Pang's actual stage order (Mt. Fuji -> Guilin -> Emerald Temple -> Angkor Wat -> Ayers Rock...), the 5 stages are: Stage 1 Mt. Fuji (Japan), Stage 2 Guilin (China), Stage 3 Emerald Temple (Thailand), Stage 4 Angkor Wat (Cambodia), Stage 5 Ayers Rock (Australia)

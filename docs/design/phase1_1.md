@@ -1,12 +1,12 @@
-# Phase 1-1. 메인 화면
+# Phase 1-1. Main Screen
 
-## 목표
+## Goal
 
-- 게임 접속 시 메인 화면 표시
+- Show the main screen when the game loads
 
-## 설계
+## Design
 
-- 반투명 흰색 카드(글래스모피즘) 안에 타이틀 "PANG"과 "시작하기" 버튼만 배치한 단순한 구성
-- 타이틀은 여러 색(핑크·주황·하늘색)이 반복되는 가로 그라데이션에 shimmer 애니메이션을 적용해 강조
-- 화면 전체 폰트는 Galmuri11(한글 지원 픽셀 폰트)을 사용
-- 미션이 1개뿐인 현재는 "시작하기" 버튼 클릭 시 별도의 선택 화면 없이 바로 게임 플레이(미션 1)로 전환 (Phase 1-2 참고)
+- A simple layout: just the title "PANG" and a "Start" button inside a translucent white card (glassmorphism)
+- The title is emphasized with a shimmer animation applied to a horizontal gradient that repeats several colors (pink/orange/sky blue)
+- The entire screen uses the Galmuri11 font (a pixel font with Korean support)
+- Since there's currently only one mission, clicking the "Start" button transitions directly to gameplay (Mission 1) without a separate selection screen (see Phase 1-2)

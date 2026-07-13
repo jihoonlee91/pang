@@ -1,18 +1,18 @@
-# Phase 4-4. 마무리
+# Phase 4-4. Polish
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 사운드/이펙트 등 연출 요소로 완성도 마무리
+- Finish up polish with sound/effects and other presentation elements
 
-## 설계
+## Design
 
-- 사운드/BGM은 저작권 있는 외부 음원을 사용하지 않고, Web Audio API 오실레이터로 직접 합성해서 구현
-  - 효과음: 공 명중(레벨별 음높이), 플레이어 피격, 스테이지 클리어, 게임 오버
-  - BGM: 짧은 아르페지오 패턴을 낮은 볼륨으로 반복 재생하는 배경음, 브라우저 자동재생 정책에 따라 첫 사용자 조작(시작 버튼 클릭) 이후 재생 시작
-- 시각적 그래픽은 아래와 같이 개선
-  - 배경: 단색 대신 세로 그라데이션 + 바닥 라인 표시
-  - 공: level별로 다른 색상(작음=핑크, 중간=초록, 큼=파랑) + 방사형 그라데이션으로 입체감 표현
-  - 플레이어: 그라데이션 채색 + 무적 시간에는 발광 효과
-  - 발사체: 발광(glow) 효과가 있는 선으로 표현
+- Sound/BGM are implemented by synthesizing directly with Web Audio API oscillators, without using copyrighted external audio
+  - Sound effects: ball hit (pitch varies by level), player hit, stage clear, game over
+  - BGM: background music that loops a short arpeggio pattern at low volume; playback starts after the first user interaction (clicking the start button), per browser autoplay policy
+- Visual graphics are improved as follows
+  - Background: a vertical gradient plus a ground line instead of a flat color
+  - Balls: different colors per level (small = pink, medium = green, large = blue) plus a radial gradient for a sense of depth
+  - Player: gradient coloring, with a glow effect during invulnerability
+  - Harpoon: rendered as a line with a glow effect

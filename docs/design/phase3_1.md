@@ -1,14 +1,14 @@
-# Phase 3-1. 스테이지 밸런스
+# Phase 3-1. Stage Balance
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 스테이지별 공 개수/크기/속도 설계
+- Design ball count/size/speed per stage
 
-## 설계
+## Design
 
-- 총 5개 스테이지 구성
-- 스테이지 n(0-index)마다 시작 공 개수 = n+1개, 모두 최대 크기(level 2)로 시작
-- 스테이지가 올라갈수록 공 속도 배율 증가 (아래 3-2 참고)
-- 힌트 패널에 전체 5개 스테이지 목록(테마명)과 현재 진행 위치, 클리어 여부를 함께 표시해 전체 구성을 파악할 수 있게 함
+- 5 stages total
+- For each stage n (0-indexed), starting ball count = n+1, all starting at the largest size (level 2)
+- Ball speed multiplier increases with each stage (see 3-2 below)
+- The hint panel shows the full list of all 5 stages (theme names) along with the current progress position and clear status, so the player can see the overall composition

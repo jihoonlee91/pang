@@ -1,12 +1,12 @@
-# Phase 4-1. 점수 시스템
+# Phase 4-1. Scoring System
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 콤보, 보너스 등 점수 시스템 고도화
+- Enhance the scoring system with combos, bonuses, etc.
 
-## 설계
+## Design
 
-- 공 제거(분열 포함) 시 크기별 기본 점수 부여: level 0(작음) 300점, level 1 150점, level 2(큼) 100점
-- 1.5초 이내 연속으로 공을 맞히면 콤보 증가, 최종 점수 = 기본 점수 × (1 + 콤보 × 0.1)
+- Removing a ball (including via splitting) awards a base score by size: level 0 (small) 300 points, level 1 150 points, level 2 (large) 100 points
+- Hitting balls consecutively within 1.5 seconds increases the combo; final score = base score x (1 + combo x 0.1)

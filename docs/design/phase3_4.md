@@ -1,19 +1,19 @@
-# Phase 3-4. 파워업
+# Phase 3-4. Power-ups
 
-## 목표
+## Goal
 
-- 파워업/아이템 요소 검토 및 도입
+- Review and introduce power-up/item elements
 
-## 설계
+## Design
 
-- (참고) 원작 팡의 아이템: 벌칸 미사일, 더블 와이어, 파워 와이어, 시계(정지), 모래시계(감속), 배리어(1회 방어), 다이나마이트(위험 요소, 모든 공이 최소 크기로 분할), 1UP
-- 이번 구현 범위(핵심 4종 + 1UP/다이나마이트)는 무기 교체가 아닌 "효과 부여" 방식으로 단순화
-  - 더블 와이어: 12초 동안 발사체 2개를 동시에 유지 가능 (`DOUBLE_WIRE_DURATION_MS`)
-  - 시계: 6초 동안 모든 공의 움직임 정지 (닿아도 무피해) (`CLOCK_DURATION_MS`)
-  - 모래시계: 8초 동안 모든 공의 속도를 0.4배로 감속 (`HOURGLASS_DURATION_MS`, `HOURGLASS_SLOW_FACTOR`)
-  - 배리어: 다음 1회 피격을 무효화 (사용 시 소모, 여러 개 보유 시 중첩 카운트)
-  - 1UP: 즉시 HP 1 회복 (원작은 잔기 증가지만 이 프로젝트는 잔기 개념이 없어 HP 회복으로 대체, MAX_HP 초과 불가)
-  - 다이나마이트: 위험 요소, 획득 시 화면의 모든 공이 재귀적으로 분열하여 즉시 최소 크기(level 0)까지 쪼개짐 (`explodeToSmallest`), 점수는 지급하지 않음
-- 아이템은 공을 맞혀 분열/제거할 때 낮은 확률로 무작위 드롭되며(`ITEM_DROP_CHANCE` = 14%), 중력을 받아 아래로 떨어지다 화면 밖으로 나가면 소멸. 플레이어가 닿으면 즉시 효과 적용 + 효과음 재생
-- 드롭된 아이템 종류는 가중치 추첨(`ITEM_WEIGHTS`)으로 결정: 더블 와이어/시계/모래시계/배리어는 상대적으로 자주(각 20~22), 1UP과 다이나마이트는 낮은 확률(각 9)로 등장
-- 벌칸 미사일/파워 와이어(무기 교체형)는 이번 범위에서는 제외
+- (Reference) Items from the original Pang: Vulcan missile, double wire, power wire, clock (stop), hourglass (slow), barrier (single-use defense), dynamite (a hazard that splits all balls to their smallest size), 1UP
+- The scope of this implementation (the 4 core items plus 1UP/dynamite) is simplified into an "apply an effect" model rather than weapon swapping
+  - Double wire: allows keeping 2 harpoons active at once for 12 seconds (`DOUBLE_WIRE_DURATION_MS`)
+  - Clock: stops all balls' movement for 6 seconds (no damage even if touched) (`CLOCK_DURATION_MS`)
+  - Hourglass: slows all balls' speed to 0.4x for 8 seconds (`HOURGLASS_DURATION_MS`, `HOURGLASS_SLOW_FACTOR`)
+  - Barrier: negates the next hit once (consumed on use; stacks as a count if multiple are held)
+  - 1UP: immediately restores 1 HP (the original grants an extra life, but since this project has no lives concept, it's replaced with an HP restore, capped at MAX_HP)
+  - Dynamite: a hazard — on pickup, all balls on screen recursively split down to the smallest size (level 0) instantly (`explodeToSmallest`), and awards no score
+- Items have a small chance of dropping randomly when a ball is split/removed by a hit (`ITEM_DROP_CHANCE` = 14%), then fall under gravity and despawn if they go off-screen. Touching one as the player applies its effect immediately and plays a sound effect
+- The dropped item's type is decided via a weighted draw (`ITEM_WEIGHTS`): double wire/clock/hourglass/barrier appear relatively often (20-22 each), while 1UP and dynamite appear rarely (9 each)
+- The Vulcan missile/power wire (weapon-swap types) are excluded from this scope

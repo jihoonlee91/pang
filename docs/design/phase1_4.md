@@ -1,12 +1,12 @@
-# Phase 1-4. 게임 종료
+# Phase 1-4. Game End
 
-## 목표
+## Goal
 
-- 게임 오버/클리어 시 종료 화면 표시 및 재시작·메인화면 이동 흐름 구현
+- Show the end screen on game over/clear, and implement the restart/return-to-main flow
 
-## 설계
+## Design
 
-- 마지막 스테이지까지 클리어하면 "게임 클리어", HP가 0이 되면 "게임 오버" 타이틀을 종료 화면에 표시
-- 종료 화면에는 이번 플레이의 최종 점수와 로컬에 저장된 최고 점수(`docs/design/phase4_2.md` 참고)를 함께 표시
-- 최고 점수는 종료 화면 진입 시점에 현재 점수와 비교해 갱신되므로, 이번 판이 신기록이면 갱신된 값이 바로 표시됨
-- "메인으로" 버튼 클릭 시 메인 화면(Phase 1-1)으로 돌아가며, 다시 게임을 시작하려면 게임 선택 화면(Phase 1-2)을 다시 거침 (별도의 "재시작" 버튼은 두지 않음)
+- Show the title "Game Clear" on the end screen if the last stage is cleared, or "Game Over" if HP reaches 0
+- The end screen also shows this play's final score along with the locally stored high score (see `docs/design/phase4_2.md`)
+- The high score is updated by comparing against the current score at the moment the end screen is entered, so if this run is a new record, the updated value is shown immediately
+- Clicking the "Main" button returns to the main screen (Phase 1-1); to start the game again, the player goes through the game-selection screen (Phase 1-2) again (there is no separate "Restart" button)

@@ -1,15 +1,15 @@
-# Phase 2-5. 반사
+# Phase 2-5. Bouncing
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 벽/바닥/천장 반사 동작 구현
+- Implement wall/floor/ceiling bounce behavior
 
-## 설계
+## Design
 
-- 좌우 벽: x 속도 반전
-- 바닥/천장: y 속도 반전, 반발 계수 0.995로 완전탄성보다 살짝 낮게 하여 시간이 지나며 자연스럽게 감쇠되도록 함 (클래식 팽처럼 거의 일정하게 튀되, 미세한 감쇠로 물리적 안정감 부여)
-- 좌우 벽 반사에도 동일한 반발 계수를 적용해 수평 속도도 조금씩 감쇠
-- 천장: 공은 천장에 닿아도 반사만 하고 사라지지 않음 (발사체만 천장에서 소멸)
-- 버그 수정: 반발 계수 감쇠가 누적되면 바닥/장애물에서 수직 속도가 거의 0에 수렴해 "튕기지 않고 바닥을 굴러다니는" 것처럼 보이는 문제가 있었음. 모든 반사(벽/바닥/천장/장애물)에 최소 반동 속도 `MIN_BOUNCE_SPEED`(220px/s) 하한선을 적용해 항상 눈에 보이는 속도로 튕기게 함 (`engine.ts`의 `reflect`/`reflectAway` 헬퍼)
+- Left/right walls: reverse x velocity
+- Floor/ceiling: reverse y velocity, with a restitution coefficient of 0.995 — slightly below perfectly elastic — so it decays naturally over time (bounces at a nearly constant rate like classic Pang, but with a slight decay for a sense of physical stability)
+- The same restitution coefficient is applied to left/right wall bounces too, so horizontal velocity decays slightly as well
+- Ceiling: balls only bounce off the ceiling and don't disappear (only the harpoon despawns at the ceiling)
+- Bug fix: accumulated restitution decay caused vertical velocity to converge to nearly 0 on the floor/obstacle, making balls look like they were "rolling along the floor without bouncing." A minimum bounce speed floor, `MIN_BOUNCE_SPEED` (220px/s), is applied to all bounces (wall/floor/ceiling/obstacle) so they always bounce at a visibly noticeable speed (the `reflect`/`reflectAway` helpers in `engine.ts`)

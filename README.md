@@ -1,66 +1,66 @@
 # PANG
 
-클래식 "팽(Pang)" / 버스터 브라더스 스타일 아케이드 게임입니다. 발사체로 화면의 공을 맞춰 계속 작은 공으로 분열시키다가 완전히 제거하면 스테이지를 클리어합니다.
+A classic "Pang" / Buster Bros-style arcade game. Hit the balls on screen with your harpoon to keep splitting them into smaller balls, and clear the stage once they're all gone.
 
-## 게임플레이
+## Gameplay
 
-- 플레이어는 화면 하단에서 좌우로 이동하며 위쪽으로 발사체를 쏩니다.
-- 발사체는 한 번에 하나만 존재할 수 있고, 화면에 남아있는 동안에는 재발사할 수 없습니다.
-- 발사체가 공에 맞으면 그 공은 제거되고, 아직 가장 작은 크기가 아니라면 한 단계 작은 공 두 개로 분열합니다. 가장 작은 크기의 공은 맞으면 분열 없이 완전히 사라집니다.
-- 공에 부딪히면 즉사하지 않고 HP가 1 감소하며, 이후 잠깐 무적 시간이 주어집니다. HP가 0이 되면 게임 오버입니다.
-- 화면의 모든 공을 제거하면 스테이지 클리어입니다. 총 5개 스테이지(후지산 → 계림 → 에메랄드사원 → 앙코르와트 → 에어즈록 테마)를 순서대로 클리어하면 게임 클리어입니다.
-- 짧은 시간 안에 연속으로 공을 맞히면 콤보가 쌓여 점수 배율이 올라갑니다.
-- 화면 중앙의 줄무늬 발판 장애물은 발사체를 막고 공은 튕겨냅니다.
-- 최고 점수는 브라우저 `localStorage`에 저장되어 게임 종료 화면에서 함께 표시됩니다.
+- The player moves left and right along the bottom of the screen, firing a harpoon upward.
+- Only one harpoon can exist at a time, and you can't fire again while it's still on screen.
+- When a harpoon hits a ball, that ball is removed; if it isn't already the smallest size, it splits into two balls one size smaller. The smallest-size ball disappears completely without splitting when hit.
+- Getting hit by a ball doesn't kill you instantly — it reduces HP by 1 and grants a brief period of invulnerability. Game over occurs when HP reaches 0.
+- Clearing all the balls on screen clears the stage. Clear all 5 stages in order (Mt. Fuji → Guilin → Emerald Temple → Angkor Wat → Ayers Rock themes) to clear the game.
+- Hitting balls consecutively within a short time builds up a combo, increasing your score multiplier.
+- The striped platform obstacle in the center of the screen blocks harpoons and bounces balls off of it.
+- Your high score is saved in the browser's `localStorage` and shown on the game-end screen.
 
-## 조작법
+## Controls
 
-| 키 | 동작 |
+| Key | Action |
 | --- | --- |
-| `←` `→` 또는 `A` `D` | 좌우 이동 |
-| `Space` | 발사 (동시에 발사체 1개만 유지) |
+| `←` `→` or `A` `D` | Move left/right |
+| `Space` | Fire (only 1 harpoon can be active at a time) |
 
-## 개발
+## Development
 
-### 요구사항
+### Requirements
 
 - Node.js, npm
 
-### 명령어
+### Commands
 
 ```bash
-npm install       # 의존성 설치
-npm run dev       # 개발 서버 실행 (기본 포트 5173)
-npm run build     # 타입 체크(tsc -b) 후 프로덕션 빌드
-npm run lint      # oxlint 실행
-npm run preview   # 빌드 결과물 로컬 미리보기
+npm install       # install dependencies
+npm run dev       # run the dev server (default port 5173)
+npm run build     # type-check (tsc -b), then produce a production build
+npm run lint      # run oxlint
+npm run preview   # preview the built output locally
 ```
 
-## 기술 스택
+## Tech Stack
 
-- **React 19** + **TypeScript**, **Vite 8** 기반 빌드
-- 게임 렌더링/루프: Canvas 2D API (`src/GamePlay.tsx`)
-- 물리/충돌/분열 로직: `src/game/engine.ts`
-- 효과음·BGM: 외부 음원 없이 **Web Audio API** 오실레이터로 직접 합성 (`src/game/audio.ts`)
-- 폰트: **Galmuri11** (한글을 지원하는 레트로 픽셀 폰트, OFL 라이선스, CDN으로 로드)
-- 린트: **Oxlint**
+- **React 19** + **TypeScript**, built on **Vite 8**
+- Game rendering/loop: Canvas 2D API (`src/GamePlay.tsx`)
+- Physics/collision/split logic: `src/game/engine.ts`
+- Sound effects & BGM: synthesized directly with **Web Audio API** oscillators, no external audio files (`src/game/audio.ts`)
+- Font: **Galmuri11** (a retro pixel font with Korean support, OFL license, loaded via CDN)
+- Linter: **Oxlint**
 
-## 프로젝트 구조
+## Project Structure
 
 ```
 src/
-  App.tsx        화면 전환(메인 → 선택 → 플레이 → 종료) 상태 관리
-  GamePlay.tsx   게임 캔버스 렌더링, 입력 처리, 게임 루프
+  App.tsx        manages screen-transition state (main -> select -> play -> end)
+  GamePlay.tsx   game canvas rendering, input handling, game loop
   game/
-    constants.ts 캔버스/물리/점수 등 게임 상수
-    types.ts     공/발사체 등 타입 정의
-    engine.ts    스테이지 생성, 공 물리, 충돌 판정, 분열 로직
-    audio.ts     Web Audio 기반 효과음/BGM
+    constants.ts game constants: canvas/physics/scoring, etc.
+    types.ts     type definitions for balls/harpoons, etc.
+    engine.ts    stage generation, ball physics, collision detection, split logic
+    audio.ts     Web Audio-based sound effects/BGM
 docs/
-  PRD.md         게임 요구사항 개요
-  PLAN.md        Phase별 개발 계획
-  design/        Phase별 세부 설계 문서
-  FEATURES/      화면·규칙별 기능 명세
+  PRD.md         overview of game requirements
+  PLAN.md        development plan by phase
+  design/        detailed design docs per phase
+  FEATURES/      feature specs by screen/rule
 ```
 
-기획/설계 변경은 코드보다 먼저 `docs/` 문서에 반영하는 것을 원칙으로 합니다. 자세한 개발 규칙은 `CLAUDE.md`를 참고하세요.
+The principle is to reflect design changes in the `docs/` documentation before the code. See `CLAUDE.md` for detailed development rules.

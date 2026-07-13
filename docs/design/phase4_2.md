@@ -1,14 +1,14 @@
-# Phase 4-2. 기록 저장
+# Phase 4-2. Record Storage
 
-## 목표
+## Goal
 
-- 플레이 기록(점수, 도달 스테이지, 일시) 로컬 저장
+- Store play records (score, stage reached, timestamp) locally
 
-## 설계
+## Design
 
-- `localStorage`의 `pang_scores` 키에 플레이 기록 배열을 JSON으로 저장. 각 기록은 `{ score, stageReached, result, playedAt }` 형태
-  - `stageReached`: 몇 번째 스테이지까지 도달했는지 (게임 오버 시 죽은 스테이지, 클리어 시 마지막 스테이지)
+- Store an array of play records as JSON under the `pang_scores` key in `localStorage`. Each record has the shape `{ score, stageReached, result, playedAt }`
+  - `stageReached`: which stage was reached (the stage the player died on for game over, or the last stage for a clear)
   - `result`: `'clear' | 'gameover'`
-  - `playedAt`: 게임 종료 시각(ISO 문자열)
-- 기록은 최대 50개까지만 보관 (점수 내림차순 정렬 후 상위 50개 유지), 오래되고 낮은 기록은 자동으로 잘림
-- 기존 `pang_high_score` 단일 값 대신 기록 배열에서 최고 점수를 계산 (하위 호환 불필요, 아직 배포 전이라 마이그레이션 생략)
+  - `playedAt`: the time the game ended (ISO string)
+- Keep at most 50 records (sort by score descending and keep the top 50); older, lower records are automatically trimmed
+- Compute the high score from the record array instead of the old single `pang_high_score` value (no backward compatibility needed; migration is skipped since this hasn't been released yet)

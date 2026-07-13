@@ -2,74 +2,74 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 기술 스택
+## Tech Stack
 
-- **React 19** + **TypeScript** (Vite 8 기반)
-- 빌드/개발 서버: **Vite**
-- 린트: **Oxlint** (ESLint가 아님)
-- 패키지 매니저: npm
+- **React 19** + **TypeScript** (on **Vite 8**)
+- Build/dev server: **Vite**
+- Linter: **Oxlint** (not ESLint)
+- Package manager: npm
 
-## 주요 명령어
+## Key Commands
 
 ```bash
-npm install       # 의존성 설치
-npm run dev       # 개발 서버 실행 (기본 포트 5173)
-npm run build     # tsc -b (타입 체크) 후 vite build로 프로덕션 빌드
-npm run preview   # 빌드된 결과물 로컬 미리보기
-npm run lint      # oxlint 실행
+npm install       # install dependencies
+npm run dev       # run the dev server (default port 5173)
+npm run build     # type-check (tsc -b), then produce a production build with vite build
+npm run preview   # preview the built output locally
+npm run lint      # run oxlint
 ```
 
-타입만 검사하고 싶을 때:
+To only run a type check:
 ```bash
 npx tsc --noEmit -p tsconfig.app.json
 ```
 
-## 테스트
+## Testing
 
-현재 테스트 프레임워크(Vitest/Jest 등)는 설치되어 있지 않습니다. 테스트 관련 요청이 있을 경우, 먼저 테스트 러너 도입이 필요함을 사용자에게 알려야 합니다. 현재 품질 검증은 `npm run lint`(Oxlint)와 `npm run build`(타입 체크 포함)로만 이루어집니다.
+No test framework (Vitest/Jest, etc.) is currently installed. If a test-related request comes in, first let the user know that a test runner needs to be introduced. Right now, quality is only verified via `npm run lint` (Oxlint) and `npm run build` (which includes type checking).
 
-## 아키텍처
+## Architecture
 
-- 엔트리포인트는 `src/main.tsx` → `src/App.tsx`.
-- `src/App.tsx`: 메인/게임 선택/플레이/종료 4개 화면 전환과 스테이지 진행, 최고 점수(localStorage) 상태를 관리하는 최상위 컴포넌트.
-- `src/GamePlay.tsx`: 실제 게임 화면. Canvas 2D로 배경(스테이지별 테마)·장애물·공·발사체·플레이어·파티클을 그리고, `requestAnimationFrame` 기반 게임 루프에서 입력 처리, 물리 업데이트, 충돌 판정, 점수/콤보/HP 갱신을 수행.
-- `src/game/constants.ts`: 캔버스 크기, 플레이어/발사체 속도, 중력·반발 계수, HP, 공 크기별 점수, 콤보 윈도우, 스테이지 수, 장애물 위치 등 게임 상수.
-- `src/game/types.ts`: `Ball`, `Harpoon`, `StageResult` 등 게임 도메인 타입.
-- `src/game/engine.ts`: 스테이지 생성(`createStage`), 공의 중력/반사 물리(`stepBall`), 분열(`splitBall`), 발사체-공/발사체-장애물/공-플레이어 충돌 판정 등 순수 로직.
-- `src/game/audio.ts`: Web Audio API 오실레이터로 합성한 효과음(공 명중, 피격, 클리어, 게임 오버)과 BGM 재생/정지.
-- 프로젝트 루트의 `tsconfig.json`은 `tsconfig.app.json`(앱 소스용)과 `tsconfig.node.json`(Vite 설정 등 Node 환경용) 두 개의 project reference로 분리되어 있습니다.
-- `vite.config.ts`는 `@vitejs/plugin-react` 플러그인만 사용하는 기본 설정입니다.
-- Oxlint 설정은 `.oxlintrc.json`에 있으며, 타입 인식 린트 규칙(typeAware)은 기본적으로 비활성화되어 있습니다.
+- The entry point is `src/main.tsx` → `src/App.tsx`.
+- `src/App.tsx`: the top-level component that manages the 4 screen transitions (main/game select/play/end), stage progression, and high-score (localStorage) state.
+- `src/GamePlay.tsx`: the actual gameplay screen. Draws the background (per-stage theme), obstacles, balls, harpoons, player, and particles on Canvas 2D, and in a `requestAnimationFrame`-based game loop handles input, physics updates, collision detection, and score/combo/HP updates.
+- `src/game/constants.ts`: game constants — canvas size, player/harpoon speed, gravity/restitution coefficients, HP, per-ball-size score, combo window, stage count, obstacle position, etc.
+- `src/game/types.ts`: game domain types such as `Ball`, `Harpoon`, `StageResult`.
+- `src/game/engine.ts`: pure logic — stage generation (`createStage`), ball gravity/bounce physics (`stepBall`), splitting (`splitBall`), harpoon-ball/harpoon-obstacle/ball-player collision detection, etc.
+- `src/game/audio.ts`: sound effects synthesized with Web Audio API oscillators (ball hit, player hit, clear, game over) plus BGM playback/stop.
+- The root `tsconfig.json` is split into two project references: `tsconfig.app.json` (for app source) and `tsconfig.node.json` (for the Node environment, e.g. Vite config).
+- `vite.config.ts` is a basic config that only uses the `@vitejs/plugin-react` plugin.
+- The Oxlint config lives in `.oxlintrc.json`, with type-aware lint rules (typeAware) disabled by default.
 
-## 작업 방식
+## Working Style
 
-- 새로운 요구사항이 들어오면 코드를 바로 수정하지 않고, 먼저 관련 설계 문서(`docs/PRD.md`, `docs/PLAN.md`, `docs/design/*.md`)를 갱신한 다음 구현한다.
-- 커밋은 기능 단위로 잘게 나누고, 매 커밋마다 원격(`origin master`)에 즉시 푸시한다.
+- When a new requirement comes in, don't modify code right away — first update the relevant design docs (`docs/PRD.md`, `docs/PLAN.md`, `docs/design/*.md`), then implement.
+- Split commits into small, feature-sized units, and push to the remote (`origin master`) immediately after every commit.
 
-## 커밋 컨벤션
+## Commit Convention
 
-[Conventional Commits](https://www.conventionalcommits.org/) 형식을 따른다.
+Follow the [Conventional Commits](https://www.conventionalcommits.org/) format.
 
 ```
-<type>: <설명 (영문, 명령형, 소문자 시작)>
+<type>: <description (English, imperative mood, lowercase start)>
 ```
 
-- `feat`: 새로운 기능/게임플레이 요소 추가
-- `fix`: 버그 수정
-- `docs`: `docs/` 이하 설계 문서 변경 (코드 변경 없음)
-- `style`: 시각적/스타일 변경 (동작 변화 없음, 예: 색상·폰트·레이아웃)
-- `refactor`: 동작 변화 없는 코드 구조 개선
-- `chore`: 빌드 설정, 의존성 등 기타 잡무
+- `feat`: add a new feature/gameplay element
+- `fix`: bug fix
+- `docs`: changes to design docs under `docs/` (no code changes)
+- `style`: visual/styling changes (no behavior change, e.g. color/font/layout)
+- `refactor`: code structure improvements with no behavior change
+- `chore`: build config, dependencies, and other miscellaneous chores
 
-예: `feat: add power-up drops and effects`, `docs: design phase3-4 power-ups`
+Example: `feat: add power-up drops and effects`, `docs: design phase3-4 power-ups`
 
-본문(body)이 필요하면 제목 아래 빈 줄을 두고 설명을 추가한다. 커밋 메시지 마지막 줄에는 `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`를 남긴다.
+If a body is needed, leave a blank line after the subject and add the description there. End the commit message with `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`.
 
-## 기획 문서
+## Design Docs
 
-- `docs/PRD.md` — 게임 전체 요구사항 개요
-- `docs/FEATURES/main.md` — 메인 화면 기능
-- `docs/FEATURES/game_rule.md` — 게임 규칙
-- `docs/FEATURES/mission1.md` — 미션 1 (튜토리얼 스테이지)
-- `docs/PLAN.md` — Phase별 목표를 세운 파일
-- `docs/design/` — PLAN.md의 세부 Phase(1-1~1-4, 2-1~2-7, 3-1~3-4, 4-1~4-4) 별 설계문서
+- `docs/PRD.md` — overview of the game's overall requirements
+- `docs/FEATURES/main.md` — main screen features
+- `docs/FEATURES/game_rule.md` — game rules
+- `docs/FEATURES/mission1.md` — mission 1 (tutorial stage)
+- `docs/PLAN.md` — file laying out the goals for each phase
+- `docs/design/` — detailed design docs for each phase in PLAN.md (1-1 to 1-4, 2-1 to 2-7, 3-1 to 3-4, 4-1 to 4-4)

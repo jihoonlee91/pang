@@ -1,17 +1,17 @@
-# Phase 2-3. 승패 흐름
+# Phase 2-3. Win/Lose Flow
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 공-플레이어 충돌 시 HP 감소, HP 0에서 게임 오버
-- 모든 공 제거 시 스테이지 클리어
-- 플레이 화면 → 게임 오버/클리어 결과 연결 (실제 화면 전환은 Phase 1 참고)
+- HP decreases on ball-player collision, game over at HP 0
+- Stage clear when all balls are removed
+- Connect the play screen to the game over/clear result (see Phase 1 for the actual screen transition)
 
-## 설계
+## Design
 
-- 최대 HP 3, 공과 충돌 시 HP 1 감소
-- 피격 후 1.2초간 무적 시간 부여 (연속 피격 방지)
-- HP 0이 되면 게임 오버, 화면의 모든 공을 제거하면 스테이지 클리어
-- HUD에서 HP는 숫자 대신 채워지는 게이지 바 형태로 표시
-- 진입장벽을 낮추기 위해 플레이 화면 옆에 조작법/전략 힌트 패널을 상시 표시 (조작키, 분열 규칙, 콤보, 장애물, 무적시간 등)
+- Max HP 3, HP decreases by 1 on collision with a ball
+- Grant 1.2 seconds of invulnerability after being hit (to prevent consecutive hits)
+- Game over at HP 0, stage clear when all balls on screen are removed
+- On the HUD, HP is shown as a filled gauge bar instead of a number
+- To lower the barrier to entry, a controls/strategy hint panel is always shown beside the play screen (controls, split rules, combo, obstacles, invulnerability time, etc.)

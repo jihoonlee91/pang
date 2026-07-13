@@ -1,12 +1,12 @@
-# Phase 2-6. 분열 물리
+# Phase 2-6. Split Physics
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 분열된 공들의 속도/각도 배분 조정
+- Tune the velocity/angle distribution of split balls
 
-## 설계
+## Design
 
-- 분열된 두 공은 서로 반대 방향의 수평 속도를 가지고, 위쪽으로 튀어오르는 초기 수직 속도를 부여받음
-- 초기 수직 속도는 분열 후 크기(level)에 비례: level이 클수록(큰 공일수록) 더 높이 튀어오름
+- The two split balls get horizontal velocities in opposite directions, and an initial vertical velocity that bounces them upward
+- The initial vertical velocity is proportional to the post-split size (level): the larger the level (the bigger the ball), the higher it bounces

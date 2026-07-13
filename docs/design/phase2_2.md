@@ -1,14 +1,14 @@
-# Phase 2-2. 공 분열 로직
+# Phase 2-2. Ball Split Logic
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 공-발사체 충돌 판정
-- 분열 처리 및 최소 크기 공 제거
+- Ball-harpoon collision detection
+- Split handling and removal of smallest-size balls
 
-## 설계
+## Design
 
-- 공 크기 단계: level 0(작음, 반지름 14) ~ level 2(큼, 반지름 28), 총 3단계
-- 발사체가 공에 닿으면 해당 공을 제거하고, level > 0이면 반지름이 한 단계 작은 공 2개를 서로 반대 방향으로 생성
-- level 0 공이 맞으면 분열 없이 완전히 제거
+- Ball size stages: level 0 (small, radius 14) to level 2 (large, radius 28), 3 stages total
+- When a harpoon touches a ball, that ball is removed, and if level > 0, 2 balls with a radius one stage smaller are spawned moving in opposite directions
+- A level 0 ball is fully removed with no split when hit

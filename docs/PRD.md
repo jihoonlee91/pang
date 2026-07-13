@@ -1,27 +1,27 @@
-# PANG 게임 PRD (초안)
+# PANG Game PRD (Draft)
 
-> 본 문서는 초기 논의를 위한 초안입니다. 세부 사항은 팀 논의 후 확정합니다.
+> This document is a draft for initial discussion. Details will be finalized after team discussion.
 
-## 1. 개요
+## 1. Overview
 
-- **프로젝트명**: PANG
-- **장르**: 캐주얼 아케이드 (공을 맞춰 분열·제거하는 클래식 "팽" 스타일)
+- **Project name**: PANG
+- **Genre**: Casual arcade (classic "Pang"-style game where you split and remove balls by hitting them)
 
-## 2. 핵심 게임플레이
+## 2. Core Gameplay
 
-- 플레이어가 발사체를 쏴서 화면의 공을 맞춰 분열시키고 최종적으로 제거한다.
-- 모든 공을 제거하면 스테이지 클리어, 다음 스테이지로 진행한다.
-- 공에 부딪히면 즉시 사망하지 않고 HP가 일정량 감소하며, HP가 0이 되면 게임 오버된다.
+- The player fires a harpoon to hit the balls on screen, splitting them and eventually removing them.
+- Removing all the balls clears the stage and progresses to the next one.
+- Getting hit by a ball doesn't cause instant death — it reduces HP by a set amount, and game over occurs when HP reaches 0.
 
-## 3. 주요 기능 범위
+## 3. Main Feature Scope
 
-- 플레이어 조작 및 발사
-- 공의 물리 동작과 분열 로직
-- 스테이지 진행 및 난이도 상승
-- 점수/HP 표시, 게임 오버 및 재시작
+- Player controls and firing
+- Ball physics behavior and split logic
+- Stage progression and difficulty escalation
+- Score/HP display, game over and restart
 
-## 4. 비목표 (이번 버전 제외)
+## 4. Non-Goals (excluded from this version)
 
-- 멀티플레이어/온라인 대전
-- 서버 기반 계정·랭킹 시스템
-- 모바일 네이티브 앱 빌드
+- Multiplayer/online battles
+- Server-based accounts/ranking system
+- Native mobile app build

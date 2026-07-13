@@ -1,12 +1,12 @@
-# Phase 1-3. 시작 버튼
+# Phase 1-3. Start Button
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 시작 버튼 클릭 시 게임 플레이 화면으로 전환
+- Transition to the gameplay screen when the start button is clicked
 
-## 설계
+## Design
 
-- 미션이 1개뿐인 현재는 메인 화면의 "시작하기" 버튼이 곧 시작 버튼 역할을 겸하며, 클릭 시 바로 미션 1 플레이로 진입한다
-- 미션이 여러 개가 되면 선택된 미션에 대해 별도의 "시작" 버튼을 노출하는 방식으로 재검토
+- Since there's currently only one mission, the main screen's "Start" button also serves as the start button, and clicking it enters Mission 1 play directly
+- Once there are multiple missions, revisit this by exposing a separate "Start" button for the selected mission

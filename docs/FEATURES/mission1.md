@@ -1,18 +1,19 @@
-# 미션 1 (튜토리얼 스테이지)
+# Mission 1 (Tutorial Stage)
 
-## 목적
+## Purpose
 
-첫 스테이지로, 기본 조작(이동/발사)과 공 분열 규칙을 플레이어가 익히도록 한다.
+As the first stage, it lets the player learn the basic controls (move/fire) and the ball-splitting rules.
 
-## 구성
+## Composition
 
-- 공 개수: 1개 (스테이지 n(0-index)의 시작 공 개수는 n+1개이므로, 첫 스테이지는 1개)
-- 공 크기: 가장 큰 단계(level 2) 1개로 시작
-- 난이도: 가장 낮음. 스테이지별 속도 배율 = 1 + n * 0.15 공식에서 첫 스테이지는 배율 1배로 가장 느림
-- 배경 테마: 후지산(일본)
+- Ball count: 1 (the starting ball count for stage n (0-indexed) is n+1, so the first stage has 1)
+- Ball size: starts with 1 ball at the largest stage (level 2)
+- Difficulty: lowest. Under the per-stage speed multiplier formula = 1 + n * 0.15, the first stage has a
+  multiplier of 1x, the slowest
+- Background theme: Mt. Fuji (Japan)
 
-자세한 스테이지 구성/난이도 공식은 `docs/design/phase3_1.md`, `docs/design/phase3_2.md`를 참고한다.
+See `docs/design/phase3_1.md` and `docs/design/phase3_2.md` for the detailed stage composition/difficulty formula.
 
-## 클리어 조건
+## Clear Condition
 
-- 스테이지 내 모든 공을 제거하면 클리어
+- Cleared when all balls in the stage are removed

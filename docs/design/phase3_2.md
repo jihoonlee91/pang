@@ -1,12 +1,12 @@
-# Phase 3-2. 난이도 곡선
+# Phase 3-2. Difficulty Curve
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 스테이지 진행에 따른 난이도 상승 곡선 구성
+- Build the difficulty escalation curve across stage progression
 
-## 설계
+## Design
 
-- 스테이지 n(0-index)의 속도 배율 = 1 + n * 0.15
-- 미션 1(스테이지 1)은 공 1개, 느린 속도로 튜토리얼 역할
+- Speed multiplier for stage n (0-indexed) = 1 + n * 0.15
+- Mission 1 (Stage 1) serves as a tutorial, with 1 ball and slow speed

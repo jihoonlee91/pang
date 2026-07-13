@@ -1,73 +1,73 @@
 # PLAN
 
-Phase별 목표를 세운 파일입니다.
+A file laying out the goals for each phase.
 
-## Phase 1. 기본 게임 루프 (메뉴/화면 흐름)
+## Phase 1. Basic Game Loop (menu/screen flow)
 
-### Phase 1-1. 메인 화면
-- 게임 접속 시 메인 화면 표시
+### Phase 1-1. Main Screen
+- Show the main screen when the game loads
 
-### Phase 1-2. 게임 선택
-- 메인 화면에서 플레이할 게임/미션을 선택하는 흐름 구현
+### Phase 1-2. Game Selection
+- Implement the flow for selecting the game/mission to play from the main screen
 
-### Phase 1-3. 시작 버튼
-- 시작 버튼 클릭 시 게임 플레이 화면으로 전환
+### Phase 1-3. Start Button
+- Transition to the gameplay screen when the start button is clicked
 
-### Phase 1-4. 게임 종료
-- 게임 오버/클리어 시 종료 화면 표시 및 재시작·메인화면 이동 흐름 구현
+### Phase 1-4. Game End
+- Show the end screen on game over/clear, and implement the restart/return-to-main flow
 
-## Phase 2. 현실적인 물리
+## Phase 2. Realistic Physics
 
-### Phase 2-1. 플레이어 조작 & 발사체
-- 좌우 이동 및 발사 입력 처리
-- 발사체가 천장까지 직선으로 뻗어나가는 동작 구현
-- 공/천장 접촉 시 소멸, 재발사 제한 구현
+### Phase 2-1. Player Controls & Harpoon
+- Handle left/right movement and fire input
+- Implement the harpoon traveling in a straight line up to the ceiling
+- Implement despawning on ball/ceiling contact and firing restrictions
 
-### Phase 2-2. 공 분열 로직
-- 공-발사체 충돌 판정
-- 분열 처리 및 최소 크기 공 제거
+### Phase 2-2. Ball Split Logic
+- Ball-harpoon collision detection
+- Split handling and removal of smallest-size balls
 
-### Phase 2-3. 승패 흐름
-- 공-플레이어 충돌 시 HP 감소, HP 0에서 게임 오버
-- 모든 공 제거 시 스테이지 클리어
+### Phase 2-3. Win/Lose Flow
+- HP decreases on ball-player collision, game over at HP 0
+- Stage clear when all balls are removed
 
-### Phase 2-4. 중력 & 낙하
-- 공의 중력 적용
+### Phase 2-4. Gravity & Falling
+- Apply gravity to balls
 
-### Phase 2-5. 반사
-- 벽/바닥/천장 반사 동작 구현
+### Phase 2-5. Bouncing
+- Implement wall/floor/ceiling bounce behavior
 
-### Phase 2-6. 분열 물리
-- 분열된 공들의 속도/각도 배분 조정
+### Phase 2-6. Split Physics
+- Tune the velocity/angle distribution of split balls
 
-### Phase 2-7. 충돌 정밀도
-- 발사체-공, 공-공 충돌 판정 정밀도 개선
-- 딜타타임 기반 업데이트로 프레임 독립성 확보
+### Phase 2-7. Collision Precision
+- Improve precision of harpoon-ball and ball-ball collision detection
+- Ensure frame independence via delta-time-based updates
 
-## Phase 3. 난이도 & 전략
+## Phase 3. Difficulty & Strategy
 
-### Phase 3-1. 스테이지 밸런스
-- 스테이지별 공 개수/크기/속도 설계
+### Phase 3-1. Stage Balance
+- Design ball count/size/speed per stage
 
-### Phase 3-2. 난이도 곡선
-- 스테이지 진행에 따른 난이도 상승 곡선 구성
+### Phase 3-2. Difficulty Curve
+- Build the difficulty escalation curve across stage progression
 
-### Phase 3-3. 배치 패턴
-- 다양한 공 배치 패턴 설계로 전략적 플레이 유도
+### Phase 3-3. Layout Patterns
+- Design various ball layout patterns to encourage strategic play
 
-### Phase 3-4. 파워업 (선택)
-- 파워업/아이템 요소 검토 및 도입
+### Phase 3-4. Power-ups (optional)
+- Review and introduce power-up/item elements
 
-## Phase 4. 경쟁 요소
+## Phase 4. Competitive Elements
 
-### Phase 4-1. 점수 시스템
-- 콤보, 보너스 등 점수 시스템 고도화
+### Phase 4-1. Scoring System
+- Enhance the scoring system with combos, bonuses, etc.
 
-### Phase 4-2. 기록 저장
-- 최고 점수 로컬 저장
+### Phase 4-2. Record Storage
+- Store the high score locally
 
-### Phase 4-3. 랭킹 (선택)
-- 랭킹/리더보드 형태의 경쟁 요소 검토
+### Phase 4-3. Ranking (optional)
+- Review a ranking/leaderboard-style competitive element
 
-### Phase 4-4. 마무리
-- 사운드/이펙트 등 연출 요소로 완성도 마무리
+### Phase 4-4. Polish
+- Finish up polish with sound/effects and other presentation elements

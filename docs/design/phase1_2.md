@@ -1,12 +1,12 @@
-# Phase 1-2. 게임 선택
+# Phase 1-2. Game Selection
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 메인 화면에서 플레이할 게임/미션을 선택하는 흐름 구현
+- Implement the flow for selecting the game/mission to play from the main screen
 
-## 설계
+## Design
 
-- 현재는 미션이 1개(미션 1)뿐이므로 별도의 선택 화면 없이 메인 화면의 시작 버튼을 누르면 바로 게임 플레이로 진입한다 (Phase 1-3 참고)
-- 이후 미션이 여러 개로 늘어나면 메인 화면과 플레이 화면 사이에 선택 화면을 다시 두는 방식으로 재검토
+- Since there's currently only one mission (Mission 1), pressing the start button on the main screen enters gameplay directly, with no separate selection screen (see Phase 1-3)
+- Once there are multiple missions, revisit this by reintroducing a selection screen between the main screen and the play screen

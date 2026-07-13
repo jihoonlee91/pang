@@ -1,15 +1,15 @@
-# Phase 2-7. 충돌 정밀도
+# Phase 2-7. Collision Precision
 
-> 초안입니다. 세부 사항은 논의 후 확정합니다.
+> This is a draft. Details will be finalized after discussion.
 
-## 목표
+## Goal
 
-- 발사체-공, 공-공 충돌 판정 정밀도 개선
-- 딜타타임 기반 업데이트로 프레임 독립성 확보
+- Improve precision of harpoon-ball and ball-ball collision detection
+- Ensure frame independence via delta-time-based updates
 
-## 설계
+## Design
 
-- 발사체-공: 발사체 x가 공의 반지름 범위 안에 있고, 발사체 y가 공 중심을 지나쳤는지로 판정
-- 공-공: 이번 범위에서는 서로 통과 (공끼리 충돌은 제외, 필요 시 이후 phase에서 검토)
-- 공-플레이어: 원-사각형 근사 거리 판정
-- requestAnimationFrame의 델타타임(ms)을 매 프레임 속도/위치 계산에 곱해 프레임 독립적으로 업데이트
+- Harpoon-ball: determined by whether the harpoon's x is within the ball's radius range and whether the harpoon's y has passed the ball's center
+- Ball-ball: pass through each other within this scope (ball-ball collisions are excluded; revisit in a later phase if needed)
+- Ball-player: determined via an approximate circle-rectangle distance check
+- requestAnimationFrame's delta time (ms) is multiplied into the velocity/position calculations every frame to keep updates frame-independent
