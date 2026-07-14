@@ -236,6 +236,7 @@ type Props = {
 
 const AI_DEADZONE = 10
 const AI_FIRE_TOLERANCE = 18
+const AI_LEAD_TIME = 0.35
 
 type BuffDisplay = {
   doubleWire: number
@@ -359,18 +360,48 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
       lastTime = time
 
       if (!endedRef.current) {
+        const isClockActive = time < clockUntilRef.current
+        const isHourglassActive =
+          !isClockActive && time < hourglassUntilRef.current
+        const maxHarpoons =
+          time < doubleWireUntilRef.current
+            ? MAX_HARPOONS_DOUBLE_WIRE
+            : MAX_HARPOONS_DEFAULT
+
         if (demo) {
           const target = ballsRef.current.reduce<Ball | null>(
             (lowest, b) => (!lowest || b.y > lowest.y ? b : lowest),
             null,
           )
+          // Items fall straight down (x never changes), so no leading is
+          // needed for them — just head toward whichever is lowest/soonest.
+          const itemTarget = itemsRef.current.reduce<Item | null>(
+            (lowest, item) => (!lowest || item.y > lowest.y ? item : lowest),
+            null,
+          )
+          // Lead the ball's predicted position (using its current
+          // horizontal velocity) so the ship arrives in time instead of
+          // reactively chasing where the ball already is.
+          const predictedX =
+            target === null
+              ? playerXRef.current
+              : Math.min(
+                  Math.max(target.x + target.vx * AI_LEAD_TIME, 0),
+                  CANVAS_WIDTH,
+                )
+          // Prioritize grabbing a falling item (safe, since demo mode is
+          // invulnerable anyway) over chasing the next ball to pop.
+          const moveTargetX = itemTarget !== null ? itemTarget.x : predictedX
           const left =
-            target !== null && target.x < playerXRef.current - AI_DEADZONE
+            (itemTarget !== null || target !== null) &&
+            moveTargetX < playerXRef.current - AI_DEADZONE
           const right =
-            target !== null && target.x > playerXRef.current + AI_DEADZONE
+            (itemTarget !== null || target !== null) &&
+            moveTargetX > playerXRef.current + AI_DEADZONE
           const fire =
             target !== null &&
-            Math.abs(target.x - playerXRef.current) < AI_FIRE_TOLERANCE
+            Math.abs(target.x - playerXRef.current) < AI_FIRE_TOLERANCE &&
+            harpoonsRef.current.length < maxHarpoons
           keysRef.current = {
             ArrowLeft: left,
             ArrowRight: right,
@@ -405,14 +436,6 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
               ? dragTargetXRef.current
               : playerXRef.current + Math.sign(diff) * maxStep
         }
-
-        const isClockActive = time < clockUntilRef.current
-        const isHourglassActive =
-          !isClockActive && time < hourglassUntilRef.current
-        const maxHarpoons =
-          time < doubleWireUntilRef.current
-            ? MAX_HARPOONS_DOUBLE_WIRE
-            : MAX_HARPOONS_DEFAULT
 
         if (
           (keys[' '] || fireRequestedRef.current) &&
