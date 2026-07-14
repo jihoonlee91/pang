@@ -15,6 +15,7 @@ import {
   rollItemDrop,
   harpoonHitsBall,
   ballHitsPlayer,
+  predictLandingSpot,
 } from './engine'
 import type { Ball } from './types'
 
@@ -155,5 +156,28 @@ describe('collision helpers', () => {
     const ball: Ball = { id: 1, x: 100, y: PLAYER_Y, vx: 0, vy: 0, level: 2 }
     expect(ballHitsPlayer(ball, 100)).toBe(true)
     expect(ballHitsPlayer(ball, 900)).toBe(false)
+  })
+})
+
+describe('predictLandingSpot', () => {
+  it('predicts a falling ball will land near where its horizontal drift takes it', () => {
+    const ball: Ball = { id: 1, x: 200, y: 100, vx: 100, vy: 0, level: 2 }
+    const { x, time } = predictLandingSpot(ball, 1.5)
+    expect(time).toBeGreaterThan(0)
+    // Roughly x + vx * time, allowing for the small simulation step error.
+    expect(x).toBeCloseTo(200 + 100 * time, 0)
+  })
+
+  it('returns the starting position immediately for a ball with nowhere to fall', () => {
+    const ball: Ball = {
+      id: 1,
+      x: 50,
+      y: CANVAS_HEIGHT - LEVEL_RADIUS[0],
+      vx: 0,
+      vy: 0,
+      level: 0,
+    }
+    const { x } = predictLandingSpot(ball, 0.2)
+    expect(x).toBeCloseTo(50, 0)
   })
 })

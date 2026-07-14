@@ -215,3 +215,34 @@ export function itemHitsPlayer(item: Item, playerX: number): boolean {
   const dy = item.y - closestY
   return dx * dx + dy * dy <= ITEM_RADIUS * ITEM_RADIUS
 }
+
+/**
+ * Forward-simulates a ball with the exact same stepBall physics used by
+ * real gameplay, to find its next "low point" — the x position it will be
+ * at when it's closest to the player's row. Used by the AI/attract mode so
+ * it can aim where a ball will be instead of reactively chasing where it
+ * already is. Returns the predicted x and how many seconds away that is.
+ */
+export function predictLandingSpot(
+  ball: Ball,
+  horizonSec = 1.5,
+  dtSec = 1 / 60,
+): { x: number; time: number } {
+  let sim = ball
+  let bestX = ball.x
+  let bestY = ball.y
+  let bestTime = 0
+  let t = 0
+
+  while (t < horizonSec) {
+    sim = stepBall(sim, dtSec)
+    t += dtSec
+    if (sim.y > bestY) {
+      bestY = sim.y
+      bestX = sim.x
+      bestTime = t
+    }
+  }
+
+  return { x: bestX, time: bestTime }
+}

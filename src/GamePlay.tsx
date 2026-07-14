@@ -36,6 +36,7 @@ import {
   stepItem,
   itemHitsPlayer,
   explodeToSmallest,
+  predictLandingSpot,
 } from './game/engine'
 import type { Ball, Harpoon, Item, ItemType } from './game/types'
 import {
@@ -236,7 +237,6 @@ type Props = {
 
 const AI_DEADZONE = 10
 const AI_FIRE_TOLERANCE = 18
-const AI_LEAD_TIME = 0.35
 
 type BuffDisplay = {
   doubleWire: number
@@ -369,26 +369,27 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
             : MAX_HARPOONS_DEFAULT
 
         if (demo) {
-          const target = ballsRef.current.reduce<Ball | null>(
-            (lowest, b) => (!lowest || b.y > lowest.y ? b : lowest),
-            null,
-          )
+          // Forward-simulate every ball with the real physics to find whose
+          // next low point (closest approach to the player's row) arrives
+          // soonest, and aim for exactly where that will be — not just
+          // where the ball happens to be right now.
+          const prediction = ballsRef.current.reduce<{
+            ball: Ball
+            x: number
+            time: number
+          } | null>((best, b) => {
+            const { x, time } = predictLandingSpot(b)
+            return !best || time < best.time ? { ball: b, x, time } : best
+          }, null)
+          const target = prediction?.ball ?? null
+          const predictedX = prediction?.x ?? playerXRef.current
+
           // Items fall straight down (x never changes), so no leading is
           // needed for them — just head toward whichever is lowest/soonest.
           const itemTarget = itemsRef.current.reduce<Item | null>(
             (lowest, item) => (!lowest || item.y > lowest.y ? item : lowest),
             null,
           )
-          // Lead the ball's predicted position (using its current
-          // horizontal velocity) so the ship arrives in time instead of
-          // reactively chasing where the ball already is.
-          const predictedX =
-            target === null
-              ? playerXRef.current
-              : Math.min(
-                  Math.max(target.x + target.vx * AI_LEAD_TIME, 0),
-                  CANVAS_WIDTH,
-                )
           // Prioritize grabbing a falling item (safe, since demo mode is
           // invulnerable anyway) over chasing the next ball to pop.
           const moveTargetX = itemTarget !== null ? itemTarget.x : predictedX
