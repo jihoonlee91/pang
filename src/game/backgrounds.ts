@@ -8,6 +8,11 @@ export const STAGE_NAMES = [
   'Emerald Temple (Thailand)',
   'Angkor Wat (Cambodia)',
   'Ayers Rock (Australia)',
+  'Taj Mahal (India)',
+  'Pyramids of Giza (Egypt)',
+  'Eiffel Tower (France)',
+  'Big Ben (UK)',
+  'Red Square (Russia)',
 ]
 
 function drawSky(ctx: CanvasRenderingContext2D, top: string, bottom: string) {
@@ -256,12 +261,197 @@ function drawAyersRockBackground(ctx: CanvasRenderingContext2D) {
   drawGround(ctx, '#e0925c', '#b56a3c')
 }
 
+function drawTajMahalBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#ffcf9e', '#ffe9cf')
+
+  ctx.fillStyle = '#fff3d1'
+  ctx.beginPath()
+  ctx.arc(120, 100, 42, 0, Math.PI * 2)
+  ctx.fill()
+
+  const baseY = GROUND_Y
+  const cx = CANVAS_WIDTH / 2
+
+  ctx.fillStyle = '#f2ede1'
+  ctx.fillRect(cx - 160, baseY - 30, 320, 30)
+
+  function minaret(x: number) {
+    ctx.fillRect(x - 8, baseY - 150, 16, 120)
+    ctx.beginPath()
+    ctx.arc(x, baseY - 150, 8, Math.PI, 0)
+    ctx.fill()
+  }
+  ctx.fillStyle = '#f7f2e6'
+  minaret(cx - 150)
+  minaret(cx + 150)
+  minaret(cx - 110)
+  minaret(cx + 110)
+
+  ctx.fillStyle = '#f7f2e6'
+  ctx.fillRect(cx - 90, baseY - 190, 180, 130)
+
+  ctx.beginPath()
+  ctx.arc(cx, baseY - 190, 90, Math.PI, 0)
+  ctx.fill()
+
+  ctx.fillStyle = '#e8dcc0'
+  ctx.beginPath()
+  ctx.arc(cx, baseY - 260, 26, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillRect(cx - 4, baseY - 300, 8, 40)
+
+  drawGround(ctx, '#8fbf9a', '#5c9468')
+}
+
+function drawPyramidsBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#ffd394', '#ffe9c7')
+
+  ctx.fillStyle = '#fff4d6'
+  ctx.beginPath()
+  ctx.arc(CANVAS_WIDTH - 120, 90, 40, 0, Math.PI * 2)
+  ctx.fill()
+
+  const baseY = GROUND_Y
+  const pyramids = [
+    { cx: CANVAS_WIDTH / 2 - 160, height: 170, width: 200, color: '#d9a86a' },
+    { cx: CANVAS_WIDTH / 2 + 120, height: 130, width: 160, color: '#c9925a' },
+    { cx: CANVAS_WIDTH / 2 - 20, height: 210, width: 240, color: '#e0b57a' },
+  ]
+  for (const p of pyramids) {
+    ctx.fillStyle = p.color
+    ctx.beginPath()
+    ctx.moveTo(p.cx - p.width / 2, baseY)
+    ctx.lineTo(p.cx, baseY - p.height)
+    ctx.lineTo(p.cx + p.width / 2, baseY)
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  drawGround(ctx, '#e6c58a', '#c9a35f')
+}
+
+function drawEiffelTowerBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#8ca9d6', '#dbe6f5')
+
+  const baseY = GROUND_Y
+  const cx = CANVAS_WIDTH / 2
+  const topY = baseY - 300
+
+  ctx.fillStyle = '#5b5f6b'
+  ctx.beginPath()
+  ctx.moveTo(cx - 90, baseY)
+  ctx.lineTo(cx - 24, baseY - 140)
+  ctx.lineTo(cx - 30, baseY - 140)
+  ctx.lineTo(cx - 10, baseY - 230)
+  ctx.lineTo(cx - 12, baseY - 230)
+  ctx.lineTo(cx, topY)
+  ctx.lineTo(cx + 12, baseY - 230)
+  ctx.lineTo(cx + 10, baseY - 230)
+  ctx.lineTo(cx + 30, baseY - 140)
+  ctx.lineTo(cx + 24, baseY - 140)
+  ctx.lineTo(cx + 90, baseY)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#5b5f6b'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(cx - 60, baseY - 60)
+  ctx.lineTo(cx + 60, baseY - 60)
+  ctx.moveTo(cx - 35, baseY - 150)
+  ctx.lineTo(cx + 35, baseY - 150)
+  ctx.stroke()
+
+  drawGround(ctx, '#c9c9d1', '#9a9aa5')
+}
+
+function drawBigBenBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#aab4bd', '#d8dee3')
+
+  const baseY = GROUND_Y
+  const cx = CANVAS_WIDTH / 2
+  const towerWidth = 90
+  const towerTop = baseY - 260
+
+  ctx.fillStyle = '#8a7a5c'
+  ctx.fillRect(cx - towerWidth / 2, towerTop, towerWidth, baseY - towerTop)
+
+  ctx.fillStyle = '#a89572'
+  ctx.beginPath()
+  ctx.moveTo(cx - towerWidth / 2 - 6, towerTop)
+  ctx.lineTo(cx, towerTop - 70)
+  ctx.lineTo(cx + towerWidth / 2 + 6, towerTop)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.fillStyle = '#f2ede1'
+  ctx.beginPath()
+  ctx.arc(cx, towerTop + 50, 24, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = '#3a3226'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(cx, towerTop + 50)
+  ctx.lineTo(cx, towerTop + 34)
+  ctx.moveTo(cx, towerTop + 50)
+  ctx.lineTo(cx + 14, towerTop + 50)
+  ctx.stroke()
+
+  drawGround(ctx, '#9aa7ad', '#71818a')
+}
+
+function drawRedSquareBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#8fa8d6', '#c9d8ee')
+
+  const baseY = GROUND_Y
+  const cx = CANVAS_WIDTH / 2
+
+  ctx.fillStyle = '#c94f4f'
+  ctx.fillRect(cx - 200, baseY - 90, 400, 90)
+
+  function onionDome(x: number, height: number, color: string) {
+    const domeBaseY = baseY - 90
+    ctx.fillStyle = '#e8d9b5'
+    ctx.fillRect(x - 12, domeBaseY - height, 24, height)
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.moveTo(x - 18, domeBaseY - height)
+    ctx.quadraticCurveTo(
+      x - 24,
+      domeBaseY - height - 30,
+      x,
+      domeBaseY - height - 46,
+    )
+    ctx.quadraticCurveTo(
+      x + 24,
+      domeBaseY - height - 30,
+      x + 18,
+      domeBaseY - height,
+    )
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  onionDome(cx - 120, 60, '#3b8f4f')
+  onionDome(cx - 60, 90, '#e0a530')
+  onionDome(cx, 130, '#d94f4f')
+  onionDome(cx + 60, 90, '#3f7fc4')
+  onionDome(cx + 120, 60, '#e0a530')
+
+  drawGround(ctx, '#c9c2a8', '#a89e80')
+}
+
 export const BACKGROUNDS = [
   drawJapanBackground,
   drawGuilinBackground,
   drawEmeraldTempleBackground,
   drawAngkorWatBackground,
   drawAyersRockBackground,
+  drawTajMahalBackground,
+  drawPyramidsBackground,
+  drawEiffelTowerBackground,
+  drawBigBenBackground,
+  drawRedSquareBackground,
 ]
 
 export function drawBackground(
