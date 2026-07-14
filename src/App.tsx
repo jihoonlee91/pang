@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import GamePlay from './GamePlay'
+import StageMap from './StageMap'
 import { STAGE_COUNT } from './game/constants'
 import type { StageResult } from './game/types'
 import { getPlayerName, recordScore, renameEntry } from './game/scoreHistory'
 import type { ScoreEntry } from './game/scoreHistory'
 
-type Screen = 'main' | 'countdown' | 'play' | 'end'
+type Screen = 'main' | 'countdown' | 'play' | 'demo' | 'map' | 'end'
 
 const COUNTDOWN_START = 3
 const CONTROLS_SUMMARY =
@@ -27,6 +28,11 @@ function App() {
     setStageIndex(0)
     setCountdown(COUNTDOWN_START)
     setScreen('countdown')
+  }
+
+  const startDemo = () => {
+    setStageIndex(0)
+    setScreen('demo')
   }
 
   useEffect(() => {
@@ -73,6 +79,15 @@ function App() {
     finish('gameover', score)
   }
 
+  // Demo mode loops forever and never records a real score.
+  const handleDemoClear = () => {
+    setStageIndex((stageIndex + 1) % STAGE_COUNT)
+  }
+
+  const handleDemoGameOver = () => {
+    setStageIndex(0)
+  }
+
   const handleNameChange = (name: string) => {
     setPlayerNameState(name)
     setTopScores(renameEntry(playedAt, name).slice(0, 5))
@@ -100,8 +115,26 @@ function App() {
         >
           Start
         </button>
+        <button
+          type="button"
+          className="screen-button screen-button-secondary"
+          onClick={startDemo}
+        >
+          Watch Demo
+        </button>
+        <button
+          type="button"
+          className="screen-button screen-button-secondary"
+          onClick={() => setScreen('map')}
+        >
+          Stage Map
+        </button>
       </div>
     )
+  }
+
+  if (screen === 'map') {
+    return <StageMap onBack={() => setScreen('main')} />
   }
 
   if (screen === 'countdown') {
@@ -120,6 +153,26 @@ function App() {
         onClear={handleClear}
         onGameOver={handleGameOver}
       />
+    )
+  }
+
+  if (screen === 'demo') {
+    return (
+      <div className="gameplay">
+        <GamePlay
+          demo
+          stageIndex={stageIndex}
+          onClear={handleDemoClear}
+          onGameOver={handleDemoGameOver}
+        />
+        <button
+          type="button"
+          className="screen-button screen-button-secondary"
+          onClick={() => setScreen('main')}
+        >
+          Exit Demo
+        </button>
+      </div>
     )
   }
 

@@ -231,7 +231,11 @@ type Props = {
   stageIndex: number
   onClear: (score: number) => void
   onGameOver: (score: number) => void
+  demo?: boolean
 }
+
+const AI_DEADZONE = 10
+const AI_FIRE_TOLERANCE = 18
 
 type BuffDisplay = {
   doubleWire: number
@@ -247,7 +251,7 @@ const NO_BUFFS: BuffDisplay = {
   barrier: 0,
 }
 
-function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
+function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const playerXRef = useRef(CANVAS_WIDTH / 2)
   const ballsRef = useRef<Ball[]>(createStage(stageIndex))
@@ -277,10 +281,16 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
   const hourglassUntilRef = useRef(0)
   const barrierCountRef = useRef(0)
   const buffsDisplayRef = useRef<BuffDisplay>(NO_BUFFS)
+  const aiKeysDisplayRef = useRef({ left: false, right: false, fire: false })
 
   const [hp, setHp] = useState(MAX_HP)
   const [score, setScore] = useState(0)
   const [buffs, setBuffs] = useState<BuffDisplay>(NO_BUFFS)
+  const [aiKeys, setAiKeys] = useState({
+    left: false,
+    right: false,
+    fire: false,
+  })
 
   useEffect(() => {
     ballsRef.current = createStage(stageIndex)
@@ -349,6 +359,35 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
       lastTime = time
 
       if (!endedRef.current) {
+        if (demo) {
+          const target = ballsRef.current.reduce<Ball | null>(
+            (lowest, b) => (!lowest || b.y > lowest.y ? b : lowest),
+            null,
+          )
+          const left =
+            target !== null && target.x < playerXRef.current - AI_DEADZONE
+          const right =
+            target !== null && target.x > playerXRef.current + AI_DEADZONE
+          const fire =
+            target !== null &&
+            Math.abs(target.x - playerXRef.current) < AI_FIRE_TOLERANCE
+          keysRef.current = {
+            ArrowLeft: left,
+            ArrowRight: right,
+            ' ': fire,
+          }
+          const nextAiKeys = { left, right, fire }
+          const prevAiKeys = aiKeysDisplayRef.current
+          if (
+            prevAiKeys.left !== left ||
+            prevAiKeys.right !== right ||
+            prevAiKeys.fire !== fire
+          ) {
+            aiKeysDisplayRef.current = nextAiKeys
+            setAiKeys(nextAiKeys)
+          }
+        }
+
         const keys = keysRef.current
         let vx = 0
         if (keys.ArrowLeft || keys.a || keys.A) vx -= PLAYER_SPEED
@@ -462,7 +501,7 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
           harpoonsRef.current = remainingHarpoons
         }
 
-        if (!isClockActive && time >= invulnUntilRef.current) {
+        if (!demo && !isClockActive && time >= invulnUntilRef.current) {
           const hit = ballsRef.current.some((b) =>
             ballHitsPlayer(b, playerXRef.current),
           )
@@ -678,7 +717,7 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
 
     rafId = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(rafId)
-  }, [stageIndex, onClear, onGameOver])
+  }, [stageIndex, onClear, onGameOver, demo])
 
   return (
     <div className="gameplay">
@@ -696,7 +735,23 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
           </span>
         </div>
         <span className="hud-score">Score {score}</span>
+        {demo && <span className="demo-badge">DEMO</span>}
       </div>
+      {demo && (
+        <div className="ai-key-row">
+          <span className={`ai-key ${aiKeys.left ? 'ai-key-active' : ''}`}>
+            ←
+          </span>
+          <span className={`ai-key ${aiKeys.right ? 'ai-key-active' : ''}`}>
+            →
+          </span>
+          <span
+            className={`ai-key ai-key-fire ${aiKeys.fire ? 'ai-key-active' : ''}`}
+          >
+            SPACE
+          </span>
+        </div>
+      )}
       <div className="gameplay-body">
         <div className="canvas-column">
           <canvas
@@ -705,6 +760,7 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
             height={CANVAS_HEIGHT}
             style={{ border: '1px solid #2e303a', touchAction: 'none' }}
             onPointerDown={(e) => {
+              if (demo) return
               dragRef.current = {
                 startClientX: e.clientX,
                 startPlayerX: playerXRef.current,
@@ -713,6 +769,7 @@ function GamePlay({ stageIndex, onClear, onGameOver }: Props) {
               dragTargetXRef.current = playerXRef.current
             }}
             onPointerMove={(e) => {
+              if (demo) return
               const drag = dragRef.current
               const canvas = canvasRef.current
               if (!drag || !canvas) return
