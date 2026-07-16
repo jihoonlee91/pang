@@ -6,10 +6,29 @@ import { STAGE_COUNT } from './game/constants'
 import type { StageResult } from './game/types'
 import { getPlayerName, recordScore, renameEntry } from './game/scoreHistory'
 import type { ScoreEntry } from './game/scoreHistory'
+import SettingsDialog from './components/SettingsDialog'
+import { loadSettings, saveSettings, type GameSettings } from './game/settings'
+import { configureAudio, unlockAudio } from './game/audio'
 
-type Screen = 'main' | 'countdown' | 'play' | 'demo' | 'map' | 'end'
+type Screen =
+  | 'main'
+  | 'tutorial'
+  | 'countdown'
+  | 'play'
+  | 'stageClear'
+  | 'demo'
+  | 'map'
+  | 'settings'
+  | 'end'
 
 const COUNTDOWN_START = 3
+const TUTORIAL_KEY = 'pang.tutorial.complete.v1'
+const TUTORIAL_STEPS = [
+  'Hold the left and right controls to move.',
+  'Press FIRE or Space to launch a harpoon.',
+  'Pop every ball. Large balls split into smaller ones.',
+  'Avoid the balls: contact costs one HP.',
+]
 const CONTROLS_SUMMARY =
   'Move: ←/→ or A/D · Fire: Space · Touch: drag to move, tap to fire'
 
@@ -23,11 +42,32 @@ function App() {
   const [topScores, setTopScores] = useState<ScoreEntry[]>([])
   const [playedAt, setPlayedAt] = useState('')
   const [playerName, setPlayerNameState] = useState(getPlayerName)
+  const [settings, setSettings] = useState<GameSettings>(loadSettings)
+  const [tutorialStep, setTutorialStep] = useState(0)
 
-  const startCountdown = () => {
+  useEffect(() => {
+    saveSettings(settings)
+    configureAudio(settings)
+    document.documentElement.classList.toggle(
+      'reduced-motion',
+      settings.reducedMotion,
+    )
+  }, [settings])
+
+  const beginCountdown = () => {
+    unlockAudio()
     setStageIndex(0)
     setCountdown(COUNTDOWN_START)
     setScreen('countdown')
+  }
+
+  const startGame = () => {
+    unlockAudio()
+    if (localStorage.getItem(TUTORIAL_KEY) === 'true') beginCountdown()
+    else {
+      setTutorialStep(0)
+      setScreen('tutorial')
+    }
   }
 
   const startDemo = () => {
@@ -69,7 +109,8 @@ function App() {
 
   const handleClear = (score: number) => {
     if (stageIndex + 1 < STAGE_COUNT) {
-      setStageIndex(stageIndex + 1)
+      setFinalScore(score)
+      setScreen('stageClear')
     } else {
       finish('clear', score)
     }
@@ -96,7 +137,7 @@ function App() {
   useEffect(() => {
     if (screen !== 'end') return
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') startCountdown()
+      if (e.key === 'Enter') beginCountdown()
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
@@ -108,11 +149,7 @@ function App() {
       <div className="screen">
         <h1>PANG</h1>
         <p className="controls-summary">{CONTROLS_SUMMARY}</p>
-        <button
-          type="button"
-          className="screen-button"
-          onClick={startCountdown}
-        >
+        <button type="button" className="screen-button" onClick={startGame}>
           Start
         </button>
         <button
@@ -129,12 +166,82 @@ function App() {
         >
           Stage Map
         </button>
+        <button
+          type="button"
+          className="screen-button screen-button-secondary"
+          onClick={() => setScreen('settings')}
+        >
+          Settings
+        </button>
+        {'requestFullscreen' in document.documentElement && (
+          <button
+            type="button"
+            className="screen-button screen-button-secondary"
+            onClick={() => document.documentElement.requestFullscreen()}
+          >
+            Fullscreen
+          </button>
+        )}
       </div>
     )
   }
 
   if (screen === 'map') {
     return <StageMap onBack={() => setScreen('main')} />
+  }
+
+  if (screen === 'settings') {
+    return (
+      <SettingsDialog
+        settings={settings}
+        onChange={setSettings}
+        onClose={() => setScreen('main')}
+        onReplayTutorial={() => {
+          setTutorialStep(0)
+          setScreen('tutorial')
+        }}
+      />
+    )
+  }
+
+  if (screen === 'tutorial') {
+    const isLastStep = tutorialStep === TUTORIAL_STEPS.length - 1
+    return (
+      <div className="screen tutorial-screen">
+        <h1>How to Play</h1>
+        <p className="tutorial-progress">
+          {tutorialStep + 1} / {TUTORIAL_STEPS.length}
+        </p>
+        <p>{TUTORIAL_STEPS[tutorialStep]}</p>
+        <div className="tutorial-controls" aria-hidden="true">
+          {tutorialStep === 0
+            ? '◀  ▶'
+            : tutorialStep === 1
+              ? 'FIRE'
+              : '●  →  • •'}
+        </div>
+        <button
+          type="button"
+          className="screen-button"
+          onClick={() => {
+            if (!isLastStep) setTutorialStep((step) => step + 1)
+            else {
+              localStorage.setItem(TUTORIAL_KEY, 'true')
+              beginCountdown()
+            }
+          }}
+        >
+          {isLastStep ? 'Start Game' : 'Next'}
+        </button>
+        <button
+          type="button"
+          className="screen-button screen-button-secondary"
+          onClick={() => setScreen('main')}
+        >
+          Back
+        </button>
+      </div>
+    )
   }
 
   if (screen === 'countdown') {
@@ -152,7 +259,29 @@ function App() {
         stageIndex={stageIndex}
         onClear={handleClear}
         onGameOver={handleGameOver}
+        onQuit={() => setScreen('main')}
+        settings={settings}
       />
+    )
+  }
+
+  if (screen === 'stageClear') {
+    return (
+      <div className="screen">
+        <h1>Stage Clear</h1>
+        <p className="result-score">Stage Score {finalScore}</p>
+        <button
+          type="button"
+          className="screen-button"
+          onClick={() => {
+            setStageIndex((stage) => stage + 1)
+            setCountdown(COUNTDOWN_START)
+            setScreen('countdown')
+          }}
+        >
+          Next Stage
+        </button>
+      </div>
     )
   }
 
@@ -164,6 +293,8 @@ function App() {
           stageIndex={stageIndex}
           onClear={handleDemoClear}
           onGameOver={handleDemoGameOver}
+          onQuit={() => setScreen('main')}
+          settings={settings}
         />
         <button
           type="button"
@@ -216,7 +347,7 @@ function App() {
           ))}
         </ol>
       )}
-      <button type="button" className="screen-button" onClick={startCountdown}>
+      <button type="button" className="screen-button" onClick={beginCountdown}>
         Retry
       </button>
       <button

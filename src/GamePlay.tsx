@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
@@ -49,6 +49,14 @@ import {
   stopBgm,
 } from './game/audio'
 import { drawBackground, STAGE_NAMES } from './game/backgrounds'
+import { InputController, type InputAction } from './game/input/InputController'
+import type { GameSettings } from './game/settings'
+import TouchControls from './components/TouchControls'
+import {
+  advanceFixedStep,
+  FIXED_DELTA_SECONDS,
+  MAX_FRAME_DELTA_SECONDS,
+} from './game/loop/GameLoop'
 
 const BALL_COLORS = ['#fb7185', '#facc15', '#38bdf8']
 
@@ -233,6 +241,8 @@ type Props = {
   onClear: (score: number) => void
   onGameOver: (score: number) => void
   demo?: boolean
+  settings: GameSettings
+  onQuit: () => void
 }
 
 const AI_DEADZONE = 10
@@ -252,7 +262,14 @@ const NO_BUFFS: BuffDisplay = {
   barrier: 0,
 }
 
-function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
+function GamePlay({
+  stageIndex,
+  onClear,
+  onGameOver,
+  demo = false,
+  settings,
+  onQuit,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const playerXRef = useRef(CANVAS_WIDTH / 2)
   const ballsRef = useRef<Ball[]>(createStage(stageIndex))
@@ -265,7 +282,7 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
   const scoreRef = useRef(0)
   const nextIdRef = useRef(1000 * (stageIndex + 1))
   const nextItemIdRef = useRef(1)
-  const keysRef = useRef<Record<string, boolean>>({})
+  const inputRef = useRef(new InputController())
   const dragRef = useRef<{
     startClientX: number
     startPlayerX: number
@@ -273,6 +290,9 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
   } | null>(null)
   const dragTargetXRef = useRef<number | null>(null)
   const fireRequestedRef = useRef(false)
+  const stageStartScoreRef = useRef(0)
+  const dprRef = useRef(1)
+  const pausedAtRef = useRef<number | null>(null)
   const endedRef = useRef(false)
   const particlesRef = useRef<Particle[]>([])
   const popupsRef = useRef<Popup[]>([])
@@ -286,6 +306,8 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
 
   const [hp, setHp] = useState(MAX_HP)
   const [score, setScore] = useState(0)
+  const [paused, setPaused] = useState(false)
+  const [fps, setFps] = useState(60)
   const [buffs, setBuffs] = useState<BuffDisplay>(NO_BUFFS)
   const [aiKeys, setAiKeys] = useState({
     left: false,
@@ -293,33 +315,89 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
     fire: false,
   })
 
+  const resetStageState = useCallback(
+    (restoreScore: boolean) => {
+      ballsRef.current = createStage(stageIndex)
+      harpoonsRef.current = []
+      itemsRef.current = []
+      hpRef.current = MAX_HP
+      invulnUntilRef.current = 0
+      comboRef.current = 0
+      lastHitAtRef.current = 0
+      endedRef.current = false
+      particlesRef.current = []
+      popupsRef.current = []
+      doubleWireUntilRef.current = 0
+      clockUntilRef.current = 0
+      hourglassUntilRef.current = 0
+      barrierCountRef.current = 0
+      playerXRef.current = CANVAS_WIDTH / 2
+      inputRef.current.releaseAll()
+      dragRef.current = null
+      dragTargetXRef.current = null
+      fireRequestedRef.current = false
+      buffsDisplayRef.current = NO_BUFFS
+      setHp(MAX_HP)
+      setBuffs(NO_BUFFS)
+      if (restoreScore) {
+        scoreRef.current = stageStartScoreRef.current
+        setScore(stageStartScoreRef.current)
+      } else {
+        stageStartScoreRef.current = scoreRef.current
+      }
+    },
+    [stageIndex],
+  )
+
   useEffect(() => {
-    ballsRef.current = createStage(stageIndex)
-    harpoonsRef.current = []
-    itemsRef.current = []
-    hpRef.current = MAX_HP
-    invulnUntilRef.current = 0
-    comboRef.current = 0
-    lastHitAtRef.current = 0
-    endedRef.current = false
-    particlesRef.current = []
-    popupsRef.current = []
-    doubleWireUntilRef.current = 0
-    clockUntilRef.current = 0
-    hourglassUntilRef.current = 0
-    barrierCountRef.current = 0
-    buffsDisplayRef.current = NO_BUFFS
-    setHp(MAX_HP)
-    setBuffs(NO_BUFFS)
-  }, [stageIndex])
+    resetStageState(false)
+    setPaused(false)
+  }, [resetStageState])
+
+  useEffect(() => {
+    if (paused) {
+      pausedAtRef.current = performance.now()
+      return
+    }
+    if (pausedAtRef.current === null) return
+    const pausedFor = performance.now() - pausedAtRef.current
+    invulnUntilRef.current += pausedFor
+    doubleWireUntilRef.current += pausedFor
+    clockUntilRef.current += pausedFor
+    hourglassUntilRef.current += pausedFor
+    lastHitAtRef.current += pausedFor
+    pausedAtRef.current = null
+  }, [paused])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      keysRef.current[e.key] = true
-      if (e.key === ' ') e.preventDefault()
+      if (
+        !demo &&
+        !e.repeat &&
+        (e.key === 'Escape' || e.key.toLowerCase() === 'p')
+      ) {
+        e.preventDefault()
+        inputRef.current.releaseAll()
+        setPaused((value) => !value)
+        return
+      }
+      const key = e.key.toLowerCase()
+      if (key === 'arrowleft' || key === 'a')
+        inputRef.current.set('keyboard-left', 'left', true)
+      if (key === 'arrowright' || key === 'd')
+        inputRef.current.set('keyboard-right', 'right', true)
+      if (key === ' ') {
+        e.preventDefault()
+        inputRef.current.set('keyboard-fire', 'fire', true)
+      }
     }
     const handleKeyUp = (e: KeyboardEvent) => {
-      keysRef.current[e.key] = false
+      const key = e.key.toLowerCase()
+      if (key === 'arrowleft' || key === 'a')
+        inputRef.current.release('keyboard-left')
+      if (key === 'arrowright' || key === 'd')
+        inputRef.current.release('keyboard-right')
+      if (key === ' ') inputRef.current.release('keyboard-fire')
     }
     window.addEventListener('keydown', handleKeyDown)
     window.addEventListener('keyup', handleKeyUp)
@@ -327,12 +405,49 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
       window.removeEventListener('keydown', handleKeyDown)
       window.removeEventListener('keyup', handleKeyUp)
     }
+  }, [demo])
+
+  useEffect(() => {
+    const pauseForLifecycle = () => {
+      inputRef.current.releaseAll()
+      if (!demo) setPaused(true)
+    }
+    const handleVisibility = () => {
+      if (document.hidden) pauseForLifecycle()
+    }
+    window.addEventListener('blur', pauseForLifecycle)
+    window.addEventListener('pagehide', pauseForLifecycle)
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      window.removeEventListener('blur', pauseForLifecycle)
+      window.removeEventListener('pagehide', pauseForLifecycle)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [demo])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const updateBackingStore = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      dprRef.current = dpr
+      const width = Math.round(CANVAS_WIDTH * dpr)
+      const height = Math.round(CANVAS_HEIGHT * dpr)
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width
+        canvas.height = height
+      }
+    }
+    updateBackingStore()
+    window.addEventListener('resize', updateBackingStore)
+    return () => window.removeEventListener('resize', updateBackingStore)
   }, [])
 
   useEffect(() => {
-    startBgm(stageIndex)
+    if (!paused) startBgm(stageIndex)
+    else stopBgm()
     return () => stopBgm()
-  }, [stageIndex])
+  }, [stageIndex, paused])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -342,6 +457,8 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
 
     let rafId: number
     let lastTime: number | null = null
+    let fpsUpdatedAt = 0
+    let accumulator = 0
 
     const nextId = () => {
       nextIdRef.current += 1
@@ -355,297 +472,324 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
 
     const loop = (time: number) => {
       if (lastTime === null) lastTime = time
-      const dtSec = Math.min((time - lastTime) / 1000, 0.05)
+      const frameDeltaSec = Math.min(
+        Math.max((time - lastTime) / 1000, 0),
+        MAX_FRAME_DELTA_SECONDS,
+      )
+      const dtSec = FIXED_DELTA_SECONDS
       const dtMs = dtSec * 1000
       lastTime = time
 
-      if (!endedRef.current) {
-        const isClockActive = time < clockUntilRef.current
-        const isHourglassActive =
-          !isClockActive && time < hourglassUntilRef.current
-        const maxHarpoons =
-          time < doubleWireUntilRef.current
-            ? MAX_HARPOONS_DOUBLE_WIRE
-            : MAX_HARPOONS_DEFAULT
-
-        if (demo) {
-          // Forward-simulate every ball with the real physics to find whose
-          // next low point (closest approach to the player's row) arrives
-          // soonest, and aim for exactly where that will be — not just
-          // where the ball happens to be right now.
-          const prediction = ballsRef.current.reduce<{
-            ball: Ball
-            x: number
-            time: number
-          } | null>((best, b) => {
-            const { x, time } = predictLandingSpot(b)
-            return !best || time < best.time ? { ball: b, x, time } : best
-          }, null)
-          const target = prediction?.ball ?? null
-          const predictedX = prediction?.x ?? playerXRef.current
-
-          // Items fall straight down (x never changes), so no leading is
-          // needed for them — just head toward whichever is lowest/soonest.
-          const itemTarget = itemsRef.current.reduce<Item | null>(
-            (lowest, item) => (!lowest || item.y > lowest.y ? item : lowest),
-            null,
-          )
-          // Prioritize grabbing a falling item (safe, since demo mode is
-          // invulnerable anyway) over chasing the next ball to pop.
-          const moveTargetX = itemTarget !== null ? itemTarget.x : predictedX
-          const left =
-            (itemTarget !== null || target !== null) &&
-            moveTargetX < playerXRef.current - AI_DEADZONE
-          const right =
-            (itemTarget !== null || target !== null) &&
-            moveTargetX > playerXRef.current + AI_DEADZONE
-          const fire =
-            target !== null &&
-            Math.abs(target.x - playerXRef.current) < AI_FIRE_TOLERANCE &&
-            harpoonsRef.current.length < maxHarpoons
-          keysRef.current = {
-            ArrowLeft: left,
-            ArrowRight: right,
-            ' ': fire,
-          }
-          const nextAiKeys = { left, right, fire }
-          const prevAiKeys = aiKeysDisplayRef.current
-          if (
-            prevAiKeys.left !== left ||
-            prevAiKeys.right !== right ||
-            prevAiKeys.fire !== fire
-          ) {
-            aiKeysDisplayRef.current = nextAiKeys
-            setAiKeys(nextAiKeys)
-          }
-        }
-
-        const keys = keysRef.current
-        let vx = 0
-        if (keys.ArrowLeft || keys.a || keys.A) vx -= PLAYER_SPEED
-        if (keys.ArrowRight || keys.d || keys.D) vx += PLAYER_SPEED
-        playerXRef.current = Math.min(
-          Math.max(playerXRef.current + vx * dtSec, PLAYER_WIDTH / 2),
-          CANVAS_WIDTH - PLAYER_WIDTH / 2,
-        )
-
-        if (dragTargetXRef.current !== null) {
-          const diff = dragTargetXRef.current - playerXRef.current
-          const maxStep = PLAYER_SPEED * dtSec
-          playerXRef.current =
-            Math.abs(diff) <= maxStep
-              ? dragTargetXRef.current
-              : playerXRef.current + Math.sign(diff) * maxStep
-        }
-
-        if (
-          (keys[' '] || fireRequestedRef.current) &&
-          harpoonsRef.current.length < maxHarpoons
-        ) {
-          harpoonsRef.current = [
-            ...harpoonsRef.current,
-            { x: playerXRef.current, y: PLAYER_Y },
-          ]
-        }
-        fireRequestedRef.current = false
-
-        harpoonsRef.current = harpoonsRef.current
-          .map((h) => ({ x: h.x, y: h.y - HARPOON_SPEED * dtSec }))
-          .filter((h) => h.y > 0 && !harpoonHitsObstacle(h.x, h.y))
-
-        if (!isClockActive) {
-          const ballDt = isHourglassActive
-            ? dtSec * HOURGLASS_SLOW_FACTOR
-            : dtSec
-          ballsRef.current = ballsRef.current.map((b) => stepBall(b, ballDt))
-        }
-
-        if (harpoonsRef.current.length > 0) {
-          const remainingHarpoons: Harpoon[] = []
-          for (const h of harpoonsRef.current) {
-            const hitIndex = ballsRef.current.findIndex((b) =>
-              harpoonHitsBall(h.x, h.y, b),
-            )
-            if (hitIndex === -1) {
-              remainingHarpoons.push(h)
-              continue
-            }
-
-            const hitBall = ballsRef.current[hitIndex]
-            const children = splitBall(hitBall, nextId)
-
-            if (time - lastHitAtRef.current <= COMBO_WINDOW_MS) {
-              comboRef.current += 1
-            } else {
-              comboRef.current = 0
-            }
-            lastHitAtRef.current = time
-
-            const gained = Math.round(
-              SCORE_BY_LEVEL[hitBall.level] * (1 + comboRef.current * 0.1),
-            )
-            scoreRef.current += gained
-            setScore(scoreRef.current)
-
-            spawnBurst(
-              particlesRef.current,
-              hitBall.x,
-              hitBall.y,
-              BALL_COLORS[hitBall.level],
-            )
-            playHitSound(hitBall.level)
-            popupsRef.current.push({
-              x: hitBall.x,
-              y: hitBall.y,
-              text: `+${gained}`,
-              life: 700,
-              maxLife: 700,
-            })
-
-            ballsRef.current = [
-              ...ballsRef.current.slice(0, hitIndex),
-              ...ballsRef.current.slice(hitIndex + 1),
-              ...children,
-            ]
-
-            const droppedType = rollItemDrop()
-            if (droppedType) {
-              itemsRef.current = [
-                ...itemsRef.current,
-                {
-                  id: nextItemId(),
-                  x: hitBall.x,
-                  y: hitBall.y,
-                  vy: 30,
-                  type: droppedType,
-                },
-              ]
-            }
-          }
-          harpoonsRef.current = remainingHarpoons
-        }
-
-        if (!demo && !isClockActive && time >= invulnUntilRef.current) {
-          const hit = ballsRef.current.some((b) =>
-            ballHitsPlayer(b, playerXRef.current),
-          )
-          if (hit) {
-            invulnUntilRef.current = time + INVULN_MS
-            if (barrierCountRef.current > 0) {
-              barrierCountRef.current -= 1
-            } else {
-              hpRef.current -= 1
-              setHp(hpRef.current)
-              playPlayerHitSound()
-              if (hpRef.current <= 0) {
-                endedRef.current = true
-                playGameOverSound()
-                stopBgm()
-                onGameOver(scoreRef.current)
-              }
-            }
-          }
-        }
-
-        itemsRef.current = itemsRef.current
-          .map((item) => stepItem(item, dtSec))
-          .filter((item) => item.y - ITEM_RADIUS < CANVAS_HEIGHT)
-
-        const pickupIndex = itemsRef.current.findIndex((item) =>
-          itemHitsPlayer(item, playerXRef.current),
-        )
-        if (pickupIndex !== -1) {
-          const picked = itemsRef.current[pickupIndex]
-          itemsRef.current = [
-            ...itemsRef.current.slice(0, pickupIndex),
-            ...itemsRef.current.slice(pickupIndex + 1),
-          ]
-          playItemSound()
-          popupsRef.current.push({
-            x: picked.x,
-            y: picked.y - 16,
-            text: ITEM_ANNOUNCEMENTS[picked.type],
-            life: 900,
-            maxLife: 900,
-            color: ITEM_COLORS[picked.type],
-          })
-
-          switch (picked.type) {
-            case 'doubleWire':
-              doubleWireUntilRef.current = time + DOUBLE_WIRE_DURATION_MS
-              break
-            case 'clock':
-              clockUntilRef.current = time + CLOCK_DURATION_MS
-              break
-            case 'hourglass':
-              hourglassUntilRef.current = time + HOURGLASS_DURATION_MS
-              break
-            case 'barrier':
-              barrierCountRef.current += 1
-              break
-            case 'oneUp':
-              hpRef.current = Math.min(MAX_HP, hpRef.current + 1)
-              setHp(hpRef.current)
-              break
-            case 'dynamite':
-              for (const b of ballsRef.current) {
-                spawnBurst(particlesRef.current, b.x, b.y, BALL_COLORS[b.level])
-              }
-              ballsRef.current = explodeToSmallest(ballsRef.current, nextId)
-              break
-          }
-        }
-
-        const doubleWireSec = Math.max(
-          0,
-          Math.ceil((doubleWireUntilRef.current - time) / 1000),
-        )
-        const clockSec = Math.max(
-          0,
-          Math.ceil((clockUntilRef.current - time) / 1000),
-        )
-        const hourglassSec = Math.max(
-          0,
-          Math.ceil((hourglassUntilRef.current - time) / 1000),
-        )
-        const barrierCount = barrierCountRef.current
-        const prevBuffs = buffsDisplayRef.current
-        if (
-          prevBuffs.doubleWire !== doubleWireSec ||
-          prevBuffs.clock !== clockSec ||
-          prevBuffs.hourglass !== hourglassSec ||
-          prevBuffs.barrier !== barrierCount
-        ) {
-          const nextBuffs: BuffDisplay = {
-            doubleWire: doubleWireSec,
-            clock: clockSec,
-            hourglass: hourglassSec,
-            barrier: barrierCount,
-          }
-          buffsDisplayRef.current = nextBuffs
-          setBuffs(nextBuffs)
-        }
-
-        if (!endedRef.current && ballsRef.current.length === 0) {
-          endedRef.current = true
-          playClearSound()
-          onClear(scoreRef.current)
-        }
+      if (paused) {
+        lastTime = null
+        accumulator = 0
       }
 
-      particlesRef.current = particlesRef.current
-        .map((p) => ({
-          ...p,
-          x: p.x + p.vx * dtSec,
-          y: p.y + p.vy * dtSec,
-          life: p.life - dtMs,
-        }))
-        .filter((p) => p.life > 0)
+      const fixedStep = paused
+        ? { updates: 0, accumulator: 0 }
+        : advanceFixedStep(accumulator, frameDeltaSec)
+      const updateCount = fixedStep.updates
+      accumulator = fixedStep.accumulator
 
-      popupsRef.current = popupsRef.current
-        .map((p) => ({ ...p, y: p.y - 30 * dtSec, life: p.life - dtMs }))
-        .filter((p) => p.life > 0)
+      for (let updateIndex = 0; updateIndex < updateCount; updateIndex += 1) {
+        if (!paused && !endedRef.current) {
+          const isClockActive = time < clockUntilRef.current
+          const isHourglassActive =
+            !isClockActive && time < hourglassUntilRef.current
+          const maxHarpoons =
+            time < doubleWireUntilRef.current
+              ? MAX_HARPOONS_DOUBLE_WIRE
+              : MAX_HARPOONS_DEFAULT
 
+          if (demo) {
+            // Forward-simulate every ball with the real physics to find whose
+            // next low point (closest approach to the player's row) arrives
+            // soonest, and aim for exactly where that will be — not just
+            // where the ball happens to be right now.
+            const prediction = ballsRef.current.reduce<{
+              ball: Ball
+              x: number
+              time: number
+            } | null>((best, b) => {
+              const { x, time } = predictLandingSpot(b)
+              return !best || time < best.time ? { ball: b, x, time } : best
+            }, null)
+            const target = prediction?.ball ?? null
+            const predictedX = prediction?.x ?? playerXRef.current
+
+            // Items fall straight down (x never changes), so no leading is
+            // needed for them — just head toward whichever is lowest/soonest.
+            const itemTarget = itemsRef.current.reduce<Item | null>(
+              (lowest, item) => (!lowest || item.y > lowest.y ? item : lowest),
+              null,
+            )
+            // Prioritize grabbing a falling item (safe, since demo mode is
+            // invulnerable anyway) over chasing the next ball to pop.
+            const moveTargetX = itemTarget !== null ? itemTarget.x : predictedX
+            const left =
+              (itemTarget !== null || target !== null) &&
+              moveTargetX < playerXRef.current - AI_DEADZONE
+            const right =
+              (itemTarget !== null || target !== null) &&
+              moveTargetX > playerXRef.current + AI_DEADZONE
+            const fire =
+              target !== null &&
+              Math.abs(target.x - playerXRef.current) < AI_FIRE_TOLERANCE &&
+              harpoonsRef.current.length < maxHarpoons
+            inputRef.current.set('ai-left', 'left', left)
+            inputRef.current.set('ai-right', 'right', right)
+            inputRef.current.set('ai-fire', 'fire', fire)
+            const nextAiKeys = { left, right, fire }
+            const prevAiKeys = aiKeysDisplayRef.current
+            if (
+              prevAiKeys.left !== left ||
+              prevAiKeys.right !== right ||
+              prevAiKeys.fire !== fire
+            ) {
+              aiKeysDisplayRef.current = nextAiKeys
+              setAiKeys(nextAiKeys)
+            }
+          }
+
+          const keys = inputRef.current.snapshot()
+          let vx = 0
+          if (keys.left) vx -= PLAYER_SPEED
+          if (keys.right) vx += PLAYER_SPEED
+          playerXRef.current = Math.min(
+            Math.max(playerXRef.current + vx * dtSec, PLAYER_WIDTH / 2),
+            CANVAS_WIDTH - PLAYER_WIDTH / 2,
+          )
+
+          if (dragTargetXRef.current !== null) {
+            const diff = dragTargetXRef.current - playerXRef.current
+            const maxStep = PLAYER_SPEED * dtSec
+            playerXRef.current =
+              Math.abs(diff) <= maxStep
+                ? dragTargetXRef.current
+                : playerXRef.current + Math.sign(diff) * maxStep
+          }
+
+          if (
+            (keys.fire ||
+              inputRef.current.consumeFire() ||
+              fireRequestedRef.current) &&
+            harpoonsRef.current.length < maxHarpoons
+          ) {
+            harpoonsRef.current = [
+              ...harpoonsRef.current,
+              { x: playerXRef.current, y: PLAYER_Y },
+            ]
+          }
+          fireRequestedRef.current = false
+
+          harpoonsRef.current = harpoonsRef.current
+            .map((h) => ({ x: h.x, y: h.y - HARPOON_SPEED * dtSec }))
+            .filter((h) => h.y > 0 && !harpoonHitsObstacle(h.x, h.y))
+
+          if (!isClockActive) {
+            const ballDt = isHourglassActive
+              ? dtSec * HOURGLASS_SLOW_FACTOR
+              : dtSec
+            ballsRef.current = ballsRef.current.map((b) => stepBall(b, ballDt))
+          }
+
+          if (harpoonsRef.current.length > 0) {
+            const remainingHarpoons: Harpoon[] = []
+            for (const h of harpoonsRef.current) {
+              const hitIndex = ballsRef.current.findIndex((b) =>
+                harpoonHitsBall(h.x, h.y, b),
+              )
+              if (hitIndex === -1) {
+                remainingHarpoons.push(h)
+                continue
+              }
+
+              const hitBall = ballsRef.current[hitIndex]
+              const children = splitBall(hitBall, nextId)
+
+              if (time - lastHitAtRef.current <= COMBO_WINDOW_MS) {
+                comboRef.current += 1
+              } else {
+                comboRef.current = 0
+              }
+              lastHitAtRef.current = time
+
+              const gained = Math.round(
+                SCORE_BY_LEVEL[hitBall.level] * (1 + comboRef.current * 0.1),
+              )
+              scoreRef.current += gained
+              setScore(scoreRef.current)
+
+              spawnBurst(
+                particlesRef.current,
+                hitBall.x,
+                hitBall.y,
+                BALL_COLORS[hitBall.level],
+              )
+              playHitSound(hitBall.level)
+              if (settings.vibration) navigator.vibrate?.(18)
+              popupsRef.current.push({
+                x: hitBall.x,
+                y: hitBall.y,
+                text: `+${gained}`,
+                life: 700,
+                maxLife: 700,
+              })
+
+              ballsRef.current = [
+                ...ballsRef.current.slice(0, hitIndex),
+                ...ballsRef.current.slice(hitIndex + 1),
+                ...children,
+              ]
+
+              const droppedType = rollItemDrop()
+              if (droppedType) {
+                itemsRef.current = [
+                  ...itemsRef.current,
+                  {
+                    id: nextItemId(),
+                    x: hitBall.x,
+                    y: hitBall.y,
+                    vy: 30,
+                    type: droppedType,
+                  },
+                ]
+              }
+            }
+            harpoonsRef.current = remainingHarpoons
+          }
+
+          if (!demo && !isClockActive && time >= invulnUntilRef.current) {
+            const hit = ballsRef.current.some((b) =>
+              ballHitsPlayer(b, playerXRef.current),
+            )
+            if (hit) {
+              invulnUntilRef.current = time + INVULN_MS
+              if (barrierCountRef.current > 0) {
+                barrierCountRef.current -= 1
+              } else {
+                hpRef.current -= 1
+                setHp(hpRef.current)
+                playPlayerHitSound()
+                if (settings.vibration) navigator.vibrate?.(90)
+                if (hpRef.current <= 0) {
+                  endedRef.current = true
+                  playGameOverSound()
+                  stopBgm()
+                  onGameOver(scoreRef.current)
+                }
+              }
+            }
+          }
+
+          itemsRef.current = itemsRef.current
+            .map((item) => stepItem(item, dtSec))
+            .filter((item) => item.y - ITEM_RADIUS < CANVAS_HEIGHT)
+
+          const pickupIndex = itemsRef.current.findIndex((item) =>
+            itemHitsPlayer(item, playerXRef.current),
+          )
+          if (pickupIndex !== -1) {
+            const picked = itemsRef.current[pickupIndex]
+            itemsRef.current = [
+              ...itemsRef.current.slice(0, pickupIndex),
+              ...itemsRef.current.slice(pickupIndex + 1),
+            ]
+            playItemSound()
+            popupsRef.current.push({
+              x: picked.x,
+              y: picked.y - 16,
+              text: ITEM_ANNOUNCEMENTS[picked.type],
+              life: 900,
+              maxLife: 900,
+              color: ITEM_COLORS[picked.type],
+            })
+
+            switch (picked.type) {
+              case 'doubleWire':
+                doubleWireUntilRef.current = time + DOUBLE_WIRE_DURATION_MS
+                break
+              case 'clock':
+                clockUntilRef.current = time + CLOCK_DURATION_MS
+                break
+              case 'hourglass':
+                hourglassUntilRef.current = time + HOURGLASS_DURATION_MS
+                break
+              case 'barrier':
+                barrierCountRef.current += 1
+                break
+              case 'oneUp':
+                hpRef.current = Math.min(MAX_HP, hpRef.current + 1)
+                setHp(hpRef.current)
+                break
+              case 'dynamite':
+                for (const b of ballsRef.current) {
+                  spawnBurst(
+                    particlesRef.current,
+                    b.x,
+                    b.y,
+                    BALL_COLORS[b.level],
+                  )
+                }
+                ballsRef.current = explodeToSmallest(ballsRef.current, nextId)
+                break
+            }
+          }
+
+          const doubleWireSec = Math.max(
+            0,
+            Math.ceil((doubleWireUntilRef.current - time) / 1000),
+          )
+          const clockSec = Math.max(
+            0,
+            Math.ceil((clockUntilRef.current - time) / 1000),
+          )
+          const hourglassSec = Math.max(
+            0,
+            Math.ceil((hourglassUntilRef.current - time) / 1000),
+          )
+          const barrierCount = barrierCountRef.current
+          const prevBuffs = buffsDisplayRef.current
+          if (
+            prevBuffs.doubleWire !== doubleWireSec ||
+            prevBuffs.clock !== clockSec ||
+            prevBuffs.hourglass !== hourglassSec ||
+            prevBuffs.barrier !== barrierCount
+          ) {
+            const nextBuffs: BuffDisplay = {
+              doubleWire: doubleWireSec,
+              clock: clockSec,
+              hourglass: hourglassSec,
+              barrier: barrierCount,
+            }
+            buffsDisplayRef.current = nextBuffs
+            setBuffs(nextBuffs)
+          }
+
+          if (!endedRef.current && ballsRef.current.length === 0) {
+            endedRef.current = true
+            playClearSound()
+            if (settings.vibration) navigator.vibrate?.([40, 30, 100])
+            onClear(scoreRef.current)
+          }
+        }
+
+        particlesRef.current = particlesRef.current
+          .map((p) => ({
+            ...p,
+            x: p.x + p.vx * dtSec,
+            y: p.y + p.vy * dtSec,
+            life: p.life - dtMs,
+          }))
+          .filter((p) => p.life > 0)
+
+        popupsRef.current = popupsRef.current
+          .map((p) => ({ ...p, y: p.y - 30 * dtSec, life: p.life - dtMs }))
+          .filter((p) => p.life > 0)
+      }
+
+      const dpr = dprRef.current
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
       drawBackground(ctx, stageIndex)
       drawObstacle(ctx)
@@ -736,12 +880,34 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
         ctx.globalAlpha = 1
       }
 
+      if (settings.showFps && time - fpsUpdatedAt > 500) {
+        setFps(Math.round(frameDeltaSec > 0 ? 1 / frameDeltaSec : 60))
+        fpsUpdatedAt = time
+      }
+
       rafId = requestAnimationFrame(loop)
     }
 
     rafId = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(rafId)
-  }, [stageIndex, onClear, onGameOver, demo])
+  }, [
+    stageIndex,
+    onClear,
+    onGameOver,
+    demo,
+    paused,
+    settings.showFps,
+    settings.vibration,
+  ])
+
+  const handleTouchChange = (
+    source: string,
+    action: InputAction,
+    pressed: boolean,
+  ) => {
+    inputRef.current.set(source, action, pressed)
+    if (!pressed) inputRef.current.release(source)
+  }
 
   return (
     <div className="gameplay">
@@ -759,7 +925,22 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
           </span>
         </div>
         <span className="hud-score">Score {score}</span>
+        <span className="hud-combo">Combo ×{comboRef.current}</span>
+        {settings.showFps && <span className="hud-fps">{fps} FPS</span>}
         {demo && <span className="demo-badge">AI</span>}
+        {!demo && (
+          <button
+            type="button"
+            className="hud-button"
+            aria-label="Pause game"
+            onClick={() => {
+              inputRef.current.releaseAll()
+              setPaused(true)
+            }}
+          >
+            Pause
+          </button>
+        )}
       </div>
       {demo && (
         <div className="ai-key-row">
@@ -780,11 +961,11 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
         <div className="canvas-column">
           <canvas
             ref={canvasRef}
-            width={CANVAS_WIDTH}
-            height={CANVAS_HEIGHT}
+            aria-label="PANG game field. Move left and right and fire harpoons to pop every ball."
             style={{ border: '1px solid #2e303a', touchAction: 'none' }}
             onPointerDown={(e) => {
-              if (demo) return
+              if (demo || paused) return
+              e.currentTarget.setPointerCapture(e.pointerId)
               dragRef.current = {
                 startClientX: e.clientX,
                 startPlayerX: playerXRef.current,
@@ -806,19 +987,33 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
                 CANVAS_WIDTH - PLAYER_WIDTH / 2,
               )
             }}
-            onPointerUp={() => {
+            onPointerUp={(e) => {
               if (dragRef.current && !dragRef.current.moved) {
-                fireRequestedRef.current = true
+                inputRef.current.queueFire()
               }
               dragRef.current = null
               dragTargetXRef.current = null
+              if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                e.currentTarget.releasePointerCapture(e.pointerId)
+              }
             }}
-            onPointerLeave={() => {
+            onPointerCancel={() => {
+              dragRef.current = null
+              dragTargetXRef.current = null
+            }}
+            onLostPointerCapture={() => {
               dragRef.current = null
               dragTargetXRef.current = null
             }}
           />
-          <p className="touch-hint">Drag to move &middot; Tap to fire</p>
+          {!demo && (
+            <TouchControls
+              disabled={paused}
+              size={settings.touchButtonSize}
+              opacity={settings.touchButtonOpacity}
+              onChange={handleTouchChange}
+            />
+          )}
         </div>
         <aside className="hint-panel">
           <div>
@@ -871,6 +1066,43 @@ function GamePlay({ stageIndex, onClear, onGameOver, demo = false }: Props) {
           </div>
         </aside>
       </div>
+      {paused && !demo && (
+        <div
+          className="pause-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pause-title"
+        >
+          <div className="pause-panel">
+            <h2 id="pause-title">Paused</h2>
+            <button
+              type="button"
+              className="screen-button"
+              autoFocus
+              onClick={() => setPaused(false)}
+            >
+              Resume
+            </button>
+            <button
+              type="button"
+              className="screen-button screen-button-secondary"
+              onClick={() => {
+                resetStageState(true)
+                setPaused(false)
+              }}
+            >
+              Restart Stage
+            </button>
+            <button
+              type="button"
+              className="screen-button screen-button-secondary"
+              onClick={onQuit}
+            >
+              Quit to Main
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

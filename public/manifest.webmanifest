@@ -1,0 +1,19 @@
+{
+  "name": "PANG World Tour",
+  "short_name": "PANG",
+  "description": "A responsive canvas arcade game",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "theme_color": "#0ea5e9",
+  "background_color": "#7dc8f0",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

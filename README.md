@@ -68,3 +68,11 @@ docs/
 ```
 
 The principle is to reflect design changes in the `docs/` documentation before the code. See `CLAUDE.md` for detailed development rules.
+
+# Mobile and installable play
+
+The game now keeps its original 960×540 physics while adapting the visible Canvas to desktop, phone, and tablet viewports. Mobile play includes multi-touch left/right/fire controls, safe-area support, Retina rendering, explicit pause, automatic lifecycle pause, persistent audio/control settings, reduced-motion support, fullscreen where available, and a production PWA service worker.
+
+Keyboard controls: Left/Right or A/D to move, Space to fire, and Escape or P to pause.
+
+Implementation notes are in `docs/FEATURES/MOBILE_CONTROLS.md`, `RESPONSIVE_LAYOUT.md`, `PAUSE_AND_LIFECYCLE.md`, and `PWA.md`.

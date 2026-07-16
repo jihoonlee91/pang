@@ -1,5 +1,21 @@
+import type { GameSettings } from './settings'
+
 let audioCtx: AudioContext | null = null
 let bgmTimer: ReturnType<typeof setInterval> | null = null
+let masterVolume = 0.8
+let musicVolume = 0.45
+let effectsVolume = 0.8
+
+export function configureAudio(settings: GameSettings) {
+  masterVolume = settings.masterVolume
+  musicVolume = settings.musicVolume
+  effectsVolume = settings.effectsVolume
+}
+
+export function unlockAudio() {
+  const context = getContext()
+  void context?.resume()
+}
 
 function getContext(): AudioContext | null {
   if (typeof window === 'undefined') return null
@@ -8,6 +24,7 @@ function getContext(): AudioContext | null {
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext })
         .webkitAudioContext
+    if (!AudioCtor) return null
     audioCtx = new AudioCtor()
   }
   if (audioCtx.state === 'suspended') {
@@ -22,6 +39,7 @@ function playTone(
   type: OscillatorType,
   volume: number,
   delaySec = 0,
+  music = false,
 ) {
   const ctx = getContext()
   if (!ctx) return
@@ -32,7 +50,8 @@ function playTone(
   osc.frequency.value = freq
 
   const startTime = ctx.currentTime + delaySec
-  gain.gain.setValueAtTime(volume, startTime)
+  const channelVolume = music ? musicVolume : effectsVolume
+  gain.gain.setValueAtTime(volume * masterVolume * channelVolume, startTime)
   gain.gain.exponentialRampToValueAtTime(0.001, startTime + durationSec)
 
   osc.connect(gain)
@@ -86,7 +105,7 @@ export function startBgm(stageIndex = 0) {
   const pattern = BGM_PATTERNS[stageIndex % BGM_PATTERNS.length]
   let i = 0
   bgmTimer = setInterval(() => {
-    playTone(pattern[i % pattern.length], 0.35, 'sine', 0.025)
+    playTone(pattern[i % pattern.length], 0.35, 'sine', 0.025, 0, true)
     i += 1
   }, 400)
 }
