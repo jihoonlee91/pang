@@ -23,8 +23,30 @@ import {
 } from './constants'
 import type { Ball, Item, ItemType } from './types'
 
+const EARLY_STAGE_BALLS: readonly (readonly Omit<Ball, 'id'>[])[] = [
+  [{ x: CANVAS_WIDTH / 2, y: 110, vx: 90, vy: 0, level: 2 }],
+  [
+    { x: CANVAS_WIDTH * 0.32, y: 130, vx: 95, vy: 0, level: 1 },
+    { x: CANVAS_WIDTH * 0.68, y: 130, vx: -95, vy: 0, level: 1 },
+  ],
+  [{ x: CANVAS_WIDTH / 2, y: 105, vx: 105, vy: 0, level: 2 }],
+  [
+    { x: CANVAS_WIDTH * 0.34, y: 105, vx: 110, vy: 0, level: 2 },
+    { x: CANVAS_WIDTH * 0.72, y: 150, vx: -100, vy: 0, level: 1 },
+  ],
+  [
+    { x: CANVAS_WIDTH * 0.34, y: 105, vx: 115, vy: 0, level: 2 },
+    { x: CANVAS_WIDTH * 0.68, y: 105, vx: -115, vy: 0, level: 2 },
+  ],
+]
+
 export function createStage(stageIndex: number): Ball[] {
-  const count = Math.min(stageIndex + 1, 8)
+  const earlyLayout = EARLY_STAGE_BALLS[stageIndex]
+  if (earlyLayout) {
+    return earlyLayout.map((ball, id) => ({ id, ...ball }))
+  }
+
+  const count = Math.min(Math.floor(stageIndex / 2) + 1, 8)
   const speedMultiplier = 1 + stageIndex * 0.15
   const baseVx = 100 * speedMultiplier
   const balls: Ball[] = []

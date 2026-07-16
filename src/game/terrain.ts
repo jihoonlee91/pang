@@ -67,8 +67,30 @@ const EXTRA_PLATFORMS: readonly (readonly Obstacle[])[] = [
   ],
 ]
 
+const EARLY_STAGE_TERRAINS: readonly StageTerrain[] = [
+  { platforms: [], ladders: [] },
+  { platforms: [], ladders: [] },
+  (() => {
+    const platform = { x: 390, y: 270, width: 180, height: 18 }
+    return {
+      platforms: [platform],
+      ladders: [ladderTo(platform, platform.x + platform.width / 2)],
+    }
+  })(),
+  (() => {
+    const platform = { x: 150, y: 310, width: 210, height: 18 }
+    return {
+      platforms: [platform],
+      ladders: [ladderTo(platform, platform.x + 52)],
+    }
+  })(),
+]
+
 export const STAGE_TERRAINS: readonly StageTerrain[] = STAGE_OBSTACLES.map(
   (primary, stageIndex) => {
+    const earlyTerrain = EARLY_STAGE_TERRAINS[stageIndex]
+    if (earlyTerrain) return earlyTerrain
+
     const platforms = [primary, ...EXTRA_PLATFORMS[stageIndex]]
     const ladders = platforms.map((platform, platformIndex) => {
       const inset = 44 + ((stageIndex + platformIndex) % 3) * 42

@@ -39,9 +39,22 @@ describe('createStage', () => {
     expect(balls[0].level).toBe(2)
   })
 
+  it('keeps the second stage simple with two medium balls', () => {
+    const balls = createStage(1)
+    expect(balls).toHaveLength(2)
+    expect(balls.every((ball) => ball.level === 1)).toBe(true)
+  })
+
+  it('introduces difficulty gradually in the early stages', () => {
+    expect(createStage(2)).toHaveLength(1)
+    expect(createStage(3)).toHaveLength(2)
+    expect(createStage(4)).toHaveLength(2)
+  })
+
   it('caps the ball count at 8 for late stages', () => {
-    expect(createStage(6)).toHaveLength(7)
-    expect(createStage(7)).toHaveLength(8)
+    expect(createStage(6)).toHaveLength(4)
+    expect(createStage(7)).toHaveLength(4)
+    expect(createStage(14)).toHaveLength(8)
     expect(createStage(20)).toHaveLength(8)
   })
 })
