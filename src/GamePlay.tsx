@@ -223,6 +223,14 @@ type Popup = {
   color?: string
 }
 
+type PickupEffect = {
+  type: ItemType
+  x: number
+  y: number
+  life: number
+  maxLife: number
+}
+
 function drawObstacle(ctx: CanvasRenderingContext2D, obstacle: Obstacle) {
   const { x, y, width, height } = obstacle
 
@@ -547,6 +555,229 @@ function spawnBurst(
   }
 }
 
+function spawnPickupCelebration(
+  particles: Particle[],
+  effects: PickupEffect[],
+  x: number,
+  y: number,
+  type: ItemType,
+) {
+  const color = ITEM_COLORS[type]
+  const count = 28
+  for (let i = 0; i < count; i += 1) {
+    const angle = (Math.PI * 2 * i) / count
+    const speed = 130 + (i % 4) * 55
+    particles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 35,
+      life: 650,
+      maxLife: 650,
+      color: i % 4 === 0 ? '#ffffff' : color,
+    })
+  }
+  effects.push({ type, x, y, life: 720, maxLife: 720 })
+}
+
+function drawPickupEffect(ctx: CanvasRenderingContext2D, effect: PickupEffect) {
+  const remaining = effect.life / effect.maxLife
+  const progress = 1 - remaining
+  const color = ITEM_COLORS[effect.type]
+  const radius = 24 + progress * 110
+
+  ctx.save()
+  ctx.globalAlpha = remaining * 0.16
+  ctx.fillStyle = color
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+
+  ctx.globalAlpha = remaining
+  ctx.shadowColor = color
+  ctx.shadowBlur = 22
+  ctx.strokeStyle = color
+  ctx.lineWidth = 8 * remaining + 2
+  ctx.beginPath()
+  ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2)
+  ctx.stroke()
+
+  ctx.globalAlpha = remaining * 0.72
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.arc(effect.x, effect.y, radius * 0.72, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.restore()
+}
+
+function drawBarrierShell(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  charges: number,
+  time: number,
+) {
+  ctx.save()
+  const pulse = 1 + Math.sin(time / 150) * 0.04
+  ctx.translate(x, y - 3)
+  ctx.scale(pulse, pulse)
+  ctx.shadowColor = '#facc15'
+  ctx.shadowBlur = 18
+  ctx.fillStyle = 'rgba(250, 204, 21, 0.16)'
+  ctx.strokeStyle = '#fef08a'
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.ellipse(0, 0, 37, 29, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.stroke()
+
+  ctx.strokeStyle = '#f59e0b'
+  ctx.lineWidth = 5
+  ctx.setLineDash([13, 7])
+  ctx.lineDashOffset = -(time / 55)
+  ctx.beginPath()
+  ctx.ellipse(0, 0, 43, 34, 0, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.setLineDash([])
+
+  for (let plate = 0; plate < 6; plate += 1) {
+    const angle = (Math.PI * 2 * plate) / 6
+    const plateX = Math.cos(angle) * 39
+    const plateY = Math.sin(angle) * 30
+    ctx.save()
+    ctx.translate(plateX, plateY)
+    ctx.rotate(angle + Math.PI / 4)
+    ctx.fillStyle = '#facc15'
+    ctx.fillRect(-4, -4, 8, 8)
+    ctx.restore()
+  }
+
+  ctx.fillStyle = '#09091f'
+  ctx.strokeStyle = '#fef08a'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.arc(34, -30, 11, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = '#ffffff'
+  ctx.font = "700 10px 'Galmuri11', monospace"
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(String(charges), 34, -29)
+  ctx.restore()
+}
+
+function drawInvincibleShield(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  time: number,
+) {
+  const rotation = (time / 520) % (Math.PI * 2)
+  ctx.save()
+  ctx.translate(x, y - 4)
+  ctx.shadowColor = '#22d3ee'
+  ctx.shadowBlur = 24
+  ctx.fillStyle = 'rgba(34, 211, 238, 0.14)'
+  ctx.beginPath()
+  ctx.ellipse(0, 0, 45, 36, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  for (let ring = 0; ring < 2; ring += 1) {
+    ctx.save()
+    ctx.rotate(rotation * (ring === 0 ? 1 : -1))
+    ctx.strokeStyle = ring === 0 ? '#67e8f9' : '#f0abfc'
+    ctx.lineWidth = 4
+    ctx.setLineDash([18, 9])
+    ctx.beginPath()
+    ctx.ellipse(0, 0, 45 - ring * 6, 36 - ring * 5, 0, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.restore()
+  }
+
+  for (let spark = 0; spark < 6; spark += 1) {
+    const angle = rotation + (Math.PI * 2 * spark) / 6
+    const sparkX = Math.cos(angle) * 48
+    const sparkY = Math.sin(angle) * 37
+    ctx.fillStyle = spark % 2 === 0 ? '#ffffff' : '#f0abfc'
+    ctx.fillRect(sparkX - 2, sparkY - 2, 4, 4)
+  }
+  ctx.restore()
+}
+
+function drawSpeedTrails(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  time: number,
+) {
+  ctx.save()
+  ctx.strokeStyle = '#2dd4bf'
+  ctx.lineWidth = 3
+  ctx.shadowColor = '#2dd4bf'
+  ctx.shadowBlur = 10
+  for (let trail = 0; trail < 4; trail += 1) {
+    const offset = ((time / 8 + trail * 17) % 54) - 27
+    ctx.globalAlpha = 0.25 + trail * 0.16
+    ctx.beginPath()
+    ctx.moveTo(x - 30 - Math.abs(offset), y - 12 + trail * 7)
+    ctx.lineTo(x - 8, y - 12 + trail * 7)
+    ctx.moveTo(x + 8, y - 12 + trail * 7)
+    ctx.lineTo(x + 30 + Math.abs(offset), y - 12 + trail * 7)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+function drawWeaponAura(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  kind: 'doubleWire' | 'powerWire' | 'vulcan',
+  time: number,
+) {
+  const colors = {
+    doubleWire: '#22d3ee',
+    powerWire: '#facc15',
+    vulcan: '#fb923c',
+  } as const
+  const color = colors[kind]
+  const pulse = 0.6 + Math.sin(time / 95) * 0.22
+
+  ctx.save()
+  ctx.translate(x, y - 23)
+  ctx.shadowColor = color
+  ctx.shadowBlur = 16
+  ctx.strokeStyle = color
+  ctx.fillStyle = color
+  ctx.lineWidth = kind === 'powerWire' ? 4 : 3
+  ctx.globalAlpha = pulse
+
+  if (kind === 'doubleWire') {
+    for (const side of [-1, 1]) {
+      ctx.fillRect(side * 10 - 3, -7, 6, 16)
+      ctx.beginPath()
+      ctx.arc(side * 10, -10, 5, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+  } else if (kind === 'powerWire') {
+    const radius = 11 + ((time / 45) % 9)
+    ctx.beginPath()
+    ctx.arc(0, -3, radius, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.fillRect(-4, -15, 8, 24)
+  } else {
+    ctx.rotate((time / 120) % (Math.PI * 2))
+    for (let barrel = 0; barrel < 4; barrel += 1) {
+      ctx.rotate(Math.PI / 2)
+      ctx.fillRect(-2, -19, 4, 14)
+    }
+    ctx.beginPath()
+    ctx.arc(0, 0, 7, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+}
+
 type Props = {
   stageIndex: number
   initialScore?: number
@@ -629,6 +860,7 @@ function GamePlay({
   const endedRef = useRef(false)
   const particlesRef = useRef<Particle[]>([])
   const popupsRef = useRef<Popup[]>([])
+  const pickupEffectsRef = useRef<PickupEffect[]>([])
 
   const doubleWireUntilRef = useRef(0)
   const powerWireUntilRef = useRef(0)
@@ -667,6 +899,7 @@ function GamePlay({
       endedRef.current = false
       particlesRef.current = []
       popupsRef.current = []
+      pickupEffectsRef.current = []
       doubleWireUntilRef.current = 0
       powerWireUntilRef.current = 0
       vulcanUntilRef.current = 0
@@ -1173,6 +1406,27 @@ function GamePlay({
               invulnUntilRef.current = time + INVULN_MS
               if (barrierCountRef.current > 0) {
                 barrierCountRef.current -= 1
+                spawnBurst(
+                  particlesRef.current,
+                  playerXRef.current,
+                  playerYRef.current - 4,
+                  '#facc15',
+                )
+                pickupEffectsRef.current.push({
+                  type: 'barrier',
+                  x: playerXRef.current,
+                  y: playerYRef.current - 4,
+                  life: 420,
+                  maxLife: 420,
+                })
+                popupsRef.current.push({
+                  x: playerXRef.current,
+                  y: playerYRef.current - 38,
+                  text: 'BLOCK!',
+                  life: 700,
+                  maxLife: 700,
+                  color: '#facc15',
+                })
               } else {
                 hpRef.current -= 1
                 setHp(hpRef.current)
@@ -1218,6 +1472,13 @@ function GamePlay({
               maxLife: 900,
               color: ITEM_COLORS[picked.type],
             })
+            spawnPickupCelebration(
+              particlesRef.current,
+              pickupEffectsRef.current,
+              playerXRef.current,
+              playerYRef.current - 4,
+              picked.type,
+            )
 
             switch (picked.type) {
               case 'doubleWire':
@@ -1370,6 +1631,10 @@ function GamePlay({
         popupsRef.current = popupsRef.current
           .map((p) => ({ ...p, y: p.y - 30 * dtSec, life: p.life - dtMs }))
           .filter((p) => p.life > 0)
+
+        pickupEffectsRef.current = pickupEffectsRef.current
+          .map((effect) => ({ ...effect, life: effect.life - dtMs }))
+          .filter((effect) => effect.life > 0)
       }
 
       const dpr = dprRef.current
@@ -1404,9 +1669,37 @@ function GamePlay({
         ctx.globalAlpha = 1
       }
 
-      const isInvuln =
-        time < invulnUntilRef.current || time < invincibleUntilRef.current
+      for (const effect of pickupEffectsRef.current) {
+        drawPickupEffect(ctx, effect)
+      }
+
+      const hasInvincibleShield = time < invincibleUntilRef.current
+      const hasSpeedTrails = time < speedBoostUntilRef.current
+      const weaponAura =
+        time < vulcanUntilRef.current
+          ? 'vulcan'
+          : time < powerWireUntilRef.current
+            ? 'powerWire'
+            : time < doubleWireUntilRef.current
+              ? 'doubleWire'
+              : null
+      const isInvuln = time < invulnUntilRef.current || hasInvincibleShield
       const playerY = playerYRef.current
+      if (hasSpeedTrails) {
+        drawSpeedTrails(ctx, playerXRef.current, playerY, time)
+      }
+      if (barrierCountRef.current > 0) {
+        drawBarrierShell(
+          ctx,
+          playerXRef.current,
+          playerY,
+          barrierCountRef.current,
+          time,
+        )
+      }
+      if (weaponAura) {
+        drawWeaponAura(ctx, playerXRef.current, playerY, weaponAura, time)
+      }
       const playerGradient = ctx.createLinearGradient(
         0,
         playerY - PLAYER_HEIGHT / 2,
@@ -1451,6 +1744,10 @@ function GamePlay({
       ctx.closePath()
       ctx.fill()
       ctx.restore()
+
+      if (hasInvincibleShield) {
+        drawInvincibleShield(ctx, playerXRef.current, playerY, time)
+      }
 
       ctx.font = "12px 'Galmuri11', monospace"
       ctx.textAlign = 'center'
