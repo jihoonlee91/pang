@@ -22,43 +22,84 @@ export type PortalTransition = {
   to: Portal
 }
 
+type PortalCoordinates = readonly [
+  entryX: number,
+  entryY: number,
+  exitX: number,
+  exitY: number,
+]
+
+const PORTAL_LAYOUTS: readonly (readonly PortalCoordinates[])[] = [
+  [[120, 150, 830, 360]],
+  [
+    [180, 330, 760, 130],
+    [390, 120, 610, 390],
+  ],
+  [[90, 250, 870, 210]],
+  [
+    [140, 120, 820, 400],
+    [320, 350, 650, 150],
+    [460, 110, 510, 390],
+  ],
+  [
+    [220, 170, 730, 330],
+    [110, 390, 850, 120],
+  ],
+  [
+    [130, 210, 820, 170],
+    [330, 110, 670, 400],
+    [430, 350, 540, 150],
+  ],
+  [[210, 120, 770, 400]],
+  [
+    [100, 350, 860, 140],
+    [380, 180, 610, 360],
+  ],
+  [
+    [160, 400, 800, 110],
+    [300, 140, 690, 330],
+    [440, 100, 520, 410],
+  ],
+  [
+    [120, 130, 840, 380],
+    [350, 400, 640, 120],
+  ],
+]
+
+const PORTAL_COLORS = [
+  ['#22d3ee', '#f472b6'],
+  ['#a78bfa', '#facc15'],
+  ['#34d399', '#fb7185'],
+] as const
+
 export function getStagePortals(stageIndex: number): readonly PortalPair[] {
   if (stageIndex < PORTAL_START_STAGE) return []
 
-  const offset = stageIndex - PORTAL_START_STAGE
-  const firstPair: PortalPair = {
-    entry: {
-      x: 125 + (offset % 3) * 34,
-      y: 155 + (offset % 4) * 34,
-      color: '#22d3ee',
-      label: 'A',
+  const layoutIndex = Math.min(
+    PORTAL_LAYOUTS.length - 1,
+    stageIndex - PORTAL_START_STAGE,
+  )
+  return PORTAL_LAYOUTS[layoutIndex].map(
+    ([entryX, entryY, exitX, exitY], pairIndex) => {
+      const [entryColor, exitColor] =
+        PORTAL_COLORS[pairIndex % PORTAL_COLORS.length]
+      const label = String.fromCharCode(65 + pairIndex)
+      return {
+        entry: {
+          x: entryX,
+          y: entryY,
+          color: entryColor,
+          label,
+        },
+        exit: {
+          x: exitX,
+          y: exitY,
+          color: exitColor,
+          label,
+        },
+      }
     },
-    exit: {
-      x: 835 - (offset % 3) * 38,
-      y: 350 - (offset % 4) * 30,
-      color: '#f472b6',
-      label: 'A',
-    },
-  }
-
-  if (stageIndex < 25) return [firstPair]
-
-  const secondPair: PortalPair = {
-    entry: {
-      x: 350 + (offset % 2) * 48,
-      y: 120 + (offset % 3) * 38,
-      color: '#a78bfa',
-      label: 'B',
-    },
-    exit: {
-      x: 610 - (offset % 2) * 42,
-      y: 390 - (offset % 3) * 42,
-      color: '#facc15',
-      label: 'B',
-    },
-  }
-
-  return [firstPair, secondPair]
+  )
 }
 
 export function findPortalTransition(

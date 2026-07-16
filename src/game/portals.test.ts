@@ -9,12 +9,26 @@ describe('dimension portals', () => {
     expect(BACKGROUNDS).toHaveLength(30)
   })
 
-  it('starts with one pair at stage 21 and adds a second pair at stage 26', () => {
+  it('changes the portal count on every dimension stage', () => {
+    const expectedCounts = [1, 2, 1, 3, 2, 3, 1, 2, 3, 2]
     expect(getStagePortals(19)).toHaveLength(0)
-    expect(getStagePortals(20)).toHaveLength(1)
-    expect(getStagePortals(24)).toHaveLength(1)
-    expect(getStagePortals(25)).toHaveLength(2)
-    expect(getStagePortals(29)).toHaveLength(2)
+    expect(
+      expectedCounts.map((_, offset) => getStagePortals(20 + offset).length),
+    ).toEqual(expectedCounts)
+    for (let stage = 1; stage < expectedCounts.length; stage += 1) {
+      expect(expectedCounts[stage]).not.toBe(expectedCounts[stage - 1])
+    }
+  })
+
+  it('uses a distinct portal position layout for every dimension stage', () => {
+    const layoutSignatures = Array.from({ length: 10 }, (_, offset) =>
+      getStagePortals(20 + offset)
+        .flatMap((pair) => [pair.entry, pair.exit])
+        .map((portal) => `${portal.x},${portal.y}`)
+        .join('|'),
+    )
+
+    expect(new Set(layoutSignatures).size).toBe(layoutSignatures.length)
   })
 
   it('detects contact with either side of a portal pair', () => {

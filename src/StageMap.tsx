@@ -5,7 +5,7 @@ import {
   BACKGROUND_READY_EVENT,
   STAGE_NAMES,
 } from './game/backgrounds'
-import { PORTAL_START_STAGE } from './game/portals'
+import { PORTAL_START_STAGE, getStagePortals } from './game/portals'
 
 type ThumbnailProps = {
   stageIndex: number
@@ -105,6 +105,7 @@ function StageMap({
           const isCleared = currentStage !== undefined && i < currentStage
           const isLocked = Boolean(onStartStage) && i > highestUnlockedStage
           const isPortalStage = i >= PORTAL_START_STAGE
+          const portalCount = isPortalStage ? getStagePortals(i).length : 0
           const card = (
             <div
               className={`stage-map-card ${isCleared ? 'stage-map-card-cleared' : ''} ${isCurrent ? 'stage-map-card-current' : ''} ${isNext ? 'stage-map-card-next' : ''} ${selectedStage === i ? 'stage-map-card-selected' : ''} ${isLocked ? 'stage-map-card-locked' : ''}`}
@@ -131,7 +132,7 @@ function StageMap({
                 )}
                 {isPortalStage && (
                   <span className="stage-map-badge stage-map-badge-portal">
-                    PORTAL ZONE
+                    PORTAL ×{portalCount}
                   </span>
                 )}
               </div>
