@@ -399,7 +399,7 @@
 .touch-dpad {
   display: grid;
   grid-template-columns: repeat(3, var(--touch-size));
-  grid-template-rows: repeat(2, var(--touch-size));
+  grid-template-rows: repeat(3, var(--touch-size));
   gap: 8px;
   align-items: center;
   justify-items: center;
@@ -417,7 +417,7 @@
 
 .touch-down {
   grid-column: 2;
-  grid-row: 2;
+  grid-row: 3;
 }
 
 .touch-right {
@@ -683,7 +683,7 @@
 
   .touch-dpad {
     grid-template-columns: repeat(3, min(var(--touch-size), 58px));
-    grid-template-rows: repeat(2, min(var(--touch-size), 58px));
+    grid-template-rows: repeat(3, min(var(--touch-size), 58px));
     gap: 5px;
   }
 
