@@ -269,6 +269,82 @@ function drawObstacle(ctx: CanvasRenderingContext2D, obstacle: Obstacle) {
   }
 }
 
+function drawBrickFrame(ctx: CanvasRenderingContext2D) {
+  const thickness = 12
+  const rows = 2
+  const mortar = 2
+  const horizontalBrick = 38
+  const verticalBrick = 28
+  const rowSize = thickness / rows
+
+  ctx.save()
+  ctx.fillStyle = '#431407'
+  ctx.fillRect(0, 0, CANVAS_WIDTH, thickness)
+  ctx.fillRect(0, CANVAS_HEIGHT - thickness, CANVAS_WIDTH, thickness)
+  ctx.fillRect(0, thickness, thickness, CANVAS_HEIGHT - thickness * 2)
+  ctx.fillRect(
+    CANVAS_WIDTH - thickness,
+    thickness,
+    thickness,
+    CANVAS_HEIGHT - thickness * 2,
+  )
+
+  const drawBrick = (x: number, y: number, width: number, height: number) => {
+    const gradient = ctx.createLinearGradient(0, y, 0, y + height)
+    gradient.addColorStop(0, '#fb923c')
+    gradient.addColorStop(0.25, '#c2410c')
+    gradient.addColorStop(1, '#7c2d12')
+    ctx.fillStyle = gradient
+    ctx.fillRect(x, y, width, height)
+    ctx.strokeStyle = '#2a0c04'
+    ctx.lineWidth = 1
+    ctx.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1)
+  }
+
+  for (let row = 0; row < rows; row += 1) {
+    const offset = row % 2 === 0 ? 0 : -horizontalBrick / 2
+    for (let x = offset; x < CANVAS_WIDTH; x += horizontalBrick) {
+      const brickWidth = Math.min(horizontalBrick - mortar, CANVAS_WIDTH - x)
+      if (brickWidth <= 0) continue
+      drawBrick(x, row * rowSize, brickWidth, rowSize - mortar)
+      drawBrick(
+        x,
+        CANVAS_HEIGHT - thickness + row * rowSize,
+        brickWidth,
+        rowSize - mortar,
+      )
+    }
+  }
+
+  for (let column = 0; column < rows; column += 1) {
+    const offset = column % 2 === 0 ? thickness : thickness - verticalBrick / 2
+    for (let y = offset; y < CANVAS_HEIGHT - thickness; y += verticalBrick) {
+      const brickHeight = Math.min(
+        verticalBrick - mortar,
+        CANVAS_HEIGHT - thickness - y,
+      )
+      if (brickHeight <= 0) continue
+      drawBrick(column * rowSize, y, rowSize - mortar, brickHeight)
+      drawBrick(
+        CANVAS_WIDTH - thickness + column * rowSize,
+        y,
+        rowSize - mortar,
+        brickHeight,
+      )
+    }
+  }
+
+  ctx.strokeStyle = '#f59e0b'
+  ctx.lineWidth = 2
+  ctx.strokeRect(
+    thickness,
+    thickness,
+    CANVAS_WIDTH - thickness * 2,
+    CANVAS_HEIGHT - thickness * 2,
+  )
+  ctx.restore()
+}
+
 function drawHarpoon(ctx: CanvasRenderingContext2D, harpoon: Harpoon) {
   if (harpoon.kind === 'vulcan') {
     ctx.save()
@@ -1292,6 +1368,8 @@ function GamePlay({
         ctx.fillText(p.text, p.x, p.y)
         ctx.globalAlpha = 1
       }
+
+      drawBrickFrame(ctx)
 
       if (settings.showFps && time - fpsUpdatedAt > 500) {
         setFps(Math.round(frameDeltaSec > 0 ? 1 / frameDeltaSec : 60))
