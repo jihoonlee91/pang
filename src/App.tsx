@@ -113,6 +113,14 @@ function App() {
     setScreen('demo')
   }
 
+  const startAtStage = (selectedStage: number) => {
+    unlockAudio()
+    setStageIndex(selectedStage)
+    setFinalScore(0)
+    setCountdown(COUNTDOWN_START)
+    setScreen('countdown')
+  }
+
   useEffect(() => {
     if (screen !== 'countdown') return
     if (countdown <= 0) {
@@ -280,7 +288,9 @@ function App() {
   }
 
   if (screen === 'map') {
-    return <StageMap onBack={() => setScreen('main')} />
+    return (
+      <StageMap onBack={() => setScreen('main')} onStartStage={startAtStage} />
+    )
   }
 
   if (screen === 'settings') {

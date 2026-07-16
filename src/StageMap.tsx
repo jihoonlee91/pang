@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CANVAS_WIDTH, CANVAS_HEIGHT, STAGE_COUNT } from './game/constants'
 import { BACKGROUNDS, STAGE_NAMES } from './game/backgrounds'
 
@@ -36,6 +36,7 @@ type Props = {
   actionLabel?: string
   onAction?: () => void
   compact?: boolean
+  onStartStage?: (stageIndex: number) => void
 }
 
 function StageMap({
@@ -47,22 +48,31 @@ function StageMap({
   actionLabel,
   onAction,
   compact = false,
+  onStartStage,
 }: Props) {
+  const [selectedStage, setSelectedStage] = useState<number | null>(null)
+
   return (
     <div
       className={`screen stage-map-screen ${compact ? 'stage-map-transition' : ''}`}
     >
       <h1>{title}</h1>
       {statusText && <p className="stage-map-status">{statusText}</p>}
+      {onStartStage && (
+        <p className="stage-map-status">
+          {selectedStage === null
+            ? 'Choose a stage to start'
+            : `Stage ${selectedStage + 1} selected`}
+        </p>
+      )}
       <div className="stage-map-grid">
         {Array.from({ length: STAGE_COUNT }, (_, i) => {
           const isCurrent = i === currentStage
           const isNext = i === nextStage
           const isCleared = currentStage !== undefined && i < currentStage
-          return (
+          const card = (
             <div
-              className={`stage-map-card ${isCleared ? 'stage-map-card-cleared' : ''} ${isCurrent ? 'stage-map-card-current' : ''} ${isNext ? 'stage-map-card-next' : ''}`}
-              key={i}
+              className={`stage-map-card ${isCleared ? 'stage-map-card-cleared' : ''} ${isCurrent ? 'stage-map-card-current' : ''} ${isNext ? 'stage-map-card-next' : ''} ${selectedStage === i ? 'stage-map-card-selected' : ''}`}
               aria-current={isCurrent ? 'step' : undefined}
             >
               <div className="stage-thumb-wrap">
@@ -84,9 +94,39 @@ function StageMap({
               </p>
             </div>
           )
+
+          return onStartStage ? (
+            <button
+              type="button"
+              className="stage-map-card-button"
+              aria-pressed={selectedStage === i}
+              onClick={() => setSelectedStage(i)}
+              key={i}
+            >
+              {card}
+            </button>
+          ) : (
+            <div className="stage-map-card-static" key={i}>
+              {card}
+            </div>
+          )
         })}
       </div>
       <div className="stage-map-actions">
+        {onStartStage && (
+          <button
+            type="button"
+            className="screen-button"
+            disabled={selectedStage === null}
+            onClick={() => {
+              if (selectedStage !== null) onStartStage(selectedStage)
+            }}
+          >
+            {selectedStage === null
+              ? 'Select a Stage'
+              : `Start Stage ${selectedStage + 1}`}
+          </button>
+        )}
         {onAction && actionLabel && (
           <button type="button" className="screen-button" onClick={onAction}>
             {actionLabel}

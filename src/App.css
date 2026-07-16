@@ -1345,6 +1345,57 @@
   box-shadow: 0 10px 24px rgba(2, 8, 23, 0.2);
 }
 
+.stage-map-card-button,
+.stage-map-card-static {
+  min-width: 0;
+}
+
+.stage-map-card-button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.stage-map-card-button .stage-map-card,
+.stage-map-card-static .stage-map-card {
+  height: 100%;
+}
+
+.stage-map-card-button:hover .stage-map-card {
+  border-color: #67e8f9;
+  background: rgba(8, 145, 178, 0.22);
+  transform: translateY(-4px);
+}
+
+.stage-map-card-button:focus-visible {
+  border-radius: 14px;
+  outline: 3px solid #fef08a;
+  outline-offset: 4px;
+}
+
+.stage-map-card-selected,
+.stage-map-card-button:hover .stage-map-card-selected {
+  border-color: #facc15;
+  background: rgba(133, 77, 14, 0.48);
+  box-shadow:
+    0 0 0 4px rgba(250, 204, 21, 0.2),
+    0 18px 36px rgba(2, 8, 23, 0.38),
+    0 0 26px rgba(250, 204, 21, 0.2);
+  transform: translateY(-5px);
+}
+
+.screen-button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+  opacity: 0.52;
+  transform: none;
+  box-shadow: 0 3px 0 rgba(2, 8, 23, 0.55);
+}
+
 .stage-map-card p {
   color: #bae6fd;
 }
