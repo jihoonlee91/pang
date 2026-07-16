@@ -20,6 +20,7 @@ import {
   ballHitsPlayer,
   predictLandingSpot,
   harpoonHitsObstacle,
+  getPowerHarpoonStopY,
 } from './engine'
 import type { Ball } from './types'
 
@@ -67,6 +68,16 @@ describe('stage obstacles', () => {
         stageTwoObstacle,
       ),
     ).toBe(false)
+  })
+
+  it('stops a power harpoon below an obstacle instead of piercing it', () => {
+    const obstacle = getStageObstacle(0)
+    const blockedX = obstacle.x + obstacle.width / 2
+
+    expect(getPowerHarpoonStopY(blockedX, obstacle)).toBe(
+      obstacle.y + obstacle.height,
+    )
+    expect(getPowerHarpoonStopY(obstacle.x - 20, obstacle)).toBe(0)
   })
 })
 

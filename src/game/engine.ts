@@ -134,6 +134,15 @@ export function harpoonHitsObstacle(
   )
 }
 
+export function getPowerHarpoonStopY(
+  harpoonX: number,
+  obstacle: Obstacle,
+): number {
+  const crossesObstacle =
+    harpoonX > obstacle.x && harpoonX < obstacle.x + obstacle.width
+  return crossesObstacle ? obstacle.y + obstacle.height : 0
+}
+
 export function splitBall(ball: Ball, nextId: () => number): Ball[] {
   if (ball.level === 0) return []
 

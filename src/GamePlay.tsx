@@ -48,6 +48,7 @@ import {
   splitBall,
   harpoonHitsBall,
   harpoonHitsObstacle,
+  getPowerHarpoonStopY,
   ballHitsPlayer,
   rollItemDrop,
   stepItem,
@@ -179,7 +180,8 @@ const ITEM_TITLES: Record<ItemType, string> = {
 
 const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
   doubleWire: '12초 동안 작살을 2개까지 동시에 발사합니다.',
-  powerWire: '12초 동안 천장까지 닿아 5초간 남는 강화 작살을 발사합니다.',
+  powerWire:
+    '12초 동안 장애물이나 천장까지 닿아 5초간 남는 강화 작살을 발사합니다.',
   vulcan: '12초 동안 빠른 탄환을 연속 발사합니다.',
   clock: '6초 동안 모든 공의 움직임을 멈춥니다.',
   hourglass: '8초 동안 모든 공을 느리게 만듭니다.',
@@ -820,7 +822,7 @@ function GamePlay({
             const newHarpoon: Harpoon = isPowerWireActive
               ? {
                   x: playerXRef.current,
-                  y: 0,
+                  y: getPowerHarpoonStopY(playerXRef.current, obstacle),
                   kind: 'powerWire',
                   expiresAt: time + POWER_WIRE_STAY_MS,
                 }

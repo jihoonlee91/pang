@@ -3,7 +3,7 @@
 This implementation keeps the existing mobile-friendly HP system while restoring several recognizable arcade mechanics from the 1989 game:
 
 - Every stage has a 90-second limit. Running out of time ends the run, while clearing early awards 10 points per remaining second.
-- Power Harpoon (`P`) instantly reaches the ceiling and remains for five seconds or until a balloon touches the wire.
+- Power Harpoon (`P`) instantly reaches the first obstacle or the ceiling and remains for five seconds or until a balloon touches the wire.
 - Vulcan (`V`) fires up to five fast projectiles at 120 ms intervals. Its shots use point-projectile collision rather than the full persistent-wire collision.
 - Double Wire, Clock, Hourglass, Barrier, 1UP, and Dynamite remain available. Picking up a weapon replaces the previous weapon mode.
 - Speed Boost (`S`) increases movement speed by 60% for 10 seconds, while Invincible (`I`) prevents collision damage for 8 seconds.
