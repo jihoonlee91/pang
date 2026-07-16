@@ -5,6 +5,7 @@ import {
   useState,
   type CSSProperties,
 } from 'react'
+import { createPortal } from 'react-dom'
 import {
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
@@ -1355,9 +1356,26 @@ function GamePlay({
         </span>
         <span className="hud-score">Total Score {score}</span>
         <span className="hud-combo">Combo ×{comboRef.current}</span>
-        {(TIMED_BUFF_KEYS.some((key) => buffs[key] > 0) ||
-          buffs.barrier > 0) && (
-          <div className="hud-buffs" aria-label="Active item effects">
+        {settings.showFps && <span className="hud-fps">{fps} FPS</span>}
+        {demo && <span className="demo-badge">AI</span>}
+        {!demo && (
+          <button
+            type="button"
+            className="hud-button"
+            aria-label="Pause game"
+            onClick={() => {
+              inputRef.current.releaseAll()
+              setPaused(true)
+            }}
+          >
+            Pause
+          </button>
+        )}
+      </div>
+      {!itemNotice &&
+        (TIMED_BUFF_KEYS.some((key) => buffs[key] > 0) || buffs.barrier > 0) &&
+        createPortal(
+          <div className="hud-buffs-overlay" aria-label="Active item effects">
             {TIMED_BUFF_KEYS.filter((key) => buffs[key] > 0).map((key) => (
               <span
                 className="buff-timer"
@@ -1385,44 +1403,31 @@ function GamePlay({
                 <strong>×{buffs.barrier}</strong>
               </span>
             )}
-          </div>
+          </div>,
+          document.body,
         )}
-        {settings.showFps && <span className="hud-fps">{fps} FPS</span>}
-        {demo && <span className="demo-badge">AI</span>}
-        {!demo && (
-          <button
-            type="button"
-            className="hud-button"
-            aria-label="Pause game"
-            onClick={() => {
-              inputRef.current.releaseAll()
-              setPaused(true)
-            }}
+      {itemNotice &&
+        createPortal(
+          <div
+            className="item-notice"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
           >
-            Pause
-          </button>
+            <span
+              className="item-notice-icon"
+              style={{ backgroundColor: ITEM_COLORS[itemNotice] }}
+              aria-hidden="true"
+            >
+              {ITEM_LABELS[itemNotice]}
+            </span>
+            <span className="item-notice-copy">
+              <strong>{ITEM_TITLES[itemNotice]} 획득!</strong>
+              <span>{ITEM_DESCRIPTIONS[itemNotice]}</span>
+            </span>
+          </div>,
+          document.body,
         )}
-      </div>
-      {itemNotice && (
-        <div
-          className="item-notice"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          <span
-            className="item-notice-icon"
-            style={{ backgroundColor: ITEM_COLORS[itemNotice] }}
-            aria-hidden="true"
-          >
-            {ITEM_LABELS[itemNotice]}
-          </span>
-          <span className="item-notice-copy">
-            <strong>{ITEM_TITLES[itemNotice]} 획득!</strong>
-            <span>{ITEM_DESCRIPTIONS[itemNotice]}</span>
-          </span>
-        </div>
-      )}
       {demo && (
         <div className="ai-key-row">
           <span className={`ai-key ${aiKeys.left ? 'ai-key-active' : ''}`}>
