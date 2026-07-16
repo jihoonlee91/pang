@@ -22,6 +22,7 @@ type Screen =
   | 'end'
 
 const COUNTDOWN_START = 3
+const STAGE_ADVANCE_COUNTDOWN = 5
 const TUTORIAL_KEY = 'pang.tutorial.complete.v1'
 const TUTORIAL_STEPS = [
   'Hold the left and right controls to move.',
@@ -44,7 +45,9 @@ function App() {
   const [playerName, setPlayerNameState] = useState(getPlayerName)
   const [settings, setSettings] = useState<GameSettings>(loadSettings)
   const [tutorialStep, setTutorialStep] = useState(0)
-  const [stageAdvanceCountdown, setStageAdvanceCountdown] = useState(3)
+  const [stageAdvanceCountdown, setStageAdvanceCountdown] = useState(
+    STAGE_ADVANCE_COUNTDOWN,
+  )
 
   useEffect(() => {
     saveSettings(settings)
@@ -170,7 +173,7 @@ function App() {
   const handleClear = (score: number) => {
     if (stageIndex + 1 < STAGE_COUNT) {
       setFinalScore(score)
-      setStageAdvanceCountdown(3)
+      setStageAdvanceCountdown(STAGE_ADVANCE_COUNTDOWN)
       setScreen('stageClear')
     } else {
       finish('clear', score)
