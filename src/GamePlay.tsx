@@ -78,7 +78,7 @@ import {
   MAX_FRAME_DELTA_SECONDS,
 } from './game/loop/GameLoop'
 
-const BALL_COLORS = ['#fb7185', '#facc15', '#38bdf8']
+const BALL_COLORS = ['#ff1744', '#ffea00', '#00b0ff']
 
 const HINTS = [
   '← → or A / D: move',
@@ -220,8 +220,8 @@ function drawObstacle(ctx: CanvasRenderingContext2D, obstacle: Obstacle) {
   // A dark silhouette plus a cyan halo keeps terrain readable against every
   // bright, dark, illustrated, or code-drawn stage background.
   ctx.save()
-  ctx.shadowColor = '#22d3ee'
-  ctx.shadowBlur = 16
+  ctx.shadowColor = '#00e5ff'
+  ctx.shadowBlur = 20
   ctx.fillStyle = '#020617'
   ctx.fillRect(x - 5, y - 5, width + 10, height + 10)
   ctx.restore()
@@ -237,7 +237,7 @@ function drawObstacle(ctx: CanvasRenderingContext2D, obstacle: Obstacle) {
   ctx.beginPath()
   ctx.rect(x, y, width, height)
   ctx.clip()
-  ctx.fillStyle = '#fde047'
+  ctx.fillStyle = '#ffea00'
   const stripeWidth = 16
   for (let sx = x - height; sx < x + width; sx += stripeWidth * 2) {
     ctx.beginPath()
@@ -254,14 +254,14 @@ function drawObstacle(ctx: CanvasRenderingContext2D, obstacle: Obstacle) {
   ctx.lineWidth = 2
   ctx.strokeRect(x, y, width, height)
 
-  ctx.strokeStyle = '#22d3ee'
+  ctx.strokeStyle = '#00e5ff'
   ctx.lineWidth = 3
   ctx.strokeRect(x - 3, y - 3, width + 6, height + 6)
 
   for (const boltX of [x + 9, x + width - 9]) {
     ctx.beginPath()
     ctx.arc(boltX, y + height / 2, 3.5, 0, Math.PI * 2)
-    ctx.fillStyle = '#22d3ee'
+    ctx.fillStyle = '#00e5ff'
     ctx.fill()
     ctx.strokeStyle = '#ffffff'
     ctx.lineWidth = 1.5
@@ -349,6 +349,9 @@ function drawBall(ctx: CanvasRenderingContext2D, ball: Ball) {
   const r = LEVEL_RADIUS[ball.level]
   const color = BALL_COLORS[ball.level]
 
+  ctx.save()
+  ctx.shadowColor = color
+  ctx.shadowBlur = 12
   const gradient = ctx.createRadialGradient(
     ball.x - r * 0.35,
     ball.y - r * 0.35,
@@ -358,16 +361,18 @@ function drawBall(ctx: CanvasRenderingContext2D, ball: Ball) {
     r,
   )
   gradient.addColorStop(0, '#ffffff')
-  gradient.addColorStop(0.25, color)
-  gradient.addColorStop(1, '#00000055')
+  gradient.addColorStop(0.18, color)
+  gradient.addColorStop(0.72, color)
+  gradient.addColorStop(1, '#020617')
 
   ctx.beginPath()
   ctx.arc(ball.x, ball.y, r, 0, Math.PI * 2)
   ctx.fillStyle = gradient
   ctx.fill()
-  ctx.lineWidth = 1
-  ctx.strokeStyle = '#00000033'
+  ctx.lineWidth = 2.5
+  ctx.strokeStyle = '#020617'
   ctx.stroke()
+  ctx.restore()
 }
 
 function drawItem(ctx: CanvasRenderingContext2D, item: Item) {

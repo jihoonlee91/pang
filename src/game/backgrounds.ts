@@ -543,7 +543,16 @@ const ILLUSTRATED_BACKGROUNDS = LATE_STAGE_IMAGE_URLS.map((src, index) =>
   createIllustratedBackground(src, NIGHT_BACKGROUNDS[index]),
 )
 
-export const BACKGROUNDS = [...BASE_BACKGROUNDS, ...ILLUSTRATED_BACKGROUNDS]
+const RAW_BACKGROUNDS = [...BASE_BACKGROUNDS, ...ILLUSTRATED_BACKGROUNDS]
+
+export const BACKGROUNDS = RAW_BACKGROUNDS.map(
+  (draw) => (ctx: CanvasRenderingContext2D) => {
+    ctx.save()
+    ctx.filter = 'saturate(0.76) brightness(0.96)'
+    draw(ctx)
+    ctx.restore()
+  },
+)
 
 export function drawBackground(
   ctx: CanvasRenderingContext2D,
