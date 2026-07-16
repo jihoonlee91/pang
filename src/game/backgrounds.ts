@@ -1,6 +1,17 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './constants'
+import neuschwansteinUrl from '../assets/backgrounds/stage11-neuschwanstein.webp'
+import colosseumUrl from '../assets/backgrounds/stage12-colosseum.webp'
+import santoriniUrl from '../assets/backgrounds/stage13-santorini.webp'
+import sagradaFamiliaUrl from '../assets/backgrounds/stage14-sagrada-familia.webp'
+import marrakeshUrl from '../assets/backgrounds/stage15-marrakesh.webp'
+import serengetiUrl from '../assets/backgrounds/stage16-serengeti.webp'
+import rioUrl from '../assets/backgrounds/stage17-rio.webp'
+import machuPicchuUrl from '../assets/backgrounds/stage18-machu-picchu.webp'
+import grandCanyonUrl from '../assets/backgrounds/stage19-grand-canyon.webp'
+import auroraVillageUrl from '../assets/backgrounds/stage20-aurora-village.webp'
 
 export const GROUND_Y = CANVAS_HEIGHT - 90
+export const BACKGROUND_READY_EVENT = 'pang-background-ready'
 
 export const STAGE_NAMES = [
   'Mt. Fuji (Japan)',
@@ -489,7 +500,50 @@ const NIGHT_BACKGROUNDS = BASE_BACKGROUNDS.map(
   },
 )
 
-export const BACKGROUNDS = [...BASE_BACKGROUNDS, ...NIGHT_BACKGROUNDS]
+const LATE_STAGE_IMAGE_URLS = [
+  neuschwansteinUrl,
+  colosseumUrl,
+  santoriniUrl,
+  sagradaFamiliaUrl,
+  marrakeshUrl,
+  serengetiUrl,
+  rioUrl,
+  machuPicchuUrl,
+  grandCanyonUrl,
+  auroraVillageUrl,
+]
+
+function createIllustratedBackground(
+  src: string,
+  fallback: (ctx: CanvasRenderingContext2D) => void,
+) {
+  let image: HTMLImageElement | null = null
+
+  return (ctx: CanvasRenderingContext2D) => {
+    if (image?.complete && image.naturalWidth > 0) {
+      ctx.drawImage(image, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+      return
+    }
+
+    fallback(ctx)
+    if (image || typeof Image === 'undefined') return
+
+    image = new Image()
+    image.decoding = 'async'
+    image.addEventListener('load', () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(BACKGROUND_READY_EVENT))
+      }
+    })
+    image.src = src
+  }
+}
+
+const ILLUSTRATED_BACKGROUNDS = LATE_STAGE_IMAGE_URLS.map((src, index) =>
+  createIllustratedBackground(src, NIGHT_BACKGROUNDS[index]),
+)
+
+export const BACKGROUNDS = [...BASE_BACKGROUNDS, ...ILLUSTRATED_BACKGROUNDS]
 
 export function drawBackground(
   ctx: CanvasRenderingContext2D,

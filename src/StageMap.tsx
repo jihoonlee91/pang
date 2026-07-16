@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { CANVAS_WIDTH, CANVAS_HEIGHT, STAGE_COUNT } from './game/constants'
-import { BACKGROUNDS, STAGE_NAMES } from './game/backgrounds'
+import {
+  BACKGROUNDS,
+  BACKGROUND_READY_EVENT,
+  STAGE_NAMES,
+} from './game/backgrounds'
 
 type ThumbnailProps = {
   stageIndex: number
@@ -14,7 +18,10 @@ function StageThumbnail({ stageIndex }: ThumbnailProps) {
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    BACKGROUNDS[stageIndex % BACKGROUNDS.length](ctx)
+    const draw = () => BACKGROUNDS[stageIndex % BACKGROUNDS.length](ctx)
+    draw()
+    window.addEventListener(BACKGROUND_READY_EVENT, draw)
+    return () => window.removeEventListener(BACKGROUND_READY_EVENT, draw)
   }, [stageIndex])
 
   return (
