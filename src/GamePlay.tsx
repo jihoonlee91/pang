@@ -70,6 +70,8 @@ import {
   itemHitsPlayer,
   explodeToSmallest,
   predictLandingSpot,
+  chooseSafeX,
+  type DangerZone,
 } from './game/engine'
 import type { Ball, Harpoon, Item, ItemType } from './game/types'
 import {
@@ -1265,6 +1267,10 @@ type Props = {
 
 const AI_DEADZONE = 10
 const AI_FIRE_TOLERANCE = 18
+// Extra margin beyond the exact ball-radius + player-half-width collision
+// distance, so the AI starts dodging with some reaction room rather than
+// shaving hits as close as physically possible.
+const AI_DODGE_BUFFER = 18
 const HIT_EFFECT_MS = 350
 
 type BuffDisplay = {
@@ -1644,27 +1650,26 @@ function GamePlay({
           }
 
           if (demo) {
-            // Forward-simulate every ball with the real physics to find whose
-            // next low point (closest approach to the player's row) arrives
-            // soonest, and aim for exactly where that will be — not just
-            // where the ball happens to be right now.
-            const prediction = ballsRef.current.reduce<{
-              ball: Ball
-              x: number
-              time: number
-            } | null>((best, b) => {
-              const { x, time } = predictLandingSpot(
+            // Forward-simulate every ball with the real physics to find each
+            // one's next low point (closest approach to the player's row) —
+            // used both to pick a shooting target (soonest arrival) and to
+            // build a danger map for dodging (every ball is a hazard, not
+            // just the one being shot at).
+            const predictions = ballsRef.current.map((b) => ({
+              ball: b,
+              ...predictLandingSpot(
                 b,
                 1.5,
                 1 / 60,
                 terrain.platforms,
                 windAx,
                 activeGravityWell,
-              )
-              return !best || time < best.time ? { ball: b, x, time } : best
-            }, null)
-            const target = prediction?.ball ?? null
-            const predictedX = prediction?.x ?? playerXRef.current
+              ),
+            }))
+            const targetPrediction = predictions.reduce<
+              (typeof predictions)[number] | null
+            >((best, p) => (!best || p.time < best.time ? p : best), null)
+            const target = targetPrediction?.ball ?? null
 
             // Items fall straight down (x never changes), so no leading is
             // needed for them — just head toward whichever is lowest/soonest.
@@ -1672,17 +1677,33 @@ function GamePlay({
               (lowest, item) => (!lowest || item.y > lowest.y ? item : lowest),
               null,
             )
-            // Prioritize grabbing a falling item (safe, since demo mode is
-            // invulnerable anyway) over chasing the next ball to pop.
-            const moveTargetX = itemTarget !== null ? itemTarget.x : predictedX
-            const left =
-              (itemTarget !== null || target !== null) &&
-              moveTargetX < playerXRef.current - AI_DEADZONE
-            const right =
-              (itemTarget !== null || target !== null) &&
-              moveTargetX > playerXRef.current + AI_DEADZONE
+            const desiredX =
+              itemTarget !== null
+                ? itemTarget.x
+                : (targetPrediction?.x ?? playerXRef.current)
+
+            const dangerZones: DangerZone[] = predictions.map((p) => ({
+              x: p.x,
+              time: p.time,
+              radius:
+                LEVEL_RADIUS[p.ball.level] + PLAYER_WIDTH / 2 + AI_DODGE_BUFFER,
+            }))
+            const moveTargetX =
+              itemTarget !== null || target !== null
+                ? chooseSafeX(desiredX, playerXRef.current, dangerZones, {
+                    min: PLAYER_WIDTH / 2,
+                    max: CANVAS_WIDTH - PLAYER_WIDTH / 2,
+                  })
+                : playerXRef.current
+
+            const left = moveTargetX < playerXRef.current - AI_DEADZONE
+            const right = moveTargetX > playerXRef.current + AI_DEADZONE
+            // Only fire once actually settled near the target — a
+            // mid-dodge position that happens to pass through the fire
+            // tolerance shouldn't trigger a shot.
             const fire =
               target !== null &&
+              Math.abs(moveTargetX - playerXRef.current) < AI_DEADZONE &&
               Math.abs(target.x - playerXRef.current) < AI_FIRE_TOLERANCE &&
               harpoonsRef.current.length < maxHarpoons
             inputRef.current.set('ai-left', 'left', left)
@@ -1908,7 +1929,6 @@ function GamePlay({
           }
 
           if (
-            !demo &&
             !isClockActive &&
             !isInvincibleActive &&
             time >= invulnUntilRef.current

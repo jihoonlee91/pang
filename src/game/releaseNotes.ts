@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.10.0',
+    date: '2026-07-17',
+    notes: [
+      'Watch AI Play is a real playthrough now: the AI takes damage, dodges incoming balls, and can lose a run — no more scripted invincibility.',
+    ],
+  },
+  {
     version: '1.9.0',
     date: '2026-07-17',
     notes: [
@@ -43,12 +50,5 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     version: '1.6.1',
     date: '2026-07-17',
     notes: ['Background music volume raised slightly.'],
-  },
-  {
-    version: '1.6.0',
-    date: '2026-07-17',
-    notes: [
-      'Added an "Install App" button on the main screen, plus an install hint for iOS Safari.',
-    ],
   },
 ]

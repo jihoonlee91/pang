@@ -22,6 +22,7 @@ import {
   harpoonHitsBall,
   ballHitsPlayer,
   predictLandingSpot,
+  chooseSafeX,
   harpoonHitsObstacle,
   getPowerHarpoonStopY,
 } from './engine'
@@ -341,5 +342,38 @@ describe('predictLandingSpot', () => {
     }
     const { x } = predictLandingSpot(ball, 0.2)
     expect(x).toBeCloseTo(50, 0)
+  })
+})
+
+describe('chooseSafeX', () => {
+  const bounds = { min: 20, max: 940 }
+
+  it('returns the desired position when nothing is nearby', () => {
+    expect(chooseSafeX(400, 400, [], bounds)).toBe(400)
+  })
+
+  it('ignores danger zones outside the dodge horizon', () => {
+    const x = chooseSafeX(400, 400, [{ x: 400, time: 2, radius: 30 }], bounds)
+    expect(x).toBe(400)
+  })
+
+  it('nudges away from a ball about to land where it wants to stand', () => {
+    const x = chooseSafeX(400, 400, [{ x: 400, time: 0.5, radius: 30 }], bounds)
+    expect(Math.abs(x - 400)).toBeGreaterThanOrEqual(30)
+  })
+
+  it('dodges immediately when something is about to land on the current spot', () => {
+    const x = chooseSafeX(
+      500, // desired position is far away and irrelevant here
+      300, // current position
+      [{ x: 300, time: 0.1, radius: 30 }],
+      bounds,
+    )
+    expect(Math.abs(x - 300)).toBeGreaterThanOrEqual(30)
+  })
+
+  it('clamps the result within bounds', () => {
+    const x = chooseSafeX(30, 30, [{ x: 30, time: 0.5, radius: 40 }], bounds)
+    expect(x).toBeGreaterThanOrEqual(bounds.min)
   })
 })

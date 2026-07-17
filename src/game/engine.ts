@@ -336,3 +336,56 @@ export function predictLandingSpot(
 
   return { x: bestX, time: bestTime }
 }
+
+export type DangerZone = {
+  /** Predicted x position of the incoming ball. */
+  x: number
+  /** Seconds until it arrives there. */
+  time: number
+  /** Half-width of the no-go band around x (ball radius + player half-width + buffer). */
+  radius: number
+}
+
+/**
+ * Picks a safe x for the AI/attract mode to stand at, given where it would
+ * *like* to stand (to line up a shot or grab an item) and a set of
+ * near-term ball arrivals to avoid. Two tiers:
+ *  - Emergency: something is about to land right where the player already
+ *    is — dodge immediately, ignoring the desired position entirely.
+ *  - Otherwise: nudge the desired position away from any ball that would
+ *    otherwise be standing there when it arrives, closest threats first.
+ */
+export function chooseSafeX(
+  desiredX: number,
+  currentX: number,
+  dangerZones: readonly DangerZone[],
+  bounds: { min: number; max: number },
+  options: { dodgeHorizonSec?: number; immediateDangerSec?: number } = {},
+): number {
+  const dodgeHorizonSec = options.dodgeHorizonSec ?? 0.85
+  const immediateDangerSec = options.immediateDangerSec ?? 0.25
+  const clamp = (x: number) => Math.min(Math.max(x, bounds.min), bounds.max)
+
+  const imminent = dangerZones.find(
+    (zone) =>
+      zone.time <= immediateDangerSec &&
+      Math.abs(zone.x - currentX) < zone.radius,
+  )
+  if (imminent) {
+    const away = currentX <= imminent.x ? -1 : 1
+    return clamp(currentX + away * imminent.radius)
+  }
+
+  let x = desiredX
+  const relevant = [...dangerZones]
+    .filter((zone) => zone.time <= dodgeHorizonSec)
+    .sort((a, b) => a.time - b.time)
+  for (const zone of relevant) {
+    const dist = x - zone.x
+    if (Math.abs(dist) < zone.radius) {
+      const away = dist >= 0 ? 1 : -1
+      x = zone.x + away * zone.radius
+    }
+  }
+  return clamp(x)
+}
