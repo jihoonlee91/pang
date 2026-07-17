@@ -32,6 +32,18 @@ type Screen =
 
 const MILESTONE_INTERVAL = 10
 
+// Screens with a simple "back to main" meaning for Esc/the Android back
+// button. 'play'/'stageClear' are deliberately excluded — GamePlay owns
+// Escape there (it toggles pause); 'main'/'countdown'/'milestone' have no
+// sensible back target.
+const BACK_TO_MAIN_SCREENS: readonly Screen[] = [
+  'tutorial',
+  'settings',
+  'map',
+  'demo',
+  'end',
+]
+
 const COUNTDOWN_START = 3
 const STAGE_ADVANCE_COUNTDOWN = 5
 const TUTORIAL_KEY = 'pang.tutorial.complete.v1'
@@ -327,6 +339,40 @@ function App() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   })
+
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.repeat) return
+      if (BACK_TO_MAIN_SCREENS.includes(screen)) {
+        event.preventDefault()
+        setScreen('main')
+      }
+      // 'play'/'stageClear' already handle Escape themselves (pause toggle).
+    }
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [screen])
+
+  // Push a history entry for every non-main screen so the browser/Android
+  // back gesture has something to "pop" instead of leaving the app.
+  useEffect(() => {
+    if (screen !== 'main') history.pushState({ screen }, '')
+  }, [screen])
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (BACK_TO_MAIN_SCREENS.includes(screen)) {
+        setScreen('main')
+      } else if (screen === 'play' || screen === 'stageClear') {
+        // No real keydown fires for a hardware back gesture — synthesize
+        // the Escape GamePlay already listens for, to pause instead of
+        // silently losing the run.
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+      }
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [screen])
 
   if (screen === 'main') {
     return (
