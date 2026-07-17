@@ -1690,10 +1690,16 @@ function GamePlay({
             }))
             const moveTargetX =
               itemTarget !== null || target !== null
-                ? chooseSafeX(desiredX, playerXRef.current, dangerZones, {
-                    min: PLAYER_WIDTH / 2,
-                    max: CANVAS_WIDTH - PLAYER_WIDTH / 2,
-                  })
+                ? chooseSafeX(
+                    desiredX,
+                    playerXRef.current,
+                    dangerZones,
+                    {
+                      min: PLAYER_WIDTH / 2,
+                      max: CANVAS_WIDTH - PLAYER_WIDTH / 2,
+                    },
+                    { playerSpeed },
+                  )
                 : playerXRef.current
 
             const left = moveTargetX < playerXRef.current - AI_DEADZONE

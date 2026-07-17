@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.11.0',
+    date: '2026-07-17',
+    notes: [
+      'AI Play dodges much more reliably now — it plans further ahead and searches for genuinely safe ground instead of just nudging away from danger.',
+    ],
+  },
+  {
     version: '1.10.0',
     date: '2026-07-17',
     notes: [
@@ -45,10 +52,5 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     notes: [
       'Item buff timers blink red once 3 seconds or less remain, so an effect running out is never a surprise.',
     ],
-  },
-  {
-    version: '1.6.1',
-    date: '2026-07-17',
-    notes: ['Background music volume raised slightly.'],
   },
 ]

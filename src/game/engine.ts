@@ -349,21 +349,36 @@ export type DangerZone = {
 /**
  * Picks a safe x for the AI/attract mode to stand at, given where it would
  * *like* to stand (to line up a shot or grab an item) and a set of
- * near-term ball arrivals to avoid. Two tiers:
- *  - Emergency: something is about to land right where the player already
- *    is — dodge immediately, ignoring the desired position entirely.
- *  - Otherwise: nudge the desired position away from any ball that would
- *    otherwise be standing there when it arrives, closest threats first.
+ * near-term ball arrivals to avoid.
+ *
+ *  - Reflex: something is about to land right where the player already is,
+ *    right now — escape as far as the time available allows, ignoring the
+ *    desired position entirely.
+ *  - Otherwise: a danger zone only counts against a candidate position if
+ *    the player could actually *be there* when it resolves (reachable in
+ *    time, and not already past by the time they'd arrive) — a distant
+ *    threat that will have come and gone before the player could reach it
+ *    isn't actually a threat. Among positions that clear every reachable
+ *    threat, search outward from the desired x for the nearest one; if
+ *    nothing is fully clear (tight quarters), fall back to whichever
+ *    position has the largest margin from its nearest threat.
  */
 export function chooseSafeX(
   desiredX: number,
   currentX: number,
   dangerZones: readonly DangerZone[],
   bounds: { min: number; max: number },
-  options: { dodgeHorizonSec?: number; immediateDangerSec?: number } = {},
+  options: {
+    dodgeHorizonSec?: number
+    immediateDangerSec?: number
+    playerSpeed?: number
+    stepPx?: number
+  } = {},
 ): number {
-  const dodgeHorizonSec = options.dodgeHorizonSec ?? 0.85
+  const dodgeHorizonSec = options.dodgeHorizonSec ?? 1.1
   const immediateDangerSec = options.immediateDangerSec ?? 0.25
+  const playerSpeed = options.playerSpeed ?? 300
+  const stepPx = options.stepPx ?? 12
   const clamp = (x: number) => Math.min(Math.max(x, bounds.min), bounds.max)
 
   const imminent = dangerZones.find(
@@ -372,20 +387,46 @@ export function chooseSafeX(
       Math.abs(zone.x - currentX) < zone.radius,
   )
   if (imminent) {
+    const escapeDistance = Math.max(
+      imminent.radius,
+      playerSpeed * Math.max(imminent.time, 0.05),
+    )
     const away = currentX <= imminent.x ? -1 : 1
-    return clamp(currentX + away * imminent.radius)
+    return clamp(currentX + away * escapeDistance)
   }
 
-  let x = desiredX
-  const relevant = [...dangerZones]
-    .filter((zone) => zone.time <= dodgeHorizonSec)
-    .sort((a, b) => a.time - b.time)
-  for (const zone of relevant) {
-    const dist = x - zone.x
-    if (Math.abs(dist) < zone.radius) {
-      const away = dist >= 0 ? 1 : -1
-      x = zone.x + away * zone.radius
+  const relevant = dangerZones.filter((zone) => zone.time <= dodgeHorizonSec)
+  const margin = (x: number) =>
+    Math.min(
+      ...relevant.map((zone) => {
+        const travelTime = Math.abs(x - currentX) / playerSpeed
+        // Already resolved by the time we'd get there — not a threat here.
+        if (travelTime > zone.time + 0.15) return Infinity
+        return Math.abs(x - zone.x) - zone.radius
+      }),
+    )
+  const isSafe = (x: number) => relevant.length === 0 || margin(x) >= 0
+
+  if (isSafe(desiredX)) return clamp(desiredX)
+
+  const span = bounds.max - bounds.min
+  for (let offset = stepPx; offset <= span; offset += stepPx) {
+    for (const dir of [1, -1]) {
+      const candidate = clamp(desiredX + dir * offset)
+      if (isSafe(candidate)) return candidate
     }
   }
-  return clamp(x)
+
+  // Nothing found fully clear — pick the position with the most breathing
+  // room from its nearest reachable threat.
+  let best = clamp(desiredX)
+  let bestMargin = margin(best)
+  for (let x = bounds.min; x <= bounds.max; x += stepPx) {
+    const m = margin(x)
+    if (m > bestMargin) {
+      bestMargin = m
+      best = x
+    }
+  }
+  return best
 }

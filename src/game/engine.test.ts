@@ -376,4 +376,31 @@ describe('chooseSafeX', () => {
     const x = chooseSafeX(30, 30, [{ x: 30, time: 0.5, radius: 40 }], bounds)
     expect(x).toBeGreaterThanOrEqual(bounds.min)
   })
+
+  it('ignores a distant threat that will have resolved before it could be reached', () => {
+    // The zone is 900px away and resolves in 0.05s — even at full player
+    // speed (300px/s) there's no way to be there by then, so it never
+    // actually endangers standing at the desired spot.
+    const x = chooseSafeX(
+      900,
+      0,
+      [{ x: 900, time: 0.05, radius: 30 }],
+      bounds,
+      { playerSpeed: 300 },
+    )
+    expect(x).toBe(900)
+  })
+
+  it('picks the side with a much shorter safe detour', () => {
+    // A wide zone parked left-of-center plus a narrower one on the desired
+    // spot together make the left side need a huge detour (down to ~300)
+    // while the right side clears in a short hop (past ~430).
+    const zones = [
+      { x: 400, time: 0.5, radius: 30 },
+      { x: 350, time: 0.5, radius: 50 },
+    ]
+    const x = chooseSafeX(400, 400, zones, bounds)
+    expect(x).toBeGreaterThan(400)
+    expect(x - 400).toBeLessThan(100)
+  })
 })
