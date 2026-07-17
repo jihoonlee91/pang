@@ -703,19 +703,19 @@
   .touch-move,
   .touch-fire {
     pointer-events: auto;
-    transform: translateY(clamp(34px, 10vh, 50px));
+    transform: translateY(clamp(48px, 15vh, 74px));
   }
 
   .touch-move .touch-button {
-    width: min(var(--touch-size), 58px);
-    height: min(var(--touch-size), 58px);
-    min-width: 52px;
-    min-height: 52px;
+    width: min(var(--touch-size), 76px);
+    height: min(var(--touch-size), 76px);
+    min-width: 68px;
+    min-height: 68px;
   }
 
   .touch-button {
-    max-width: 92px;
-    max-height: 92px;
+    max-width: 112px;
+    max-height: 112px;
   }
 
   .item-notice {
