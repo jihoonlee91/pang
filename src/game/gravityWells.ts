@@ -1,12 +1,19 @@
 import { CANVAS_WIDTH } from './constants'
 
-export const GRAVITY_WELL_START_STAGE = 40
+export const GRAVITY_WELL_START_STAGE = 50
 export const GRAVITY_WELL_STAGE_COUNT = 10
 
 export type GravityWell = {
   x: number
   y: number
   strength: number
+  /**
+   * Optional tangential force (perpendicular to the radial pull), scaled
+   * the same way as strength. Turns a straight-line pull into a swirling
+   * orbit instead. Used by the Vortex hazard (`vortices.ts`, stages
+   * 71-80) — plain gravity wells leave this unset.
+   */
+  spin?: number
 }
 
 // Minimum distance-squared used when applying the pull, so a ball passing
@@ -26,8 +33,8 @@ const WELL_POSITIONS: readonly (readonly [number, number])[] = [
   [480, 300],
 ]
 
-// A fixed gravity well hazard for the stellar-forge stages (41-50, 0-indexed
-// 40-49). Position varies per stage and pull strength escalates with depth.
+// A fixed gravity well hazard for the stellar-forge stages (51-60, 0-indexed
+// 50-59). Position varies per stage and pull strength escalates with depth.
 export function getStageGravityWell(stageIndex: number): GravityWell | null {
   if (
     stageIndex < GRAVITY_WELL_START_STAGE ||
@@ -51,5 +58,14 @@ export function applyGravityWellPull(
   const distanceSquared = Math.max(dx * dx + dy * dy, MIN_DISTANCE_SQUARED)
   const distance = Math.sqrt(distanceSquared)
   const pull = well.strength / distanceSquared
-  return { ax: (dx / distance) * pull, ay: (dy / distance) * pull }
+  let ax = (dx / distance) * pull
+  let ay = (dy / distance) * pull
+  if (well.spin) {
+    // Perpendicular to the radius vector, so the pull curves into an
+    // orbit instead of a straight line toward the center.
+    const tangential = well.spin / distanceSquared
+    ax += (-dy / distance) * tangential
+    ay += (dx / distance) * tangential
+  }
+  return { ax, ay }
 }

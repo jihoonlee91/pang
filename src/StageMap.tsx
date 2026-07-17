@@ -8,6 +8,7 @@ import {
 import { getStagePortals } from './game/portals'
 import { getStageCurrent } from './game/currents'
 import { getStageGravityWell } from './game/gravityWells'
+import { getStageVortex } from './game/vortices'
 
 type ThumbnailProps = {
   stageIndex: number
@@ -110,6 +111,7 @@ function StageMap({
           const isPortalStage = portalCount > 0
           const isCurrentStage = getStageCurrent(i) !== null
           const isGravityWellStage = getStageGravityWell(i) !== null
+          const isVortexStage = getStageVortex(i) !== null
           const card = (
             <div
               className={`stage-map-card ${isCleared ? 'stage-map-card-cleared' : ''} ${isCurrent ? 'stage-map-card-current' : ''} ${isNext ? 'stage-map-card-next' : ''} ${selectedStage === i ? 'stage-map-card-selected' : ''} ${isLocked ? 'stage-map-card-locked' : ''}`}
@@ -147,6 +149,11 @@ function StageMap({
                 {isGravityWellStage && (
                   <span className="stage-map-badge stage-map-badge-gravity">
                     GRAVITY WELL
+                  </span>
+                )}
+                {isVortexStage && (
+                  <span className="stage-map-badge stage-map-badge-gravity">
+                    VORTEX
                   </span>
                 )}
               </div>

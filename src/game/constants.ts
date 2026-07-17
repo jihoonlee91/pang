@@ -31,7 +31,7 @@ export const SCORE_BY_LEVEL = [300, 150, 100]
 
 export const COMBO_WINDOW_MS = 1500
 
-export const STAGE_COUNT = 60
+export const STAGE_COUNT = 80
 export const STAGE_TIME_SECONDS = 90
 export const TIME_BONUS_PER_SECOND = 10
 
@@ -71,6 +71,18 @@ export const STAGE_OBSTACLES: readonly Obstacle[] = [
   { x: 120, y: 330, width: 170, height: 18 },
   { x: 640, y: 160, width: 210, height: 18 },
   { x: 360, y: 290, width: 240, height: 18 },
+  // --- World Tour II (stages 21-30) ---
+  { x: 230, y: 195, width: 200, height: 18 },
+  { x: 590, y: 340, width: 180, height: 18 },
+  { x: 95, y: 275, width: 210, height: 18 },
+  { x: 445, y: 155, width: 230, height: 18 },
+  { x: 715, y: 305, width: 170, height: 18 },
+  { x: 275, y: 235, width: 240, height: 18 },
+  { x: 565, y: 195, width: 200, height: 18 },
+  { x: 165, y: 320, width: 190, height: 18 },
+  { x: 635, y: 235, width: 210, height: 18 },
+  { x: 415, y: 175, width: 220, height: 18 },
+  // --- Dimension X (stages 31-40) ---
   { x: 110, y: 165, width: 180, height: 18 },
   { x: 660, y: 285, width: 190, height: 18 },
   { x: 350, y: 190, width: 220, height: 18 },
@@ -81,7 +93,7 @@ export const STAGE_OBSTACLES: readonly Obstacle[] = [
   { x: 145, y: 255, width: 190, height: 18 },
   { x: 675, y: 350, width: 175, height: 18 },
   { x: 355, y: 145, width: 250, height: 18 },
-  // --- The Trench (stages 31-40) ---
+  // --- The Trench (stages 41-50) ---
   { x: 420, y: 220, width: 170, height: 18 },
   { x: 130, y: 300, width: 200, height: 18 },
   { x: 650, y: 175, width: 190, height: 18 },
@@ -92,7 +104,7 @@ export const STAGE_OBSTACLES: readonly Obstacle[] = [
   { x: 160, y: 155, width: 170, height: 18 },
   { x: 680, y: 260, width: 150, height: 18 },
   { x: 340, y: 355, width: 220, height: 18 },
-  // --- Stellar Forge (stages 41-50) ---
+  // --- Stellar Forge (stages 51-60) ---
   { x: 100, y: 200, width: 210, height: 18 },
   { x: 600, y: 350, width: 240, height: 18 },
   { x: 330, y: 240, width: 180, height: 18 },
@@ -103,7 +115,7 @@ export const STAGE_OBSTACLES: readonly Obstacle[] = [
   { x: 150, y: 260, width: 190, height: 18 },
   { x: 650, y: 300, width: 170, height: 18 },
   { x: 380, y: 150, width: 240, height: 18 },
-  // --- Cosmic Frontier (stages 51-60) ---
+  // --- Cosmic Frontier (stages 61-70) ---
   { x: 200, y: 175, width: 220, height: 18 },
   { x: 610, y: 305, width: 190, height: 18 },
   { x: 70, y: 260, width: 200, height: 18 },
@@ -114,6 +126,17 @@ export const STAGE_OBSTACLES: readonly Obstacle[] = [
   { x: 130, y: 335, width: 190, height: 18 },
   { x: 660, y: 250, width: 180, height: 18 },
   { x: 400, y: 160, width: 220, height: 18 },
+  // --- Vortex Frontier (stages 71-80) ---
+  { x: 185, y: 210, width: 220, height: 18 },
+  { x: 625, y: 290, width: 190, height: 18 },
+  { x: 55, y: 245, width: 200, height: 18 },
+  { x: 485, y: 330, width: 230, height: 18 },
+  { x: 745, y: 175, width: 160, height: 18 },
+  { x: 305, y: 205, width: 250, height: 18 },
+  { x: 525, y: 155, width: 200, height: 18 },
+  { x: 115, y: 350, width: 190, height: 18 },
+  { x: 705, y: 265, width: 180, height: 18 },
+  { x: 365, y: 145, width: 220, height: 18 },
 ]
 
 export function getStageObstacle(stageIndex: number): Obstacle {
@@ -158,11 +181,11 @@ export const ITEM_WEIGHTS: [ItemType, number][] = [
   ['scoreBonus', 8],
 ]
 
-// Stabilizer only does anything from stage 31 (0-indexed 30) onward, where
-// the current/gravity-well hazards begin — hardcoded here rather than
-// imported from currents.ts/gravityWells.ts to avoid a circular import
-// (both of those already import from this file).
-const STABILIZER_START_STAGE = 30
+// Stabilizer only does anything from stage 41 (0-indexed 40) onward, where
+// the current/gravity-well/vortex hazards begin — hardcoded here rather
+// than imported from currents.ts/gravityWells.ts/vortices.ts to avoid a
+// circular import (all of those already import from this file).
+const STABILIZER_START_STAGE = 40
 
 export function getItemWeights(stageIndex: number): [ItemType, number][] {
   if (stageIndex < STABILIZER_START_STAGE) return ITEM_WEIGHTS

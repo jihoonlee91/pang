@@ -1,7 +1,7 @@
 import { CANVAS_WIDTH, LEVEL_RADIUS } from './constants'
 import type { Ball } from './types'
 
-export const PORTAL_START_STAGE = 20
+export const PORTAL_START_STAGE = 30
 export const PORTAL_RADIUS = 30
 export const PORTAL_COOLDOWN_MS = 900
 

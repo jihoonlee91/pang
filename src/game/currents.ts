@@ -1,4 +1,4 @@
-export const CURRENT_START_STAGE = 30
+export const CURRENT_START_STAGE = 40
 export const CURRENT_STAGE_COUNT = 10
 
 export type StageCurrent = {

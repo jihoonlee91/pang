@@ -34,6 +34,16 @@ export const STAGE_NAMES = [
   'Machu Picchu (Peru)',
   'Grand Canyon (USA)',
   'Aurora Village (Canada)',
+  'Great Wall of China (China)',
+  'Petra (Jordan)',
+  'Sydney Opera House (Australia)',
+  'Statue of Liberty (USA)',
+  'Niagara Falls (Canada)',
+  'Chichen Itza (Mexico)',
+  'Venice Canals (Italy)',
+  'Table Mountain (South Africa)',
+  'Geysir (Iceland)',
+  'Milford Sound (New Zealand)',
   'Neon Megacity (Dimension X)',
   'Orbital Dock (Dimension X)',
   'Crystal Moon (Dimension X)',
@@ -74,6 +84,16 @@ export const STAGE_NAMES = [
   'Dark Expanse (Deep Space)',
   'Edge of Everything (Deep Space)',
   'Hellfire Core (Cosmic Frontier)',
+  'Event Horizon Prime (Vortex Frontier)',
+  'Wormhole Threshold (Vortex Frontier)',
+  'Shattered Moon (Vortex Frontier)',
+  'Ion Storm (Vortex Frontier)',
+  'Binary Collapse (Vortex Frontier)',
+  'Comet Maelstrom (Vortex Frontier)',
+  'Graviton Well (Vortex Frontier)',
+  'Pulsar Vortex (Vortex Frontier)',
+  'Nebula Funnel (Vortex Frontier)',
+  'The Singularity (Vortex Frontier)',
 ]
 
 function drawSky(ctx: CanvasRenderingContext2D, top: string, bottom: string) {
@@ -513,6 +533,448 @@ const BASE_BACKGROUNDS = [
   drawEiffelTowerBackground,
   drawBigBenBackground,
   drawRedSquareBackground,
+]
+
+function drawGreatWallBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#8fb8d8', '#d9ecf5')
+
+  ctx.fillStyle = '#ffffff99'
+  ctx.beginPath()
+  ctx.ellipse(680, 100, 40, 16, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  const baseY = GROUND_Y
+  const ridge = (x: number) => baseY - 60 - Math.sin(x / 130) * 55
+
+  ctx.fillStyle = '#6f9a5c'
+  ctx.beginPath()
+  ctx.moveTo(0, baseY)
+  for (let x = 0; x <= CANVAS_WIDTH; x += 20) ctx.lineTo(x, ridge(x) + 40)
+  ctx.lineTo(CANVAS_WIDTH, baseY)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#c9a875'
+  ctx.lineWidth = 20
+  ctx.beginPath()
+  ctx.moveTo(0, ridge(0))
+  for (let x = 0; x <= CANVAS_WIDTH; x += 20) ctx.lineTo(x, ridge(x))
+  ctx.stroke()
+
+  ctx.fillStyle = '#c9a875'
+  for (let x = 6; x < CANVAS_WIDTH; x += 24) {
+    ctx.fillRect(x - 5, ridge(x) - 20, 10, 10)
+  }
+  ctx.fillStyle = '#a98955'
+  for (let x = 90; x < CANVAS_WIDTH; x += 260) {
+    ctx.fillRect(x - 16, ridge(x) - 34, 32, 32)
+  }
+
+  drawGround(ctx, '#7cb06a', '#4f8b45')
+}
+
+function drawPetraBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#f0b98a', '#fbe0bd')
+
+  const baseY = GROUND_Y
+  ctx.fillStyle = '#c9704a'
+  ctx.beginPath()
+  ctx.moveTo(0, baseY)
+  ctx.lineTo(0, baseY - 320)
+  ctx.lineTo(150, baseY - 280)
+  ctx.lineTo(120, baseY)
+  ctx.closePath()
+  ctx.fill()
+  ctx.beginPath()
+  ctx.moveTo(CANVAS_WIDTH, baseY)
+  ctx.lineTo(CANVAS_WIDTH, baseY - 320)
+  ctx.lineTo(CANVAS_WIDTH - 150, baseY - 280)
+  ctx.lineTo(CANVAS_WIDTH - 120, baseY)
+  ctx.closePath()
+  ctx.fill()
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.fillStyle = '#d98a5e'
+  ctx.fillRect(cx - 160, baseY - 200, 320, 200)
+
+  ctx.fillStyle = '#c9704a'
+  for (const dx of [-130, -75, 75, 130]) {
+    ctx.fillRect(cx + dx - 8, baseY - 200, 16, 190)
+  }
+
+  ctx.beginPath()
+  ctx.moveTo(cx - 170, baseY - 200)
+  ctx.lineTo(cx, baseY - 250)
+  ctx.lineTo(cx + 170, baseY - 200)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.fillStyle = '#a85a3a'
+  ctx.fillRect(cx - 40, baseY - 130, 80, 130)
+  ctx.beginPath()
+  ctx.arc(cx, baseY - 130, 40, Math.PI, 0)
+  ctx.fill()
+
+  ctx.fillStyle = '#8a4a30'
+  ctx.beginPath()
+  ctx.ellipse(cx, baseY - 268, 14, 20, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#d9a56f', '#b57a45')
+}
+
+function drawSydneyOperaHouseBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#6fc2e0', '#c9ecf7')
+
+  ctx.fillStyle = '#ffffffcc'
+  ctx.beginPath()
+  ctx.arc(140, 90, 38, 0, Math.PI * 2)
+  ctx.fill()
+
+  const baseY = GROUND_Y - 30
+  ctx.fillStyle = '#e8e2d5'
+  ctx.fillRect(CANVAS_WIDTH / 2 - 280, baseY, 560, 30)
+
+  function shell(x: number, height: number, width: number) {
+    ctx.beginPath()
+    ctx.moveTo(x - width / 2, baseY)
+    ctx.quadraticCurveTo(x - width * 0.15, baseY - height, x, baseY - height)
+    ctx.quadraticCurveTo(
+      x + width * 0.1,
+      baseY - height * 0.6,
+      x + width / 2,
+      baseY,
+    )
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.fillStyle = '#ffffff'
+  shell(CANVAS_WIDTH / 2 - 160, 90, 130)
+  shell(CANVAS_WIDTH / 2 - 40, 140, 150)
+  shell(CANVAS_WIDTH / 2 + 100, 110, 140)
+  shell(CANVAS_WIDTH / 2 + 220, 70, 100)
+
+  ctx.strokeStyle = '#4a6a80'
+  ctx.lineWidth = 6
+  ctx.beginPath()
+  ctx.arc(140, baseY + 20, 90, Math.PI, Math.PI * 1.6)
+  ctx.stroke()
+
+  ctx.fillStyle = '#2f6a8a'
+  ctx.fillRect(0, baseY + 30, CANVAS_WIDTH, GROUND_Y - baseY - 30)
+
+  drawGround(ctx, '#2f6a8a', '#1f4a63')
+}
+
+function drawStatueOfLibertyBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#a8c8e0', '#e0eef8')
+
+  const baseY = GROUND_Y
+  const cx = CANVAS_WIDTH / 2
+
+  ctx.fillStyle = '#8a8a7a'
+  ctx.beginPath()
+  ctx.moveTo(cx - 70, baseY)
+  ctx.lineTo(cx - 55, baseY - 60)
+  ctx.lineTo(cx + 55, baseY - 60)
+  ctx.lineTo(cx + 70, baseY)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.fillStyle = '#5b9c8a'
+  ctx.beginPath()
+  ctx.moveTo(cx - 30, baseY - 60)
+  ctx.quadraticCurveTo(cx - 50, baseY - 170, cx - 18, baseY - 240)
+  ctx.lineTo(cx + 18, baseY - 240)
+  ctx.quadraticCurveTo(cx + 45, baseY - 170, cx + 30, baseY - 60)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.beginPath()
+  ctx.arc(cx, baseY - 258, 18, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = '#5b9c8a'
+  ctx.lineWidth = 4
+  for (let spike = -2; spike <= 2; spike += 1) {
+    ctx.beginPath()
+    ctx.moveTo(cx + spike * 6, baseY - 272)
+    ctx.lineTo(cx + spike * 9, baseY - 290)
+    ctx.stroke()
+  }
+
+  ctx.strokeStyle = '#5b9c8a'
+  ctx.lineWidth = 10
+  ctx.beginPath()
+  ctx.moveTo(cx + 22, baseY - 220)
+  ctx.lineTo(cx + 55, baseY - 300)
+  ctx.stroke()
+  ctx.fillStyle = '#f2c14e'
+  ctx.beginPath()
+  ctx.arc(cx + 58, baseY - 312, 12, 0, Math.PI * 2)
+  ctx.fill()
+
+  ctx.fillStyle = '#7fa8c2'
+  ctx.fillRect(0, baseY - 6, CANVAS_WIDTH, 6)
+
+  drawGround(ctx, '#7fa8c2', '#4a7590')
+}
+
+function drawNiagaraFallsBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#a9c9d9', '#e6f2f5')
+
+  const baseY = GROUND_Y
+  ctx.fillStyle = '#6f9a5c'
+  ctx.fillRect(0, baseY - 140, 180, 140)
+  ctx.fillRect(CANVAS_WIDTH - 180, baseY - 160, 180, 160)
+
+  const cx = CANVAS_WIDTH / 2
+  const fall = ctx.createLinearGradient(0, baseY - 220, 0, baseY)
+  fall.addColorStop(0, '#eaf6fb')
+  fall.addColorStop(1, '#bcdbe6')
+  ctx.fillStyle = fall
+  ctx.beginPath()
+  ctx.moveTo(cx - 260, baseY - 180)
+  ctx.quadraticCurveTo(cx - 200, baseY - 220, cx - 60, baseY - 200)
+  ctx.quadraticCurveTo(cx + 80, baseY - 230, cx + 250, baseY - 170)
+  ctx.lineTo(cx + 220, baseY)
+  ctx.lineTo(cx - 230, baseY)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#ffffffaa'
+  ctx.lineWidth = 2
+  for (let i = 0; i < 14; i += 1) {
+    const x = cx - 240 + i * 36
+    ctx.beginPath()
+    ctx.moveTo(x, baseY - 190 + (i % 3) * 8)
+    ctx.lineTo(x + 6, baseY)
+    ctx.stroke()
+  }
+
+  ctx.fillStyle = '#ffffffcc'
+  ctx.beginPath()
+  ctx.ellipse(cx - 40, baseY - 10, 120, 34, 0, 0, Math.PI * 2)
+  ctx.ellipse(cx + 60, baseY, 100, 28, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#8fbf9a', '#5c9468')
+}
+
+function drawChichenItzaBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#7dc8e8', '#cdeefd')
+
+  const baseY = GROUND_Y
+  const cx = CANVAS_WIDTH / 2
+
+  ctx.fillStyle = '#4a8a4f'
+  for (let tree = 0; tree < 10; tree += 1) {
+    const x = tree * 96 + 20
+    const height = 40 + (tree % 3) * 16
+    ctx.beginPath()
+    ctx.arc(x, baseY - height, 34, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  const tierCount = 5
+  for (let tier = 0; tier < tierCount; tier += 1) {
+    const w = 260 - tier * 42
+    const h = 34
+    const y = baseY - 20 - tier * h
+    ctx.fillStyle = tier % 2 === 0 ? '#c9a56a' : '#b8935a'
+    ctx.fillRect(cx - w / 2, y - h, w, h)
+  }
+  ctx.fillStyle = '#8a6c40'
+  ctx.fillRect(cx - 18, baseY - 20 - tierCount * 34, 36, tierCount * 34)
+  ctx.fillStyle = '#a8875a'
+  ctx.fillRect(cx - 40, baseY - 20 - tierCount * 34 - 30, 80, 30)
+
+  drawGround(ctx, '#6fa85e', '#457a3f')
+}
+
+function drawVeniceCanalsBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#f6c98a', '#fde8c4')
+
+  const baseY = GROUND_Y - 40
+  const buildings = [
+    { x: 0, w: 130, h: 150, color: '#e0956a' },
+    { x: 130, w: 110, h: 190, color: '#e8c96a' },
+    { x: 240, w: 100, h: 160, color: '#c97a6a' },
+    { x: 620, w: 120, h: 170, color: '#d99a6a' },
+    { x: 740, w: 150, h: 200, color: '#e8b06a' },
+  ]
+  for (const b of buildings) {
+    ctx.fillStyle = b.color
+    ctx.fillRect(b.x, baseY - b.h, b.w, b.h)
+    ctx.fillStyle = '#ffffff88'
+    for (let wy = baseY - b.h + 20; wy < baseY - 10; wy += 30) {
+      for (let wx = b.x + 14; wx < b.x + b.w - 14; wx += 30) {
+        ctx.fillRect(wx, wy, 10, 14)
+      }
+    }
+  }
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.strokeStyle = '#c9b088'
+  ctx.lineWidth = 10
+  ctx.beginPath()
+  ctx.arc(cx, baseY + 20, 70, Math.PI, 0)
+  ctx.stroke()
+
+  ctx.fillStyle = '#5a8ca0'
+  ctx.fillRect(0, baseY, CANVAS_WIDTH, GROUND_Y - baseY + 40)
+
+  ctx.fillStyle = '#1c1c1c'
+  ctx.beginPath()
+  ctx.moveTo(cx - 220, baseY + 30)
+  ctx.quadraticCurveTo(cx - 260, baseY + 20, cx - 250, baseY + 5)
+  ctx.lineTo(cx - 160, baseY + 8)
+  ctx.quadraticCurveTo(cx - 150, baseY + 25, cx - 180, baseY + 32)
+  ctx.closePath()
+  ctx.fill()
+  ctx.strokeStyle = '#1c1c1c'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(cx - 240, baseY + 5)
+  ctx.lineTo(cx - 240, baseY - 30)
+  ctx.stroke()
+
+  drawGround(ctx, '#5a8ca0', '#3a6a80')
+}
+
+function drawTableMountainBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#89b8d8', '#d5eaf5')
+
+  ctx.fillStyle = '#ffffffaa'
+  ctx.beginPath()
+  ctx.ellipse(700, 90, 60, 14, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  const baseY = GROUND_Y - 60
+  ctx.fillStyle = '#6a7a6a'
+  ctx.beginPath()
+  ctx.moveTo(120, baseY)
+  ctx.lineTo(190, baseY - 190)
+  ctx.lineTo(620, baseY - 190)
+  ctx.lineTo(690, baseY)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = '#5a6a5a'
+  ctx.fillRect(190, baseY - 194, 430, 10)
+
+  ctx.fillStyle = '#d9d2c0'
+  for (let b = 0; b < 10; b += 1) {
+    const x = 40 + b * 74
+    const h = 16 + (b % 4) * 10
+    ctx.fillRect(x, baseY - h, 40, h)
+  }
+
+  ctx.fillStyle = '#3f7a9a'
+  ctx.fillRect(0, baseY, CANVAS_WIDTH, GROUND_Y - baseY + 60)
+
+  drawGround(ctx, '#3f7a9a', '#2a5570')
+}
+
+function drawGeysirBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#9fb8c9', '#dbe6ec')
+
+  const baseY = GROUND_Y
+  const cx = CANVAS_WIDTH / 2
+
+  ctx.fillStyle = '#8a9a8a'
+  ctx.beginPath()
+  ctx.moveTo(0, baseY - 30)
+  ctx.quadraticCurveTo(200, baseY - 70, 400, baseY - 30)
+  ctx.quadraticCurveTo(650, baseY - 60, CANVAS_WIDTH, baseY - 20)
+  ctx.lineTo(CANVAS_WIDTH, baseY)
+  ctx.lineTo(0, baseY)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.fillStyle = '#7a8f95'
+  ctx.beginPath()
+  ctx.ellipse(cx, baseY - 6, 80, 20, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  ctx.fillStyle = '#eaf3f5'
+  ctx.beginPath()
+  ctx.moveTo(cx - 20, baseY - 10)
+  ctx.quadraticCurveTo(cx - 40, baseY - 160, cx - 10, baseY - 260)
+  ctx.quadraticCurveTo(cx, baseY - 300, cx + 10, baseY - 260)
+  ctx.quadraticCurveTo(cx + 40, baseY - 160, cx + 20, baseY - 10)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.fillStyle = '#ffffffaa'
+  for (let cloud = 0; cloud < 6; cloud += 1) {
+    const x = cx + (cloud - 3) * 50
+    const y = baseY - 220 - (cloud % 3) * 30
+    ctx.beginPath()
+    ctx.ellipse(x, y, 34, 16, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  drawGround(ctx, '#8a8f85', '#5f6a5a')
+}
+
+function drawMilfordSoundBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#8ba8b8', '#d5e5ea')
+
+  const baseY = GROUND_Y - 40
+  ctx.fillStyle = '#4a5f5a'
+  ctx.beginPath()
+  ctx.moveTo(0, baseY)
+  ctx.lineTo(0, baseY - 280)
+  ctx.lineTo(220, baseY - 180)
+  ctx.lineTo(160, baseY)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = '#3a4f4a'
+  ctx.beginPath()
+  ctx.moveTo(CANVAS_WIDTH, baseY)
+  ctx.lineTo(CANVAS_WIDTH, baseY - 320)
+  ctx.lineTo(CANVAS_WIDTH - 260, baseY - 200)
+  ctx.lineTo(CANVAS_WIDTH - 190, baseY)
+  ctx.closePath()
+  ctx.fill()
+
+  const fall = ctx.createLinearGradient(0, baseY - 260, 0, baseY)
+  fall.addColorStop(0, '#eaf6fb')
+  fall.addColorStop(1, '#bcdbe6')
+  ctx.fillStyle = fall
+  ctx.beginPath()
+  ctx.moveTo(CANVAS_WIDTH - 250, baseY - 240)
+  ctx.lineTo(CANVAS_WIDTH - 210, baseY - 240)
+  ctx.lineTo(CANVAS_WIDTH - 195, baseY)
+  ctx.lineTo(CANVAS_WIDTH - 260, baseY)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.fillStyle = '#6a807a88'
+  ctx.beginPath()
+  ctx.moveTo(220, baseY - 180)
+  ctx.lineTo(420, baseY - 320)
+  ctx.lineTo(620, baseY - 190)
+  ctx.lineTo(220, baseY - 180)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.fillStyle = '#2f5a70'
+  ctx.fillRect(0, baseY, CANVAS_WIDTH, GROUND_Y - baseY + 40)
+
+  drawGround(ctx, '#2f5a70', '#1f3f50')
+}
+
+const WORLD_TOUR_2_BACKGROUNDS = [
+  drawGreatWallBackground,
+  drawPetraBackground,
+  drawSydneyOperaHouseBackground,
+  drawStatueOfLibertyBackground,
+  drawNiagaraFallsBackground,
+  drawChichenItzaBackground,
+  drawVeniceCanalsBackground,
+  drawTableMountainBackground,
+  drawGeysirBackground,
+  drawMilfordSoundBackground,
 ]
 
 const NIGHT_TINTS = [
@@ -1123,9 +1585,358 @@ function drawHellfireBackground(ctx: CanvasRenderingContext2D) {
 
 const HELLFIRE_BACKGROUNDS = [drawHellfireBackground]
 
+function drawStarfield(ctx: CanvasRenderingContext2D, seed: number) {
+  ctx.save()
+  for (let star = 0; star < 40; star += 1) {
+    const x = (star * 191 + seed * 37) % CANVAS_WIDTH
+    const y = 10 + ((star * 71 + seed * 23) % 320)
+    ctx.globalAlpha = 0.15 + (star % 5) * 0.1
+    ctx.fillStyle = '#f8fafc'
+    ctx.fillRect(x, y, 1, 1)
+  }
+  ctx.restore()
+}
+
+function drawEventHorizonBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#050108', '#14030a')
+  drawStarfield(ctx, 1)
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 190
+  ctx.save()
+  for (let ring = 6; ring >= 0; ring -= 1) {
+    const t = ring / 6
+    ctx.strokeStyle = `rgba(${251 - t * 40}, ${146 + t * 60}, ${60 + t * 140}, ${0.5 - t * 0.05})`
+    ctx.lineWidth = 10 - ring
+    ctx.beginPath()
+    ctx.ellipse(cx, cy, 60 + ring * 20, 16 + ring * 5, 0.15, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  ctx.fillStyle = '#000000'
+  ctx.beginPath()
+  ctx.arc(cx, cy, 44, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#0a0208', '#000000')
+}
+
+function drawWormholeThresholdBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#020617', '#0b1440')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 190
+  ctx.save()
+  for (let ring = 10; ring >= 1; ring -= 1) {
+    const r = ring * 22
+    ctx.strokeStyle = `rgba(96, 165, 250, ${0.5 - ring * 0.03})`
+    ctx.lineWidth = 4
+    ctx.beginPath()
+    ctx.ellipse(cx, cy, r, r * 0.32, 0, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  const core = ctx.createRadialGradient(cx, cy, 2, cx, cy, 30)
+  core.addColorStop(0, '#ffffff')
+  core.addColorStop(1, '#1e3a8a')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(cx, cy, 30, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#0b1440', '#020617')
+}
+
+function drawShatteredMoonBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a0812', '#1c1830')
+  drawStarfield(ctx, 3)
+
+  const cx = 260
+  const cy = 160
+  ctx.fillStyle = '#c9c2d4'
+  ctx.beginPath()
+  ctx.arc(cx, cy, 50, 0.4, Math.PI * 1.5)
+  ctx.arc(cx, cy, 50, Math.PI * 1.6, Math.PI * 2)
+  ctx.fill()
+
+  const fragments: [number, number, number][] = [
+    [cx + 110, cy - 30, 16],
+    [cx + 170, cy + 40, 10],
+    [cx - 90, cy + 70, 12],
+    [cx + 60, cy + 110, 8],
+  ]
+  ctx.fillStyle = '#a8a0b8'
+  for (const [x, y, r] of fragments) {
+    ctx.beginPath()
+    ctx.moveTo(x - r, y)
+    ctx.lineTo(x, y - r)
+    ctx.lineTo(x + r, y)
+    ctx.lineTo(x, y + r)
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  drawGround(ctx, '#1c1830', '#0a0812')
+}
+
+function drawIonStormBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a0f1c', '#1a2b4a')
+
+  ctx.save()
+  for (let cloud = 0; cloud < 5; cloud += 1) {
+    const x = cloud * 190 + 40
+    ctx.fillStyle = '#312e5988'
+    ctx.beginPath()
+    ctx.ellipse(x, 60 + (cloud % 2) * 30, 100, 30, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  ctx.save()
+  ctx.strokeStyle = '#a78bfa'
+  ctx.lineWidth = 2
+  const bolts: [number, number][][] = [
+    [
+      [120, 20],
+      [160, 90],
+      [110, 140],
+      [180, 220],
+    ],
+    [
+      [520, 10],
+      [480, 80],
+      [560, 150],
+      [500, 240],
+    ],
+    [
+      [720, 30],
+      [690, 100],
+      [760, 170],
+      [700, 250],
+    ],
+  ]
+  for (const bolt of bolts) {
+    ctx.globalAlpha = 0.8
+    ctx.beginPath()
+    ctx.moveTo(bolt[0][0], bolt[0][1])
+    for (const [x, y] of bolt.slice(1)) ctx.lineTo(x, y)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#1a2b4a', '#0a0f1c')
+}
+
+function drawBinaryCollapseBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#160418', '#3a0a2a')
+  drawStarfield(ctx, 5)
+
+  const starA = { x: 300, y: 150, r: 40, color: '#fb923c' }
+  const starB = { x: 400, y: 190, r: 26, color: '#60a5fa' }
+
+  for (const s of [starA, starB]) {
+    const g = ctx.createRadialGradient(s.x, s.y, 2, s.x, s.y, s.r)
+    g.addColorStop(0, '#ffffff')
+    g.addColorStop(0.4, s.color)
+    g.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = g
+    ctx.beginPath()
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  ctx.strokeStyle = '#f472b688'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(starA.x + 20, starA.y + 10)
+  ctx.quadraticCurveTo(350, 220, starB.x - 14, starB.y - 6)
+  ctx.stroke()
+
+  drawGround(ctx, '#3a0a2a', '#160418')
+}
+
+function drawCometMaelstromBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#020a12', '#0a2436')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 180
+  ctx.save()
+  for (let comet = 0; comet < 5; comet += 1) {
+    const angle = (comet / 5) * Math.PI * 2
+    const hx = cx + Math.cos(angle) * 220
+    const hy = cy + Math.sin(angle) * 90
+    const tx = cx + Math.cos(angle + 0.6) * 120
+    const ty = cy + Math.sin(angle + 0.6) * 50
+
+    const tail = ctx.createLinearGradient(tx, ty, hx, hy)
+    tail.addColorStop(0, 'rgba(103, 232, 249, 0)')
+    tail.addColorStop(1, '#67e8f9')
+    ctx.strokeStyle = tail
+    ctx.lineWidth = 5
+    ctx.beginPath()
+    ctx.moveTo(tx, ty)
+    ctx.lineTo(hx, hy)
+    ctx.stroke()
+
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.arc(hx, hy, 5, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#0a2436', '#020a12')
+}
+
+function drawGravitonWellBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#04070f', '#0e1b33')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 200
+  ctx.save()
+  ctx.strokeStyle = '#38bdf866'
+  ctx.lineWidth = 1
+  for (let y = 20; y < GROUND_Y; y += 36) {
+    ctx.beginPath()
+    for (let x = 0; x <= CANVAS_WIDTH; x += 24) {
+      const dx = x - cx
+      const dy = y - cy
+      const dist = Math.max(Math.hypot(dx, dy), 1)
+      const pull = Math.min(2200 / dist, 220)
+      const bendX = x - (dx / dist) * pull
+      const bendY = y - (dy / dist) * pull
+      if (x === 0) ctx.moveTo(bendX, bendY)
+      else ctx.lineTo(bendX, bendY)
+    }
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  ctx.fillStyle = '#0a0f1c'
+  ctx.beginPath()
+  ctx.arc(cx, cy, 20, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = '#93c5fd'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.arc(cx, cy, 20, 0, Math.PI * 2)
+  ctx.stroke()
+
+  drawGround(ctx, '#0e1b33', '#04070f')
+}
+
+function drawPulsarVortexBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#050510', '#160b2e')
+  drawStarfield(ctx, 8)
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 180
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.rotate(0.4)
+  const beam = ctx.createLinearGradient(-360, 0, 360, 0)
+  beam.addColorStop(0, 'rgba(244, 114, 182, 0)')
+  beam.addColorStop(0.5, 'rgba(244, 114, 182, 0.55)')
+  beam.addColorStop(1, 'rgba(244, 114, 182, 0)')
+  ctx.fillStyle = beam
+  ctx.fillRect(-360, -8, 720, 16)
+  ctx.rotate(Math.PI / 2)
+  ctx.fillStyle = beam
+  ctx.fillRect(-360, -8, 720, 16)
+  ctx.restore()
+
+  const core = ctx.createRadialGradient(cx, cy, 2, cx, cy, 26)
+  core.addColorStop(0, '#ffffff')
+  core.addColorStop(1, '#f472b6')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(cx, cy, 26, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#160b2e', '#050510')
+}
+
+function drawNebulaFunnelBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a0418', '#241040')
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.save()
+  for (let band = 8; band >= 1; band -= 1) {
+    const y = 30 + band * 22
+    const width = 40 + (8 - band) * 42
+    ctx.strokeStyle = `rgba(167, 139, 250, ${0.5 - band * 0.04})`
+    ctx.lineWidth = 14
+    ctx.beginPath()
+    ctx.ellipse(cx, y, width, 14, 0, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  ctx.fillStyle = '#ffffff'
+  ctx.beginPath()
+  ctx.arc(cx, 40, 8, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#241040', '#0a0418')
+}
+
+function drawTheSingularityBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#000000', '#0c0210')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 190
+  ctx.save()
+  for (let arm = 0; arm < 4; arm += 1) {
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.rotate((arm / 4) * Math.PI * 2)
+    ctx.strokeStyle = '#f8fafc'
+    ctx.globalAlpha = 0.5
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.moveTo(0, 0)
+    for (let t = 0; t <= 40; t += 1) {
+      const angle = t * 0.25
+      const r = t * 4
+      ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r * 0.4)
+    }
+    ctx.stroke()
+    ctx.restore()
+  }
+  ctx.restore()
+
+  ctx.fillStyle = '#000000'
+  ctx.beginPath()
+  ctx.arc(cx, cy, 30, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.arc(cx, cy, 30, 0, Math.PI * 2)
+  ctx.stroke()
+
+  drawGround(ctx, '#0c0210', '#000000')
+}
+
+const VORTEX_FRONTIER_BACKGROUNDS = [
+  drawEventHorizonBackground,
+  drawWormholeThresholdBackground,
+  drawShatteredMoonBackground,
+  drawIonStormBackground,
+  drawBinaryCollapseBackground,
+  drawCometMaelstromBackground,
+  drawGravitonWellBackground,
+  drawPulsarVortexBackground,
+  drawNebulaFunnelBackground,
+  drawTheSingularityBackground,
+]
+
 const RAW_BACKGROUNDS = [
   ...BASE_BACKGROUNDS,
   ...ILLUSTRATED_BACKGROUNDS,
+  ...WORLD_TOUR_2_BACKGROUNDS,
   ...DIMENSION_BACKGROUNDS,
   ...TRENCH_BACKGROUNDS,
   ...FORGE_BACKGROUNDS,
@@ -1133,6 +1944,7 @@ const RAW_BACKGROUNDS = [
   ...GALAXY_BACKGROUNDS,
   ...DEEP_SPACE_BACKGROUNDS,
   ...HELLFIRE_BACKGROUNDS,
+  ...VORTEX_FRONTIER_BACKGROUNDS,
 ]
 
 export const BACKGROUNDS = RAW_BACKGROUNDS.map(

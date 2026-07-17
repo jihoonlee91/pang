@@ -4,7 +4,7 @@ import { getStageTerrain, STAGE_TERRAINS, stepPlayerOnTerrain } from './terrain'
 
 describe('stage terrain', () => {
   it('starts with open arenas and introduces terrain gradually', () => {
-    expect(STAGE_TERRAINS).toHaveLength(60)
+    expect(STAGE_TERRAINS).toHaveLength(80)
     expect(STAGE_TERRAINS[0]).toEqual({ platforms: [] })
     expect(STAGE_TERRAINS[1]).toEqual({ platforms: [] })
     expect(STAGE_TERRAINS[2].platforms).toHaveLength(1)

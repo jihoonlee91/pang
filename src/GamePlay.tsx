@@ -57,6 +57,7 @@ import {
 } from './game/portals'
 import { getCurrentWindAx, getStageCurrent } from './game/currents'
 import { getStageGravityWell } from './game/gravityWells'
+import { getStageVortex } from './game/vortices'
 import {
   createStage,
   stepBall,
@@ -1311,10 +1312,14 @@ function GamePlay({
   const terrain = getStageTerrain(stageIndex)
   const portalPairs = useMemo(() => getStagePortals(stageIndex), [stageIndex])
   const stageCurrent = useMemo(() => getStageCurrent(stageIndex), [stageIndex])
+  // Gravity wells and vortices are the same underlying hazard (a fixed
+  // pull point) — vortices just add spin — and never overlap in stage
+  // range, so they share one slot.
   const gravityWell = useMemo(
-    () => getStageGravityWell(stageIndex),
+    () => getStageGravityWell(stageIndex) ?? getStageVortex(stageIndex),
     [stageIndex],
   )
+  const isVortexStage = gravityWell?.spin !== undefined
   const stageTimeSeconds = getStageTimeSeconds(stageIndex)
   const stageItemDropChance = getStageItemDropChance(stageIndex)
   const stageItemWeights = useMemo(
@@ -2381,7 +2386,11 @@ function GamePlay({
           <span className="hud-hazard">Portals ×{portalPairs.length}</span>
         )}
         {stageCurrent && <span className="hud-hazard">Current</span>}
-        {gravityWell && <span className="hud-hazard">Gravity Well</span>}
+        {gravityWell && (
+          <span className="hud-hazard">
+            {isVortexStage ? 'Vortex' : 'Gravity Well'}
+          </span>
+        )}
         <div
           className="hp-bar hp-bar-pulse"
           key={hpPulseKey}
