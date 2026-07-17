@@ -7,6 +7,7 @@ type Props = {
   onChange: (settings: GameSettings) => void
   onClose: () => void
   onReplayTutorial: () => void
+  showIosInstallHint: boolean
 }
 
 export default function SettingsDialog({
@@ -14,6 +15,7 @@ export default function SettingsDialog({
   onChange,
   onClose,
   onReplayTutorial,
+  showIosInstallHint,
 }: Props) {
   const update = <K extends keyof GameSettings>(
     key: K,
@@ -121,6 +123,11 @@ export default function SettingsDialog({
         This device caches the game for offline play. Clear it if you're stuck
         on an old version.
       </p>
+      {showIosInstallHint && (
+        <p className="setting-hint">
+          To install: tap Share, then "Add to Home Screen".
+        </p>
+      )}
       <p className="disclaimer">
         This is an independent game and is not affiliated with or endorsed by
         the owners of Pang or Buster Bros.

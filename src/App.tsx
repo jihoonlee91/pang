@@ -93,6 +93,43 @@ function App() {
     else void document.documentElement.requestFullscreen()
   }
 
+  const [installPromptEvent, setInstallPromptEvent] =
+    useState<BeforeInstallPromptEvent | null>(null)
+  const [isStandalone, setIsStandalone] = useState(
+    () =>
+      window.matchMedia('(display-mode: standalone)').matches ||
+      navigator.standalone === true,
+  )
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (event: BeforeInstallPromptEvent) => {
+      event.preventDefault()
+      setInstallPromptEvent(event)
+    }
+    const handleAppInstalled = () => {
+      setInstallPromptEvent(null)
+      setIsStandalone(true)
+    }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+    return () => {
+      window.removeEventListener(
+        'beforeinstallprompt',
+        handleBeforeInstallPrompt,
+      )
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
+  }, [])
+
+  const promptInstall = async () => {
+    if (!installPromptEvent) return
+    await installPromptEvent.prompt()
+    await installPromptEvent.userChoice
+    setInstallPromptEvent(null)
+  }
+
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent)
+
   const [updateAvailable, setUpdateAvailable] = useState(false)
 
   useEffect(() => {
@@ -428,6 +465,15 @@ function App() {
               {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             </button>
           )}
+          {installPromptEvent && !isStandalone && (
+            <button
+              type="button"
+              className="screen-button screen-button-secondary"
+              onClick={() => void promptInstall()}
+            >
+              Install App
+            </button>
+          )}
         </div>
         <p className="space-hint">▼ Press Space to Start ▼</p>
       </div>
@@ -454,6 +500,9 @@ function App() {
           setTutorialStep(0)
           setScreen('tutorial')
         }}
+        showIosInstallHint={
+          isIos && !isStandalone && installPromptEvent === null
+        }
       />
     )
   }
