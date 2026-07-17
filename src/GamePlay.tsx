@@ -1072,6 +1072,156 @@ function drawWeaponAura(
   ctx.restore()
 }
 
+type PlayerTheme = 'explorer' | 'ranger' | 'voyager' | 'diver' | 'pilot'
+
+// The player's look reskins every 10 stages to match that block's theme:
+// the base explorer turret, a night-ops ranger variant, a neon "voyager"
+// suit for the dimension portals, a diving suit for the trench current,
+// and a small rocket ship for the stellar-forge finale.
+function getPlayerTheme(stageIndex: number): PlayerTheme {
+  if (stageIndex < 10) return 'explorer'
+  if (stageIndex < 20) return 'ranger'
+  if (stageIndex < 30) return 'voyager'
+  if (stageIndex < 40) return 'diver'
+  return 'pilot'
+}
+
+function drawPlayerShip(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  theme: PlayerTheme,
+  isInvuln: boolean,
+  time: number,
+) {
+  const px = x - PLAYER_WIDTH / 2
+  const py = y - PLAYER_HEIGHT / 2
+  const radius = 4
+
+  ctx.save()
+  if (isInvuln) {
+    ctx.shadowColor = '#fbbf24'
+    ctx.shadowBlur = 12
+  }
+
+  if (theme === 'explorer') {
+    ctx.fillStyle = '#374151'
+    ctx.fillRect(x - 4, py - 16, 8, 16)
+  } else if (theme === 'ranger') {
+    ctx.fillStyle = '#374151'
+    ctx.fillRect(x - 4, py - 16, 8, 16)
+    ctx.save()
+    ctx.strokeStyle = '#67e8f9'
+    ctx.shadowColor = '#67e8f9'
+    ctx.shadowBlur = 6
+    ctx.lineWidth = 3
+    ctx.lineCap = 'round'
+    for (const side of [-1, 1]) {
+      ctx.beginPath()
+      ctx.moveTo(x + side * (PLAYER_WIDTH / 2 - 2), py + 4)
+      ctx.lineTo(x + side * (PLAYER_WIDTH / 2 + 11), py - 9)
+      ctx.stroke()
+      ctx.fillStyle = '#67e8f9'
+      ctx.beginPath()
+      ctx.arc(x + side * (PLAYER_WIDTH / 2 + 11), py - 9, 2.5, 0, Math.PI * 2)
+      ctx.fill()
+    }
+    ctx.restore()
+  } else if (theme === 'voyager') {
+    ctx.fillStyle = '#374151'
+    ctx.fillRect(x - 4, py - 18, 8, 12)
+    ctx.save()
+    ctx.fillStyle = '#f472b6'
+    ctx.shadowColor = '#f472b6'
+    ctx.shadowBlur = 10
+    ctx.beginPath()
+    ctx.arc(x, py - 20, 4, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.restore()
+    ctx.save()
+    ctx.strokeStyle = '#22d3ee'
+    ctx.shadowColor = '#22d3ee'
+    ctx.shadowBlur = 6
+    ctx.lineWidth = 3
+    ctx.lineCap = 'round'
+    for (const side of [-1, 1]) {
+      ctx.beginPath()
+      ctx.moveTo(x + side * (PLAYER_WIDTH / 2 - 2), py + PLAYER_HEIGHT - 2)
+      ctx.lineTo(x + side * (PLAYER_WIDTH / 2 + 10), py + PLAYER_HEIGHT + 8)
+      ctx.stroke()
+    }
+    ctx.restore()
+  } else if (theme === 'diver') {
+    ctx.fillStyle = 'rgba(125, 211, 252, 0.35)'
+    ctx.strokeStyle = '#7dd3fc'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.arc(x, py + 2, 11, Math.PI, 0)
+    ctx.fill()
+    ctx.stroke()
+    ctx.fillStyle = '#0369a1'
+    for (const side of [-1, 1]) {
+      ctx.beginPath()
+      ctx.ellipse(x + side * (PLAYER_WIDTH / 2 + 3), y, 4, 9, 0, 0, Math.PI * 2)
+      ctx.fill()
+    }
+  } else {
+    const flicker = 6 + Math.sin(time / 60) * 2
+    ctx.save()
+    ctx.globalAlpha = 0.85
+    ctx.fillStyle = '#fb923c'
+    ctx.beginPath()
+    ctx.moveTo(x - 5, py + PLAYER_HEIGHT)
+    ctx.lineTo(x, py + PLAYER_HEIGHT + flicker)
+    ctx.lineTo(x + 5, py + PLAYER_HEIGHT)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+    ctx.fillStyle = '#cbd5e1'
+    ctx.beginPath()
+    ctx.moveTo(x - 8, py)
+    ctx.lineTo(x, py - 16)
+    ctx.lineTo(x + 8, py)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = '#1e293b'
+    for (const side of [-1, 1]) {
+      ctx.beginPath()
+      ctx.moveTo(x + side * (PLAYER_WIDTH / 2 - 2), py + 4)
+      ctx.lineTo(x + side * (PLAYER_WIDTH / 2 + 9), py + PLAYER_HEIGHT)
+      ctx.lineTo(x + side * (PLAYER_WIDTH / 2 - 2), py + PLAYER_HEIGHT)
+      ctx.closePath()
+      ctx.fill()
+    }
+  }
+
+  const bodyGradient = ctx.createLinearGradient(0, py, 0, py + PLAYER_HEIGHT)
+  bodyGradient.addColorStop(0, isInvuln ? '#fef08a' : '#f87171')
+  bodyGradient.addColorStop(1, isInvuln ? '#fbbf24' : '#b91c1c')
+  ctx.fillStyle = bodyGradient
+  ctx.beginPath()
+  ctx.moveTo(px + radius, py)
+  ctx.arcTo(
+    px + PLAYER_WIDTH,
+    py,
+    px + PLAYER_WIDTH,
+    py + PLAYER_HEIGHT,
+    radius,
+  )
+  ctx.arcTo(
+    px + PLAYER_WIDTH,
+    py + PLAYER_HEIGHT,
+    px,
+    py + PLAYER_HEIGHT,
+    radius,
+  )
+  ctx.arcTo(px, py + PLAYER_HEIGHT, px, py, radius)
+  ctx.arcTo(px, py, px + PLAYER_WIDTH, py, radius)
+  ctx.closePath()
+  ctx.fill()
+  ctx.restore()
+}
+
 type Props = {
   stageIndex: number
   initialScore?: number
@@ -2036,50 +2186,14 @@ function GamePlay({
       if (weaponAura) {
         drawWeaponAura(ctx, playerXRef.current, playerY, weaponAura, time)
       }
-      const playerGradient = ctx.createLinearGradient(
-        0,
-        playerY - PLAYER_HEIGHT / 2,
-        0,
-        playerY + PLAYER_HEIGHT / 2,
+      drawPlayerShip(
+        ctx,
+        playerXRef.current,
+        playerY,
+        getPlayerTheme(stageIndex),
+        isInvuln,
+        time,
       )
-      playerGradient.addColorStop(0, isInvuln ? '#fef08a' : '#f87171')
-      playerGradient.addColorStop(1, isInvuln ? '#fbbf24' : '#b91c1c')
-
-      ctx.save()
-      if (isInvuln) {
-        ctx.shadowColor = '#fbbf24'
-        ctx.shadowBlur = 12
-      }
-
-      const px = playerXRef.current - PLAYER_WIDTH / 2
-      const py = playerY - PLAYER_HEIGHT / 2
-
-      ctx.fillStyle = '#374151'
-      ctx.fillRect(playerXRef.current - 4, py - 16, 8, 16)
-
-      ctx.fillStyle = playerGradient
-      const radius = 4
-      ctx.beginPath()
-      ctx.moveTo(px + radius, py)
-      ctx.arcTo(
-        px + PLAYER_WIDTH,
-        py,
-        px + PLAYER_WIDTH,
-        py + PLAYER_HEIGHT,
-        radius,
-      )
-      ctx.arcTo(
-        px + PLAYER_WIDTH,
-        py + PLAYER_HEIGHT,
-        px,
-        py + PLAYER_HEIGHT,
-        radius,
-      )
-      ctx.arcTo(px, py + PLAYER_HEIGHT, px, py, radius)
-      ctx.arcTo(px, py, px + PLAYER_WIDTH, py, radius)
-      ctx.closePath()
-      ctx.fill()
-      ctx.restore()
 
       if (hasInvincibleShield) {
         drawInvincibleShield(ctx, playerXRef.current, playerY, time)
