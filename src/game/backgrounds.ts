@@ -44,6 +44,26 @@ export const STAGE_NAMES = [
   'Clockwork Nebula (Dimension X)',
   'Singularity Gate (Dimension X)',
   'Pang Core (Dimension X)',
+  'Kelp Gate (The Trench)',
+  'Bioluminescent Shoal (The Trench)',
+  'Sunken Galleon (The Trench)',
+  'Coral Spires (The Trench)',
+  'Jellyfish Current (The Trench)',
+  'Thermal Vent (The Trench)',
+  'Anglerfish Deep (The Trench)',
+  'Pressure Ridge (The Trench)',
+  'Abyssal Plain (The Trench)',
+  'The Trench Floor (The Trench)',
+  'Ember Nebula (Stellar Forge)',
+  'Comet Fields (Stellar Forge)',
+  'Forge Ring (Stellar Forge)',
+  'Collapsing Star (Stellar Forge)',
+  'Molten Asteroid Belt (Stellar Forge)',
+  'Solar Furnace (Stellar Forge)',
+  'Nova Remnant (Stellar Forge)',
+  'Event Horizon (Stellar Forge)',
+  'The Last Forge (Stellar Forge)',
+  'Pang Star (Stellar Forge)',
 ]
 
 function drawSky(ctx: CanvasRenderingContext2D, top: string, bottom: string) {
@@ -650,10 +670,195 @@ const DIMENSION_BACKGROUNDS = Array.from(
     drawDimensionBackground(ctx, index),
 )
 
+const TRENCH_COLORS = [
+  ['#031c2e', '#052e42', '#38bdf8'],
+  ['#021420', '#0a2f3f', '#34d399'],
+  ['#02101c', '#0c2b3a', '#a78bfa'],
+  ['#03202f', '#0a3446', '#f472b6'],
+  ['#011119', '#082738', '#67e8f9'],
+] as const
+
+function drawTrenchBackground(
+  ctx: CanvasRenderingContext2D,
+  depthIndex: number,
+) {
+  const [top, bottom, glow] = TRENCH_COLORS[depthIndex % TRENCH_COLORS.length]
+  drawSky(ctx, top, bottom)
+
+  ctx.save()
+  for (let bubble = 0; bubble < 30; bubble += 1) {
+    const x = (bubble * 149 + depthIndex * 83) % CANVAS_WIDTH
+    const y = 24 + ((bubble * 67 + depthIndex * 37) % (GROUND_Y - 40))
+    const size = 2 + (bubble % 4)
+    ctx.globalAlpha = 0.16 + (bubble % 5) * 0.08
+    ctx.strokeStyle = '#e0f2fe'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.arc(x, y, size, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  function jellyfish(x: number, y: number, scale: number) {
+    ctx.save()
+    ctx.translate(x, y)
+    ctx.scale(scale, scale)
+    ctx.globalAlpha = 0.55
+    ctx.fillStyle = glow
+    ctx.beginPath()
+    ctx.arc(0, 0, 22, Math.PI, 0)
+    ctx.fill()
+    ctx.strokeStyle = glow
+    ctx.lineWidth = 2
+    for (let tendril = -2; tendril <= 2; tendril += 1) {
+      ctx.beginPath()
+      ctx.moveTo(tendril * 7, 0)
+      ctx.quadraticCurveTo(tendril * 9, 22, tendril * 6, 40)
+      ctx.stroke()
+    }
+    ctx.restore()
+  }
+  jellyfish(140 + ((depthIndex * 61) % 620), 90 + (depthIndex % 3) * 30, 1)
+  jellyfish(700 - ((depthIndex * 53) % 500), 140 + (depthIndex % 4) * 20, 0.7)
+
+  ctx.globalAlpha = 0.8
+  ctx.fillStyle = '#021018'
+  const variant = depthIndex % 5
+  if (variant === 2) {
+    // Sunken galleon silhouette
+    const baseY = GROUND_Y
+    const cx = CANVAS_WIDTH / 2
+    ctx.beginPath()
+    ctx.moveTo(cx - 180, baseY)
+    ctx.lineTo(cx - 140, baseY - 60)
+    ctx.lineTo(cx + 150, baseY - 50)
+    ctx.lineTo(cx + 190, baseY)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillRect(cx - 6, baseY - 160, 10, 100)
+    ctx.fillRect(cx - 70, baseY - 110, 8, 60)
+  } else {
+    for (let spire = 0; spire < 7; spire += 1) {
+      const x = spire * 145 - 30
+      const height = 50 + ((spire * 53 + depthIndex * 31) % 150)
+      ctx.beginPath()
+      ctx.moveTo(x, GROUND_Y)
+      ctx.lineTo(x + 22, GROUND_Y - height)
+      ctx.lineTo(x + 44, GROUND_Y)
+      ctx.closePath()
+      ctx.fill()
+    }
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#083344', '#021018')
+}
+
+const TRENCH_BACKGROUNDS = Array.from(
+  { length: 10 },
+  (_, index) => (ctx: CanvasRenderingContext2D) =>
+    drawTrenchBackground(ctx, index),
+)
+
+const FORGE_COLORS = [
+  ['#180402', '#3a0c05', '#fb923c'],
+  ['#12030c', '#3a0b28', '#f472b6'],
+  ['#1a0500', '#421400', '#fbbf24'],
+  ['#0e0318', '#2c0b4a', '#a78bfa'],
+  ['#1c0300', '#440a05', '#f87171'],
+] as const
+
+function drawStellarForgeBackground(
+  ctx: CanvasRenderingContext2D,
+  formIndex: number,
+) {
+  const [top, bottom, glow] = FORGE_COLORS[formIndex % FORGE_COLORS.length]
+  drawSky(ctx, top, bottom)
+
+  ctx.save()
+  for (let star = 0; star < 50; star += 1) {
+    const x = (star * 191 + formIndex * 113) % CANVAS_WIDTH
+    const y = 14 + ((star * 71 + formIndex * 47) % 320)
+    ctx.globalAlpha = 0.2 + (star % 6) * 0.12
+    ctx.fillStyle = star % 4 === 0 ? glow : '#fff7ed'
+    ctx.fillRect(x, y, star % 9 === 0 ? 3 : 1, star % 9 === 0 ? 3 : 1)
+  }
+  ctx.restore()
+
+  const coreX = 150 + ((formIndex * 151) % 660)
+  const coreY = 90 + (formIndex % 3) * 30
+  const core = ctx.createRadialGradient(
+    coreX,
+    coreY,
+    6,
+    coreX,
+    coreY,
+    70 + (formIndex % 4) * 10,
+  )
+  core.addColorStop(0, '#fff7ed')
+  core.addColorStop(0.22, glow)
+  core.addColorStop(1, '#180402')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(coreX, coreY, 70 + (formIndex % 4) * 10, 0, Math.PI * 2)
+  ctx.fill()
+
+  ctx.strokeStyle = glow
+  ctx.lineWidth = 3
+  ctx.globalAlpha = 0.6
+  for (let ring = 0; ring < 2; ring += 1) {
+    ctx.beginPath()
+    ctx.ellipse(
+      coreX,
+      coreY,
+      95 + ring * 18,
+      26 + ring * 6,
+      0.4 + ring * 0.3,
+      0,
+      Math.PI * 2,
+    )
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#0c0403'
+  for (let spire = 0; spire < 8; spire += 1) {
+    const x = spire * 128 - 24
+    const height = 70 + ((spire * 61 + formIndex * 37) % 180)
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y)
+    ctx.lineTo(x + 18, GROUND_Y - height)
+    ctx.lineTo(x + 36, GROUND_Y - height * 0.6)
+    ctx.lineTo(x + 54, GROUND_Y)
+    ctx.closePath()
+    ctx.fill()
+  }
+
+  drawGround(ctx, '#2c0b04', '#0c0201')
+  ctx.save()
+  ctx.strokeStyle = `${glow}88`
+  ctx.lineWidth = 1
+  for (let x = 20; x < CANVAS_WIDTH; x += 70) {
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y + 8)
+    ctx.lineTo(x + 30, CANVAS_HEIGHT)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+const FORGE_BACKGROUNDS = Array.from(
+  { length: 10 },
+  (_, index) => (ctx: CanvasRenderingContext2D) =>
+    drawStellarForgeBackground(ctx, index),
+)
+
 const RAW_BACKGROUNDS = [
   ...BASE_BACKGROUNDS,
   ...ILLUSTRATED_BACKGROUNDS,
   ...DIMENSION_BACKGROUNDS,
+  ...TRENCH_BACKGROUNDS,
+  ...FORGE_BACKGROUNDS,
 ]
 
 export const BACKGROUNDS = RAW_BACKGROUNDS.map(

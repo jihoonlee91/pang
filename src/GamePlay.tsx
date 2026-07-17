@@ -52,6 +52,8 @@ import {
   teleportBall,
   type Portal,
 } from './game/portals'
+import { getCurrentWindAx, getStageCurrent } from './game/currents'
+import { getStageGravityWell } from './game/gravityWells'
 import {
   createStage,
   stepBall,
@@ -325,6 +327,76 @@ function drawPortal(
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText(portal.label, 0, 1)
+  ctx.restore()
+}
+
+// Drifting chevrons hinting at the trench current's direction/strength —
+// purely decorative, the actual push is applied to balls in the physics step.
+function drawCurrentFlow(
+  ctx: CanvasRenderingContext2D,
+  windAx: number,
+  time: number,
+) {
+  if (Math.abs(windAx) < 5) return
+  const direction = windAx > 0 ? 1 : -1
+  const period = CANVAS_WIDTH + 60
+  const drift = ((time / 1000) * 60 * direction) % period
+
+  ctx.save()
+  ctx.globalAlpha = Math.min(0.5, 0.2 + Math.abs(windAx) / 400)
+  ctx.strokeStyle = '#7dd3fc'
+  ctx.lineWidth = 2
+  for (const y of [150, 250, 350, 430]) {
+    for (let i = 0; i < 6; i += 1) {
+      const raw = (i * (period / 6) + drift) % period
+      const x = ((raw + period) % period) - 30
+      ctx.beginPath()
+      ctx.moveTo(x - 9 * direction, y - 6)
+      ctx.lineTo(x, y)
+      ctx.lineTo(x - 9 * direction, y + 6)
+      ctx.stroke()
+    }
+  }
+  ctx.restore()
+}
+
+function drawGravityWell(
+  ctx: CanvasRenderingContext2D,
+  well: { x: number; y: number },
+  time: number,
+) {
+  ctx.save()
+  ctx.translate(well.x, well.y)
+  ctx.shadowColor = '#c084fc'
+  ctx.shadowBlur = 26
+
+  for (let arm = 0; arm < 3; arm += 1) {
+    ctx.strokeStyle = '#c084fc'
+    ctx.globalAlpha = 0.5 - arm * 0.12
+    ctx.lineWidth = 3 - arm * 0.6
+    const armOffset = (arm * (Math.PI * 2)) / 3
+    const spinTime = time / 500
+    ctx.beginPath()
+    for (let t = 0; t <= 1; t += 0.05) {
+      const radius = 6 + t * 46
+      const angle = armOffset + spinTime + t * 6
+      const x = Math.cos(angle) * radius
+      const y = Math.sin(angle) * radius
+      if (t === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.stroke()
+  }
+
+  ctx.globalAlpha = 0.9
+  const core = ctx.createRadialGradient(0, 0, 2, 0, 0, 16)
+  core.addColorStop(0, '#f5f3ff')
+  core.addColorStop(0.5, '#c084fc')
+  core.addColorStop(1, '#1e0b33')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(0, 0, 16, 0, Math.PI * 2)
+  ctx.fill()
   ctx.restore()
 }
 
@@ -1048,6 +1120,11 @@ function GamePlay({
   const isStarting = startCountdown !== undefined
   const terrain = getStageTerrain(stageIndex)
   const portalPairs = useMemo(() => getStagePortals(stageIndex), [stageIndex])
+  const stageCurrent = useMemo(() => getStageCurrent(stageIndex), [stageIndex])
+  const gravityWell = useMemo(
+    () => getStageGravityWell(stageIndex),
+    [stageIndex],
+  )
   const stageTimeSeconds = getStageTimeSeconds(stageIndex)
   const stageItemDropChance = getStageItemDropChance(stageIndex)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -1342,6 +1419,7 @@ function GamePlay({
             : time < doubleWireUntilRef.current
               ? MAX_HARPOONS_DOUBLE_WIRE
               : MAX_HARPOONS_DEFAULT
+          const windAx = getCurrentWindAx(stageCurrent, time)
 
           if (!demo) {
             timeRemainingRef.current = Math.max(
@@ -1377,6 +1455,8 @@ function GamePlay({
                 1.5,
                 1 / 60,
                 terrain.platforms,
+                windAx,
+                gravityWell ?? undefined,
               )
               return !best || time < best.time ? { ball: b, x, time } : best
             }, null)
@@ -1507,7 +1587,13 @@ function GamePlay({
               ? dtSec * HOURGLASS_SLOW_FACTOR
               : dtSec
             ballsRef.current = ballsRef.current.map((ball) => {
-              const steppedBall = stepBall(ball, ballDt, terrain.platforms)
+              const steppedBall = stepBall(
+                ball,
+                ballDt,
+                terrain.platforms,
+                windAx,
+                gravityWell ?? undefined,
+              )
               if (
                 portalPairs.length === 0 ||
                 time < (portalCooldownsRef.current.get(ball.id) ?? 0)
@@ -1862,6 +1948,10 @@ function GamePlay({
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
       drawBackground(ctx, stageIndex)
+      if (stageCurrent) {
+        drawCurrentFlow(ctx, getCurrentWindAx(stageCurrent, time), time)
+      }
+      if (gravityWell) drawGravityWell(ctx, gravityWell, time)
       for (const platform of terrain.platforms) drawObstacle(ctx, platform)
       for (const pair of portalPairs) {
         drawPortal(ctx, pair.entry, time)
@@ -1996,6 +2086,8 @@ function GamePlay({
     stageItemDropChance,
     terrain,
     portalPairs,
+    stageCurrent,
+    gravityWell,
     onClear,
     onGameOver,
     demo,
@@ -2021,6 +2113,8 @@ function GamePlay({
         {portalPairs.length > 0 && (
           <span className="hud-hazard">Portals ×{portalPairs.length}</span>
         )}
+        {stageCurrent && <span className="hud-hazard">Current</span>}
+        {gravityWell && <span className="hud-hazard">Gravity Well</span>}
         <div className="hp-bar" aria-label={`HP ${hp} of ${MAX_HP}`}>
           {Array.from({ length: MAX_HP }, (_, i) => (
             <span

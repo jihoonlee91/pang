@@ -28,7 +28,7 @@ export const SCORE_BY_LEVEL = [300, 150, 100]
 
 export const COMBO_WINDOW_MS = 1500
 
-export const STAGE_COUNT = 30
+export const STAGE_COUNT = 50
 export const STAGE_TIME_SECONDS = 90
 export const TIME_BONUS_PER_SECOND = 10
 
@@ -78,6 +78,28 @@ export const STAGE_OBSTACLES: readonly Obstacle[] = [
   { x: 145, y: 255, width: 190, height: 18 },
   { x: 675, y: 350, width: 175, height: 18 },
   { x: 355, y: 145, width: 250, height: 18 },
+  // --- The Trench (stages 31-40) ---
+  { x: 420, y: 220, width: 170, height: 18 },
+  { x: 130, y: 300, width: 200, height: 18 },
+  { x: 650, y: 175, width: 190, height: 18 },
+  { x: 60, y: 250, width: 210, height: 18 },
+  { x: 700, y: 340, width: 160, height: 18 },
+  { x: 300, y: 180, width: 230, height: 18 },
+  { x: 500, y: 320, width: 190, height: 18 },
+  { x: 160, y: 155, width: 170, height: 18 },
+  { x: 680, y: 260, width: 150, height: 18 },
+  { x: 340, y: 355, width: 220, height: 18 },
+  // --- Stellar Forge (stages 41-50) ---
+  { x: 100, y: 200, width: 210, height: 18 },
+  { x: 600, y: 350, width: 240, height: 18 },
+  { x: 330, y: 240, width: 180, height: 18 },
+  { x: 60, y: 335, width: 200, height: 18 },
+  { x: 720, y: 165, width: 180, height: 18 },
+  { x: 260, y: 300, width: 250, height: 18 },
+  { x: 540, y: 160, width: 200, height: 18 },
+  { x: 150, y: 260, width: 190, height: 18 },
+  { x: 650, y: 300, width: 170, height: 18 },
+  { x: 380, y: 150, width: 240, height: 18 },
 ]
 
 export function getStageObstacle(stageIndex: number): Obstacle {

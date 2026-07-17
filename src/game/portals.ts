@@ -73,12 +73,14 @@ const PORTAL_COLORS = [
 ] as const
 
 export function getStagePortals(stageIndex: number): readonly PortalPair[] {
-  if (stageIndex < PORTAL_START_STAGE) return []
+  if (
+    stageIndex < PORTAL_START_STAGE ||
+    stageIndex >= PORTAL_START_STAGE + PORTAL_LAYOUTS.length
+  ) {
+    return []
+  }
 
-  const layoutIndex = Math.min(
-    PORTAL_LAYOUTS.length - 1,
-    stageIndex - PORTAL_START_STAGE,
-  )
+  const layoutIndex = stageIndex - PORTAL_START_STAGE
   return PORTAL_LAYOUTS[layoutIndex].map(
     ([entryX, entryY, exitX, exitY], pairIndex) => {
       const [entryColor, exitColor] =

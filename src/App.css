@@ -2177,6 +2177,26 @@
   background: #701a75;
 }
 
+#root .stage-map-badge-current-hazard {
+  top: auto;
+  right: 6px;
+  bottom: 6px;
+  left: auto;
+  border-color: #7dd3fc;
+  color: #fff;
+  background: #0369a1;
+}
+
+#root .stage-map-badge-gravity {
+  top: auto;
+  right: 6px;
+  bottom: 6px;
+  left: auto;
+  border-color: #c084fc;
+  color: #fff;
+  background: #1e0b33;
+}
+
 #root .item-notice,
 #root .pause-panel {
   border: 4px double var(--retro-cream);
