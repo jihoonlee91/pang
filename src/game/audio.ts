@@ -116,7 +116,7 @@ export function startBgm(stageIndex = 0) {
   const pattern = BGM_PATTERNS[stageIndex % BGM_PATTERNS.length]
   let i = 0
   bgmTimer = setInterval(() => {
-    playTone(pattern[i % pattern.length], 0.35, 'sine', 0.025, 0, true)
+    playTone(pattern[i % pattern.length], 0.35, 'sine', 0.035, 0, true)
     i += 1
   }, 400)
 }
