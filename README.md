@@ -4,7 +4,7 @@ A classic "Pang" / Buster Bros-style arcade game. Hit the balls on screen with y
 
 ## Play Now
 
-**<a href="https://jihoonlee91.github.io/PANG-23020975/" target="_blank" rel="noopener noreferrer">Play in your browser</a>** — no install required. The site is built and deployed automatically from `master` via GitHub Actions (see `.github/workflows/deploy-pages.yml`).
+**<a href="https://jihoonlee91.github.io/pang/" target="_blank" rel="noopener noreferrer">Play in your browser</a>** — no install required. The site is built and deployed automatically from `master` via GitHub Actions (see `.github/workflows/deploy-pages.yml`).
 
 ## Gameplay
 

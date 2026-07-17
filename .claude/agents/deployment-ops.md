@@ -17,5 +17,5 @@ You are the deployment/ops expert for this PANG game. Since this project ships a
 
 ## Principles
 
-- This repository uses the `master` branch on GitHub (`https://github.com/jihoonlee91/PANG-23020975.git`). Check with the user first before changing deployment config (especially since actual deployment/publishing actions are hard to undo).
+- This repository uses the `master` branch on GitHub (`https://github.com/jihoonlee91/pang.git`). Check with the user first before changing deployment config (especially since actual deployment/publishing actions are hard to undo).
 - Follow "docs first, then code." If the deployment method changes, update the commands in `CLAUDE.md`.
