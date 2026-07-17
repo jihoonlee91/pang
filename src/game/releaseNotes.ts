@@ -9,6 +9,14 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.15.0',
+    date: '2026-07-17',
+    notes: [
+      '20 more stages! Hell (81-90) adds periodic lava-burst floor zones, and Void (91-100) drops gravity to near-zero — the game now runs 100 stages deep.',
+      'Cosmic Frontier (61-70) reworked into one continuous "flight into a nebula" theme, with a new hazard (Nebula Field) and a new item, Nova Surge, that doubles score gained from hitting balls for 10 seconds.',
+    ],
+  },
+  {
     version: '1.14.0',
     date: '2026-07-17',
     notes: [
@@ -50,13 +58,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-07-17',
     notes: [
       'Watch AI Play is a real playthrough now: the AI takes damage, dodges incoming balls, and can lose a run — no more scripted invincibility.',
-    ],
-  },
-  {
-    version: '1.9.0',
-    date: '2026-07-17',
-    notes: [
-      'New item: Stabilizer. From stage 41 onward, it neutralizes the current/gravity-well hazard for 8 seconds.',
     ],
   },
 ]

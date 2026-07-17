@@ -92,22 +92,31 @@ export function stepBall(
     width: OBSTACLE_WIDTH,
     height: OBSTACLE_HEIGHT,
   },
-  // Lateral push from a stage current (trench stages) and/or a pull toward a
-  // fixed gravity well (stellar-forge stages) — both optional, additive on
-  // top of normal gravity/bounce physics.
+  // Lateral push from a stage current (trench stages) and/or a pull toward
+  // one or more fixed gravity wells (stellar-forge/cosmic-frontier/vortex
+  // stages) — both optional, additive on top of normal gravity/bounce
+  // physics. A single well or an array (nebula-field stages, multiple
+  // simultaneous pull points) are both accepted, mirroring how `obstacles`
+  // already supports a single value or an array.
   windAx = 0,
-  well?: GravityWell,
+  well?: GravityWell | readonly GravityWell[],
+  // Multiplies GRAVITY — 1 everywhere except the Void stages, where it's
+  // near-zero so balls drift instead of falling predictably.
+  gravityScale = 1,
 ): Ball {
   const r = LEVEL_RADIUS[ball.level]
   const verticalBounceSpeed = LEVEL_BOUNCE_SPEED[ball.level]
   let { x, y, vx, vy } = ball
 
-  vy += GRAVITY * dtSec
+  vy += GRAVITY * gravityScale * dtSec
   vx += windAx * dtSec
   if (well) {
-    const { ax, ay } = applyGravityWellPull(well, x, y)
-    vx += ax * dtSec
-    vy += ay * dtSec
+    const wells = Array.isArray(well) ? well : [well]
+    for (const w of wells) {
+      const { ax, ay } = applyGravityWellPull(w, x, y)
+      vx += ax * dtSec
+      vy += ay * dtSec
+    }
   }
   x += vx * dtSec
   y += vy * dtSec
@@ -323,8 +332,9 @@ export function predictLandingSpot(
   dtSec = 1 / 60,
   obstacles?: Obstacle | readonly Obstacle[],
   windAx = 0,
-  well?: GravityWell,
+  well?: GravityWell | readonly GravityWell[],
   ballTimeScale = 1,
+  gravityScale = 1,
 ): { x: number; time: number } {
   let sim = ball
   let bestX = ball.x
@@ -333,7 +343,14 @@ export function predictLandingSpot(
   let t = 0
 
   while (t < horizonSec) {
-    sim = stepBall(sim, dtSec * ballTimeScale, obstacles, windAx, well)
+    sim = stepBall(
+      sim,
+      dtSec * ballTimeScale,
+      obstacles,
+      windAx,
+      well,
+      gravityScale,
+    )
     t += dtSec
     if (sim.y > bestY) {
       bestY = sim.y

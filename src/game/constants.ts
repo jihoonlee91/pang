@@ -31,7 +31,7 @@ export const SCORE_BY_LEVEL = [300, 150, 100]
 
 export const COMBO_WINDOW_MS = 1500
 
-export const STAGE_COUNT = 80
+export const STAGE_COUNT = 100
 export const STAGE_TIME_SECONDS = 90
 export const TIME_BONUS_PER_SECOND = 10
 
@@ -40,7 +40,11 @@ export function getStageTimeSeconds(stageIndex: number): number {
     0,
     Math.min(STAGE_COUNT - 1, Math.floor(stageIndex)),
   )
-  return STAGE_TIME_SECONDS - normalizedStage
+  // Floors at the same value late stages already converged toward before
+  // stage count grew past ~80 (90 - 78 = 12) — without this floor, stages
+  // beyond 90 (0-indexed) hit zero or negative time and the run ends the
+  // instant it starts.
+  return Math.max(12, STAGE_TIME_SECONDS - normalizedStage)
 }
 
 export type Obstacle = {
@@ -137,6 +141,28 @@ export const STAGE_OBSTACLES: readonly Obstacle[] = [
   { x: 115, y: 350, width: 190, height: 18 },
   { x: 705, y: 265, width: 180, height: 18 },
   { x: 365, y: 145, width: 220, height: 18 },
+  // --- Hell (stages 81-90) ---
+  { x: 518, y: 207, width: 223, height: 18 },
+  { x: 757, y: 289, width: 227, height: 18 },
+  { x: 180, y: 334, width: 230, height: 18 },
+  { x: 639, y: 302, width: 193, height: 18 },
+  { x: 615, y: 182, width: 217, height: 18 },
+  { x: 223, y: 185, width: 238, height: 18 },
+  { x: 669, y: 325, width: 171, height: 18 },
+  { x: 389, y: 300, width: 196, height: 18 },
+  { x: 255, y: 221, width: 251, height: 18 },
+  { x: 669, y: 232, width: 202, height: 18 },
+  // --- Void (stages 91-100) ---
+  { x: 633, y: 177, width: 175, height: 18 },
+  { x: 282, y: 222, width: 210, height: 18 },
+  { x: 741, y: 242, width: 235, height: 18 },
+  { x: 217, y: 235, width: 247, height: 18 },
+  { x: 633, y: 207, width: 213, height: 18 },
+  { x: 652, y: 294, width: 171, height: 18 },
+  { x: 472, y: 160, width: 229, height: 18 },
+  { x: 339, y: 293, width: 185, height: 18 },
+  { x: 327, y: 228, width: 201, height: 18 },
+  { x: 720, y: 234, width: 162, height: 18 },
 ]
 
 export function getStageObstacle(stageIndex: number): Obstacle {
@@ -182,14 +208,22 @@ export const ITEM_WEIGHTS: [ItemType, number][] = [
 ]
 
 // Stabilizer only does anything from stage 41 (0-indexed 40) onward, where
-// the current/gravity-well/vortex hazards begin — hardcoded here rather
-// than imported from currents.ts/gravityWells.ts/vortices.ts to avoid a
-// circular import (all of those already import from this file).
+// the current/gravity-well/nebula-field/vortex hazards begin — hardcoded
+// here rather than imported from currents.ts/gravityWells.ts/nebulae.ts/
+// vortices.ts to avoid a circular import (all of those already import from
+// this file).
 const STABILIZER_START_STAGE = 40
 
+// Nova Surge (score multiplier) is introduced at Cosmic Frontier (stage 61,
+// 0-indexed 60) and stays in the pool for every stage after, same pattern
+// as Stabilizer.
+const NOVA_SURGE_START_STAGE = 60
+
 export function getItemWeights(stageIndex: number): [ItemType, number][] {
-  if (stageIndex < STABILIZER_START_STAGE) return ITEM_WEIGHTS
-  return [...ITEM_WEIGHTS, ['stabilizer', 12]]
+  const weights: [ItemType, number][] = [...ITEM_WEIGHTS]
+  if (stageIndex >= STABILIZER_START_STAGE) weights.push(['stabilizer', 12])
+  if (stageIndex >= NOVA_SURGE_START_STAGE) weights.push(['novaSurge', 9])
+  return weights
 }
 
 export const MAX_HARPOONS_DEFAULT = 1
@@ -210,3 +244,5 @@ export const INVINCIBLE_DURATION_MS = 8000
 export const TIME_PLUS_SECONDS = 15
 export const SCORE_BONUS_POINTS = 1000
 export const STABILIZER_DURATION_MS = 8000
+export const NOVA_SURGE_DURATION_MS = 10000
+export const NOVA_SURGE_MULTIPLIER = 2

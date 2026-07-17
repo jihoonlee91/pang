@@ -79,7 +79,10 @@ describe('createStage', () => {
     for (let stage = 1; stage < STAGE_COUNT; stage += 1) {
       expect(workload(stage)).toBeGreaterThanOrEqual(workload(stage - 1))
       expect(averageSpeed(stage)).toBeGreaterThan(averageSpeed(stage - 1))
-      expect(getStageTimeSeconds(stage)).toBeLessThan(
+      // Time budget decreases stage over stage until it hits its intentional
+      // floor (see getStageTimeSeconds' Math.max in constants.ts), where it
+      // levels off rather than continuing to shrink toward zero.
+      expect(getStageTimeSeconds(stage)).toBeLessThanOrEqual(
         getStageTimeSeconds(stage - 1),
       )
       // Item drop chance decreases stage over stage until it hits its
@@ -89,6 +92,11 @@ describe('createStage', () => {
         getStageItemDropChance(stage - 1),
       )
     }
+  })
+
+  it('floors stage time at 12 seconds instead of hitting zero or negative', () => {
+    expect(getStageTimeSeconds(STAGE_COUNT - 1)).toBe(12)
+    expect(getStageTimeSeconds(STAGE_COUNT - 1)).toBeGreaterThan(0)
   })
 })
 

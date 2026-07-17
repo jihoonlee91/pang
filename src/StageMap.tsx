@@ -8,7 +8,10 @@ import {
 import { getStagePortals } from './game/portals'
 import { getStageCurrent } from './game/currents'
 import { getStageGravityWell } from './game/gravityWells'
+import { getStageNebulaWells } from './game/nebulae'
 import { getStageVortex } from './game/vortices'
+import { getStageFireZones } from './game/fireZones'
+import { getStageGravityScale } from './game/voidGravity'
 
 type ThumbnailProps = {
   stageIndex: number
@@ -111,7 +114,11 @@ function StageMap({
           const isPortalStage = portalCount > 0
           const isCurrentStage = getStageCurrent(i) !== null
           const isGravityWellStage = getStageGravityWell(i) !== null
+          const isNebulaStage = getStageNebulaWells(i) !== null
           const isVortexStage = getStageVortex(i) !== null
+          const fireZoneCount = getStageFireZones(i)?.length ?? 0
+          const isFireZoneStage = fireZoneCount > 0
+          const isVoidStage = getStageGravityScale(i) < 1
           const card = (
             <div
               className={`stage-map-card ${isCleared ? 'stage-map-card-cleared' : ''} ${isCurrent ? 'stage-map-card-current' : ''} ${isNext ? 'stage-map-card-next' : ''} ${selectedStage === i ? 'stage-map-card-selected' : ''} ${isLocked ? 'stage-map-card-locked' : ''}`}
@@ -151,9 +158,24 @@ function StageMap({
                     GRAVITY WELL
                   </span>
                 )}
+                {isNebulaStage && (
+                  <span className="stage-map-badge stage-map-badge-gravity">
+                    NEBULA FIELD
+                  </span>
+                )}
                 {isVortexStage && (
                   <span className="stage-map-badge stage-map-badge-gravity">
                     VORTEX
+                  </span>
+                )}
+                {isFireZoneStage && (
+                  <span className="stage-map-badge stage-map-badge-portal">
+                    FIRE ZONES
+                  </span>
+                )}
+                {isVoidStage && (
+                  <span className="stage-map-badge stage-map-badge-current-hazard">
+                    LOW GRAVITY
                   </span>
                 )}
               </div>

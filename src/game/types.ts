@@ -29,6 +29,7 @@ export type ItemType =
   | 'timePlus'
   | 'scoreBonus'
   | 'stabilizer'
+  | 'novaSurge'
 
 export type Item = {
   id: number

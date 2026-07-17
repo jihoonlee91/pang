@@ -44,6 +44,8 @@ import {
   TIME_PLUS_SECONDS,
   SCORE_BONUS_POINTS,
   STABILIZER_DURATION_MS,
+  NOVA_SURGE_DURATION_MS,
+  NOVA_SURGE_MULTIPLIER,
   getItemWeights,
 } from './game/constants'
 import type { Obstacle } from './game/constants'
@@ -57,7 +59,14 @@ import {
 } from './game/portals'
 import { getCurrentWindAx, getStageCurrent } from './game/currents'
 import { getStageGravityWell } from './game/gravityWells'
+import { getStageNebulaWells } from './game/nebulae'
 import { getStageVortex } from './game/vortices'
+import {
+  getStageFireZones,
+  getFireZoneState,
+  type FireZone,
+} from './game/fireZones'
+import { getStageGravityScale } from './game/voidGravity'
 import {
   createStage,
   stepBall,
@@ -121,6 +130,7 @@ const ITEM_LABELS: Record<ItemType, string> = {
   timePlus: 'T',
   scoreBonus: '$',
   stabilizer: 'A',
+  novaSurge: '2',
 }
 
 const ITEM_COLORS: Record<ItemType, string> = {
@@ -137,6 +147,7 @@ const ITEM_COLORS: Record<ItemType, string> = {
   timePlus: '#60a5fa',
   scoreBonus: '#fde047',
   stabilizer: '#22d3ee',
+  novaSurge: '#fb923c',
 }
 
 const BUFF_LABELS: Record<
@@ -147,7 +158,8 @@ const BUFF_LABELS: Record<
   | 'hourglass'
   | 'speedBoost'
   | 'invincible'
-  | 'stabilizer',
+  | 'stabilizer'
+  | 'novaSurge',
   string
 > = {
   doubleWire: 'Double Wire',
@@ -158,6 +170,7 @@ const BUFF_LABELS: Record<
   speedBoost: 'Speed Boost',
   invincible: 'Invincible',
   stabilizer: 'Stabilizer',
+  novaSurge: 'Nova Surge (x2 Score)',
 }
 
 // Timed buffs start blinking in the HUD once this many seconds remain, so
@@ -173,6 +186,7 @@ const TIMED_BUFF_KEYS = [
   'speedBoost',
   'invincible',
   'stabilizer',
+  'novaSurge',
 ] as const
 
 const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
@@ -189,6 +203,7 @@ const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
   timePlus: 'Time +15!',
   scoreBonus: 'Bonus +1000!',
   stabilizer: 'Stabilizer!',
+  novaSurge: 'Nova Surge!',
 }
 
 const ITEM_TITLES: Record<ItemType, string> = {
@@ -205,6 +220,7 @@ const ITEM_TITLES: Record<ItemType, string> = {
   timePlus: 'Time Plus',
   scoreBonus: 'Score Bonus',
   stabilizer: 'Stabilizer',
+  novaSurge: 'Nova Surge',
 }
 
 const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
@@ -221,7 +237,8 @@ const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
   invincible: '8초 동안 공에 닿아도 피해를 받지 않습니다.',
   timePlus: '남은 제한시간이 즉시 15초 증가합니다.',
   scoreBonus: '누적 점수를 즉시 1,000점 추가합니다.',
-  stabilizer: '8초 동안 조류/중력 우물 효과를 무력화합니다.',
+  stabilizer: '8초 동안 조류/중력 우물/성운/소용돌이 효과를 무력화합니다.',
+  novaSurge: '10초 동안 공을 맞혀 얻는 점수가 2배가 됩니다.',
 }
 
 type Particle = {
@@ -416,6 +433,44 @@ function drawGravityWell(
   ctx.arc(0, 0, 16, 0, Math.PI * 2)
   ctx.fill()
   ctx.restore()
+}
+
+function drawFireZones(
+  ctx: CanvasRenderingContext2D,
+  zones: readonly FireZone[],
+  time: number,
+) {
+  const floorY = PLAYER_Y + 26
+  for (const zone of zones) {
+    const state = getFireZoneState(zone, time)
+    if (state === 'dormant') continue
+
+    ctx.save()
+    if (state === 'warning') {
+      ctx.globalAlpha = 0.35 + Math.sin(time / 90) * 0.15
+      ctx.fillStyle = '#f97316'
+      ctx.fillRect(zone.x, floorY - 6, zone.width, 10)
+    } else {
+      ctx.shadowColor = '#fb923c'
+      ctx.shadowBlur = 22
+      const flame = ctx.createLinearGradient(0, floorY - 70, 0, floorY + 8)
+      flame.addColorStop(0, 'rgba(253, 224, 71, 0)')
+      flame.addColorStop(0.5, '#fb923c')
+      flame.addColorStop(1, '#f97316')
+      ctx.fillStyle = flame
+      const flicker = Math.sin(time / 60) * 6
+      ctx.beginPath()
+      ctx.moveTo(zone.x, floorY)
+      for (let x = zone.x; x <= zone.x + zone.width; x += 14) {
+        const h = 40 + Math.sin((x + time / 40) / 18) * 16 + flicker
+        ctx.lineTo(x, floorY - h)
+      }
+      ctx.lineTo(zone.x + zone.width, floorY)
+      ctx.closePath()
+      ctx.fill()
+    }
+    ctx.restore()
+  }
 }
 
 function drawBrickFrame(ctx: CanvasRenderingContext2D) {
@@ -834,6 +889,19 @@ function drawFallingItemIcon(
       ctx.moveTo(0, 9)
       ctx.quadraticCurveTo(7, 9, 7, 2)
       ctx.stroke()
+      break
+    case 'novaSurge':
+      ctx.beginPath()
+      ctx.arc(0, 0, 4, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.lineWidth = 2
+      for (let ray = 0; ray < 8; ray += 1) {
+        const angle = (ray / 8) * Math.PI * 2
+        ctx.beginPath()
+        ctx.moveTo(Math.cos(angle) * 6, Math.sin(angle) * 6)
+        ctx.lineTo(Math.cos(angle) * 11, Math.sin(angle) * 11)
+        ctx.stroke()
+      }
       break
   }
 }
@@ -1284,6 +1352,7 @@ type BuffDisplay = {
   speedBoost: number
   invincible: number
   stabilizer: number
+  novaSurge: number
 }
 
 const NO_BUFFS: BuffDisplay = {
@@ -1296,6 +1365,7 @@ const NO_BUFFS: BuffDisplay = {
   speedBoost: 0,
   invincible: 0,
   stabilizer: 0,
+  novaSurge: 0,
 }
 
 function GamePlay({
@@ -1312,14 +1382,26 @@ function GamePlay({
   const terrain = getStageTerrain(stageIndex)
   const portalPairs = useMemo(() => getStagePortals(stageIndex), [stageIndex])
   const stageCurrent = useMemo(() => getStageCurrent(stageIndex), [stageIndex])
-  // Gravity wells and vortices are the same underlying hazard (a fixed
-  // pull point) — vortices just add spin — and never overlap in stage
-  // range, so they share one slot.
+  // Gravity wells, nebula fields, and vortices are all the same underlying
+  // hazard (one or more fixed pull points) — nebula fields are just two
+  // weaker wells, vortices add spin — and none of the three ranges overlap,
+  // so they share one slot. stepBall/predictLandingSpot already accept a
+  // single well or an array of them.
   const gravityWell = useMemo(
-    () => getStageGravityWell(stageIndex) ?? getStageVortex(stageIndex),
+    () =>
+      getStageGravityWell(stageIndex) ??
+      getStageNebulaWells(stageIndex) ??
+      getStageVortex(stageIndex),
     [stageIndex],
   )
-  const isVortexStage = gravityWell?.spin !== undefined
+  const isVortexStage =
+    !Array.isArray(gravityWell) && gravityWell?.spin !== undefined
+  const isNebulaStage = Array.isArray(gravityWell)
+  const fireZones = useMemo(() => getStageFireZones(stageIndex), [stageIndex])
+  const gravityScale = useMemo(
+    () => getStageGravityScale(stageIndex),
+    [stageIndex],
+  )
   const stageTimeSeconds = getStageTimeSeconds(stageIndex)
   const stageItemDropChance = getStageItemDropChance(stageIndex)
   const stageItemWeights = useMemo(
@@ -1368,6 +1450,7 @@ function GamePlay({
   const speedBoostUntilRef = useRef(0)
   const invincibleUntilRef = useRef(0)
   const stabilizerUntilRef = useRef(0)
+  const novaSurgeUntilRef = useRef(0)
   const barrierCountRef = useRef(0)
   const portalCooldownsRef = useRef(new Map<number, number>())
   const buffsDisplayRef = useRef<BuffDisplay>(NO_BUFFS)
@@ -1408,6 +1491,7 @@ function GamePlay({
       hourglassUntilRef.current = 0
       speedBoostUntilRef.current = 0
       invincibleUntilRef.current = 0
+      novaSurgeUntilRef.current = 0
       barrierCountRef.current = 0
       portalCooldownsRef.current.clear()
       playerXRef.current = CANVAS_WIDTH / 2
@@ -1472,6 +1556,7 @@ function GamePlay({
     hourglassUntilRef.current += pausedFor
     speedBoostUntilRef.current += pausedFor
     invincibleUntilRef.current += pausedFor
+    novaSurgeUntilRef.current += pausedFor
     lastHitAtRef.current += pausedFor
     harpoonsRef.current = harpoonsRef.current.map((harpoon) => ({
       ...harpoon,
@@ -1628,6 +1713,7 @@ function GamePlay({
               ? MAX_HARPOONS_DOUBLE_WIRE
               : MAX_HARPOONS_DEFAULT
           const isStabilizerActive = time < stabilizerUntilRef.current
+          const isNovaSurgeActive = time < novaSurgeUntilRef.current
           const windAx = isStabilizerActive
             ? 0
             : getCurrentWindAx(stageCurrent, time)
@@ -1680,6 +1766,7 @@ function GamePlay({
                 windAx,
                 activeGravityWell,
                 ballTimeScale,
+                gravityScale,
               ),
             }))
             const targetPrediction = predictions.reduce<
@@ -1711,18 +1798,29 @@ function GamePlay({
             // landing. Once harpoons are full and no shot is available, the
             // target goes back to being a real threat like anything else.)
             const canEngageTarget = harpoonsRef.current.length < maxHarpoons
-            const dangerZones: DangerZone[] = predictions
-              .filter(
-                (p) => !(canEngageTarget && target && p.ball.id === target.id),
-              )
-              .map((p) => ({
-                x: p.x,
-                time: p.time,
-                radius:
-                  LEVEL_RADIUS[p.ball.level] +
-                  PLAYER_WIDTH / 2 +
-                  AI_DODGE_BUFFER,
+            const fireZoneDangers: DangerZone[] = (fireZones ?? [])
+              .filter((zone) => getFireZoneState(zone, time) !== 'dormant')
+              .map((zone) => ({
+                x: zone.x + zone.width / 2,
+                time: 0,
+                radius: zone.width / 2 + PLAYER_WIDTH / 2 + AI_DODGE_BUFFER,
               }))
+            const dangerZones: DangerZone[] = [
+              ...predictions
+                .filter(
+                  (p) =>
+                    !(canEngageTarget && target && p.ball.id === target.id),
+                )
+                .map((p) => ({
+                  x: p.x,
+                  time: p.time,
+                  radius:
+                    LEVEL_RADIUS[p.ball.level] +
+                    PLAYER_WIDTH / 2 +
+                    AI_DODGE_BUFFER,
+                })),
+              ...fireZoneDangers,
+            ]
             // While invincible, nothing is actually a threat — go straight
             // for the goal instead of routing around ghosts.
             const moveTargetX =
@@ -1862,6 +1960,7 @@ function GamePlay({
                 terrain.platforms,
                 windAx,
                 activeGravityWell,
+                gravityScale,
               )
               if (
                 portalPairs.length === 0 ||
@@ -1925,7 +2024,9 @@ function GamePlay({
               lastHitAtRef.current = time
 
               const gained = Math.round(
-                SCORE_BY_LEVEL[hitBall.level] * (1 + comboRef.current * 0.1),
+                SCORE_BY_LEVEL[hitBall.level] *
+                  (1 + comboRef.current * 0.1) *
+                  (isNovaSurgeActive ? NOVA_SURGE_MULTIPLIER : 1),
               )
               scoreRef.current = addToTotalScore(scoreRef.current, gained)
               setScore(scoreRef.current)
@@ -1978,9 +2079,19 @@ function GamePlay({
             !isInvincibleActive &&
             time >= invulnUntilRef.current
           ) {
-            const hit = ballsRef.current.some((b) =>
-              ballHitsPlayer(b, playerXRef.current, playerYRef.current),
-            )
+            const hitByFireZone =
+              fireZones?.some((zone) => {
+                if (getFireZoneState(zone, time) !== 'active') return false
+                return (
+                  playerXRef.current + PLAYER_WIDTH / 2 > zone.x &&
+                  playerXRef.current - PLAYER_WIDTH / 2 < zone.x + zone.width
+                )
+              }) ?? false
+            const hit =
+              hitByFireZone ||
+              ballsRef.current.some((b) =>
+                ballHitsPlayer(b, playerXRef.current, playerYRef.current),
+              )
             if (hit) {
               invulnUntilRef.current = time + INVULN_MS
               if (barrierCountRef.current > 0) {
@@ -2125,6 +2236,9 @@ function GamePlay({
               case 'stabilizer':
                 stabilizerUntilRef.current = time + STABILIZER_DURATION_MS
                 break
+              case 'novaSurge':
+                novaSurgeUntilRef.current = time + NOVA_SURGE_DURATION_MS
+                break
             }
           }
 
@@ -2160,6 +2274,10 @@ function GamePlay({
             0,
             Math.ceil((stabilizerUntilRef.current - time) / 1000),
           )
+          const novaSurgeSec = Math.max(
+            0,
+            Math.ceil((novaSurgeUntilRef.current - time) / 1000),
+          )
           const barrierCount = barrierCountRef.current
           const prevBuffs = buffsDisplayRef.current
           if (
@@ -2171,6 +2289,7 @@ function GamePlay({
             prevBuffs.speedBoost !== speedBoostSec ||
             prevBuffs.invincible !== invincibleSec ||
             prevBuffs.stabilizer !== stabilizerSec ||
+            prevBuffs.novaSurge !== novaSurgeSec ||
             prevBuffs.barrier !== barrierCount
           ) {
             const nextBuffs: BuffDisplay = {
@@ -2182,6 +2301,7 @@ function GamePlay({
               speedBoost: speedBoostSec,
               invincible: invincibleSec,
               stabilizer: stabilizerSec,
+              novaSurge: novaSurgeSec,
               barrier: barrierCount,
             }
             buffsDisplayRef.current = nextBuffs
@@ -2247,7 +2367,11 @@ function GamePlay({
       if (stageCurrent) {
         drawCurrentFlow(ctx, getCurrentWindAx(stageCurrent, time), time)
       }
-      if (gravityWell) drawGravityWell(ctx, gravityWell, time)
+      if (gravityWell) {
+        const wells = Array.isArray(gravityWell) ? gravityWell : [gravityWell]
+        for (const well of wells) drawGravityWell(ctx, well, time)
+      }
+      if (fireZones) drawFireZones(ctx, fireZones, time)
       for (const platform of terrain.platforms) drawObstacle(ctx, platform)
       for (const pair of portalPairs) {
         drawPortal(ctx, pair.entry, time)
@@ -2359,6 +2483,8 @@ function GamePlay({
     portalPairs,
     stageCurrent,
     gravityWell,
+    fireZones,
+    gravityScale,
     onClear,
     onGameOver,
     demo,
@@ -2388,9 +2514,15 @@ function GamePlay({
         {stageCurrent && <span className="hud-hazard">Current</span>}
         {gravityWell && (
           <span className="hud-hazard">
-            {isVortexStage ? 'Vortex' : 'Gravity Well'}
+            {isVortexStage
+              ? 'Vortex'
+              : isNebulaStage
+                ? 'Nebula Field'
+                : 'Gravity Well'}
           </span>
         )}
+        {fireZones && <span className="hud-hazard">Fire Zones</span>}
+        {gravityScale < 1 && <span className="hud-hazard">Low Gravity</span>}
         <div
           className="hp-bar hp-bar-pulse"
           key={hpPulseKey}
@@ -2618,6 +2750,7 @@ function GamePlay({
                 buffs.speedBoost === 0 &&
                 buffs.invincible === 0 &&
                 buffs.stabilizer === 0 &&
+                buffs.novaSurge === 0 &&
                 buffs.barrier === 0 && <li>None</li>}
             </ul>
           </div>
