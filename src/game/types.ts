@@ -28,6 +28,7 @@ export type ItemType =
   | 'invincible'
   | 'timePlus'
   | 'scoreBonus'
+  | 'stabilizer'
 
 export type Item = {
   id: number

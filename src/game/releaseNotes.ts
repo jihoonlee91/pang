@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.9.0',
+    date: '2026-07-17',
+    notes: [
+      'New item: Stabilizer. From stage 31 onward, it neutralizes the current/gravity-well hazard for 8 seconds.',
+    ],
+  },
+  {
     version: '1.8.0',
     date: '2026-07-17',
     notes: ['Added this "What\'s New" screen, in Settings.'],
@@ -42,13 +49,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-07-17',
     notes: [
       'Added an "Install App" button on the main screen, plus an install hint for iOS Safari.',
-    ],
-  },
-  {
-    version: '1.5.0',
-    date: '2026-07-17',
-    notes: [
-      'Your ship now changes appearance every 10 stages: explorer, ranger, voyager, diver, and pilot looks.',
     ],
   },
 ]

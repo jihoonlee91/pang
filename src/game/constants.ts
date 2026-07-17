@@ -147,6 +147,17 @@ export const ITEM_WEIGHTS: [ItemType, number][] = [
   ['scoreBonus', 8],
 ]
 
+// Stabilizer only does anything from stage 31 (0-indexed 30) onward, where
+// the current/gravity-well hazards begin — hardcoded here rather than
+// imported from currents.ts/gravityWells.ts to avoid a circular import
+// (both of those already import from this file).
+const STABILIZER_START_STAGE = 30
+
+export function getItemWeights(stageIndex: number): [ItemType, number][] {
+  if (stageIndex < STABILIZER_START_STAGE) return ITEM_WEIGHTS
+  return [...ITEM_WEIGHTS, ['stabilizer', 12]]
+}
+
 export const MAX_HARPOONS_DEFAULT = 1
 export const MAX_HARPOONS_DOUBLE_WIRE = 2
 export const MAX_VULCAN_SHOTS = 5
@@ -164,3 +175,4 @@ export const SPEED_BOOST_MULTIPLIER = 1.6
 export const INVINCIBLE_DURATION_MS = 8000
 export const TIME_PLUS_SECONDS = 15
 export const SCORE_BONUS_POINTS = 1000
+export const STABILIZER_DURATION_MS = 8000

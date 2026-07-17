@@ -273,6 +273,17 @@ describe('rollItemDrop', () => {
     const rand = () => values.shift() ?? 0
     expect(rollItemDrop(rand)).toBe('scoreBonus')
   })
+
+  it('draws from a custom weight table when one is passed', () => {
+    const values = [0, 0.999]
+    const rand = () => values.shift() ?? 0
+    expect(
+      rollItemDrop(rand, 1, [
+        ['stabilizer', 1],
+        ['oneUp', 1],
+      ]),
+    ).toBe('oneUp')
+  })
 })
 
 describe('collision helpers', () => {

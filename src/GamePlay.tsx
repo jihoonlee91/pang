@@ -43,6 +43,8 @@ import {
   INVINCIBLE_DURATION_MS,
   TIME_PLUS_SECONDS,
   SCORE_BONUS_POINTS,
+  STABILIZER_DURATION_MS,
+  getItemWeights,
 } from './game/constants'
 import type { Obstacle } from './game/constants'
 import { getStageTerrain, stepPlayerOnTerrain } from './game/terrain'
@@ -115,6 +117,7 @@ const ITEM_LABELS: Record<ItemType, string> = {
   invincible: 'I',
   timePlus: 'T',
   scoreBonus: '$',
+  stabilizer: 'A',
 }
 
 const ITEM_COLORS: Record<ItemType, string> = {
@@ -130,6 +133,7 @@ const ITEM_COLORS: Record<ItemType, string> = {
   invincible: '#c084fc',
   timePlus: '#60a5fa',
   scoreBonus: '#fde047',
+  stabilizer: '#22d3ee',
 }
 
 const BUFF_LABELS: Record<
@@ -139,7 +143,8 @@ const BUFF_LABELS: Record<
   | 'clock'
   | 'hourglass'
   | 'speedBoost'
-  | 'invincible',
+  | 'invincible'
+  | 'stabilizer',
   string
 > = {
   doubleWire: 'Double Wire',
@@ -149,6 +154,7 @@ const BUFF_LABELS: Record<
   hourglass: 'Hourglass (Slow)',
   speedBoost: 'Speed Boost',
   invincible: 'Invincible',
+  stabilizer: 'Stabilizer',
 }
 
 // Timed buffs start blinking in the HUD once this many seconds remain, so
@@ -163,6 +169,7 @@ const TIMED_BUFF_KEYS = [
   'hourglass',
   'speedBoost',
   'invincible',
+  'stabilizer',
 ] as const
 
 const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
@@ -178,6 +185,7 @@ const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
   invincible: 'Invincible!',
   timePlus: 'Time +15!',
   scoreBonus: 'Bonus +1000!',
+  stabilizer: 'Stabilizer!',
 }
 
 const ITEM_TITLES: Record<ItemType, string> = {
@@ -193,6 +201,7 @@ const ITEM_TITLES: Record<ItemType, string> = {
   invincible: 'Invincible',
   timePlus: 'Time Plus',
   scoreBonus: 'Score Bonus',
+  stabilizer: 'Stabilizer',
 }
 
 const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
@@ -209,6 +218,7 @@ const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
   invincible: '8초 동안 공에 닿아도 피해를 받지 않습니다.',
   timePlus: '남은 제한시간이 즉시 15초 증가합니다.',
   scoreBonus: '누적 점수를 즉시 1,000점 추가합니다.',
+  stabilizer: '8초 동안 조류/중력 우물 효과를 무력화합니다.',
 }
 
 type Particle = {
@@ -806,6 +816,22 @@ function drawFallingItemIcon(
       ctx.fillStyle = '#fff7b2'
       ctx.fill()
       break
+    case 'stabilizer':
+      ctx.lineWidth = 2.4
+      ctx.beginPath()
+      ctx.arc(0, -8, 3, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(0, -5)
+      ctx.lineTo(0, 9)
+      ctx.moveTo(-6, -1)
+      ctx.lineTo(6, -1)
+      ctx.moveTo(0, 9)
+      ctx.quadraticCurveTo(-7, 9, -7, 2)
+      ctx.moveTo(0, 9)
+      ctx.quadraticCurveTo(7, 9, 7, 2)
+      ctx.stroke()
+      break
   }
 }
 
@@ -1250,6 +1276,7 @@ type BuffDisplay = {
   barrier: number
   speedBoost: number
   invincible: number
+  stabilizer: number
 }
 
 const NO_BUFFS: BuffDisplay = {
@@ -1261,6 +1288,7 @@ const NO_BUFFS: BuffDisplay = {
   barrier: 0,
   speedBoost: 0,
   invincible: 0,
+  stabilizer: 0,
 }
 
 function GamePlay({
@@ -1283,6 +1311,10 @@ function GamePlay({
   )
   const stageTimeSeconds = getStageTimeSeconds(stageIndex)
   const stageItemDropChance = getStageItemDropChance(stageIndex)
+  const stageItemWeights = useMemo(
+    () => getItemWeights(stageIndex),
+    [stageIndex],
+  )
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const playerXRef = useRef(CANVAS_WIDTH / 2)
   const playerYRef = useRef(PLAYER_Y)
@@ -1324,6 +1356,7 @@ function GamePlay({
   const hourglassUntilRef = useRef(0)
   const speedBoostUntilRef = useRef(0)
   const invincibleUntilRef = useRef(0)
+  const stabilizerUntilRef = useRef(0)
   const barrierCountRef = useRef(0)
   const portalCooldownsRef = useRef(new Map<number, number>())
   const buffsDisplayRef = useRef<BuffDisplay>(NO_BUFFS)
@@ -1583,7 +1616,13 @@ function GamePlay({
             : time < doubleWireUntilRef.current
               ? MAX_HARPOONS_DOUBLE_WIRE
               : MAX_HARPOONS_DEFAULT
-          const windAx = getCurrentWindAx(stageCurrent, time)
+          const isStabilizerActive = time < stabilizerUntilRef.current
+          const windAx = isStabilizerActive
+            ? 0
+            : getCurrentWindAx(stageCurrent, time)
+          const activeGravityWell = isStabilizerActive
+            ? undefined
+            : (gravityWell ?? undefined)
 
           if (!demo) {
             timeRemainingRef.current = Math.max(
@@ -1620,7 +1659,7 @@ function GamePlay({
                 1 / 60,
                 terrain.platforms,
                 windAx,
-                gravityWell ?? undefined,
+                activeGravityWell,
               )
               return !best || time < best.time ? { ball: b, x, time } : best
             }, null)
@@ -1756,7 +1795,7 @@ function GamePlay({
                 ballDt,
                 terrain.platforms,
                 windAx,
-                gravityWell ?? undefined,
+                activeGravityWell,
               )
               if (
                 portalPairs.length === 0 ||
@@ -1847,7 +1886,11 @@ function GamePlay({
                 ...children,
               ]
 
-              const droppedType = rollItemDrop(Math.random, stageItemDropChance)
+              const droppedType = rollItemDrop(
+                Math.random,
+                stageItemDropChance,
+                stageItemWeights,
+              )
               if (droppedType) {
                 itemsRef.current = [
                   ...itemsRef.current,
@@ -2014,6 +2057,9 @@ function GamePlay({
                 )
                 setScore(scoreRef.current)
                 break
+              case 'stabilizer':
+                stabilizerUntilRef.current = time + STABILIZER_DURATION_MS
+                break
             }
           }
 
@@ -2045,6 +2091,10 @@ function GamePlay({
             0,
             Math.ceil((invincibleUntilRef.current - time) / 1000),
           )
+          const stabilizerSec = Math.max(
+            0,
+            Math.ceil((stabilizerUntilRef.current - time) / 1000),
+          )
           const barrierCount = barrierCountRef.current
           const prevBuffs = buffsDisplayRef.current
           if (
@@ -2055,6 +2105,7 @@ function GamePlay({
             prevBuffs.hourglass !== hourglassSec ||
             prevBuffs.speedBoost !== speedBoostSec ||
             prevBuffs.invincible !== invincibleSec ||
+            prevBuffs.stabilizer !== stabilizerSec ||
             prevBuffs.barrier !== barrierCount
           ) {
             const nextBuffs: BuffDisplay = {
@@ -2065,6 +2116,7 @@ function GamePlay({
               hourglass: hourglassSec,
               speedBoost: speedBoostSec,
               invincible: invincibleSec,
+              stabilizer: stabilizerSec,
               barrier: barrierCount,
             }
             buffsDisplayRef.current = nextBuffs
@@ -2237,6 +2289,7 @@ function GamePlay({
   }, [
     stageIndex,
     stageItemDropChance,
+    stageItemWeights,
     terrain,
     portalPairs,
     stageCurrent,
@@ -2495,6 +2548,7 @@ function GamePlay({
                 buffs.hourglass === 0 &&
                 buffs.speedBoost === 0 &&
                 buffs.invincible === 0 &&
+                buffs.stabilizer === 0 &&
                 buffs.barrier === 0 && <li>None</li>}
             </ul>
           </div>

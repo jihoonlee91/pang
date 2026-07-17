@@ -268,16 +268,17 @@ export function explodeToSmallest(balls: Ball[], nextId: () => number): Ball[] {
 export function rollItemDrop(
   rand: () => number = Math.random,
   dropChance = ITEM_DROP_CHANCE,
+  weights: readonly [ItemType, number][] = ITEM_WEIGHTS,
 ): ItemType | null {
   if (rand() > dropChance) return null
 
-  const total = ITEM_WEIGHTS.reduce((sum, [, weight]) => sum + weight, 0)
+  const total = weights.reduce((sum, [, weight]) => sum + weight, 0)
   let roll = rand() * total
-  for (const [type, weight] of ITEM_WEIGHTS) {
+  for (const [type, weight] of weights) {
     if (roll < weight) return type
     roll -= weight
   }
-  return ITEM_WEIGHTS[ITEM_WEIGHTS.length - 1][0]
+  return weights[weights.length - 1][0]
 }
 
 export function stepItem(item: Item, dtSec: number): Item {
