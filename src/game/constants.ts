@@ -22,6 +22,9 @@ export const SPLIT_VY_PER_LEVEL = 150
 
 export const MAX_HP = 3
 export const INVULN_MS = 1200
+// Grace period at the start of a stage so a ball already in flight can't
+// hit the player the instant control begins.
+export const STAGE_START_INVULN_MS = 3000
 
 export const LEVEL_RADIUS = [14, 20, 28]
 export const SCORE_BY_LEVEL = [300, 150, 100]

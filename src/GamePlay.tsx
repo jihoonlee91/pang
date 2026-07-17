@@ -18,6 +18,7 @@ import {
   VULCAN_SPEED,
   MAX_HP,
   INVULN_MS,
+  STAGE_START_INVULN_MS,
   LEVEL_RADIUS,
   SCORE_BY_LEVEL,
   COMBO_WINDOW_MS,
@@ -1191,7 +1192,7 @@ function GamePlay({
       harpoonsRef.current = []
       itemsRef.current = []
       hpRef.current = MAX_HP
-      invulnUntilRef.current = 0
+      invulnUntilRef.current = performance.now() + STAGE_START_INVULN_MS
       comboRef.current = 0
       lastHitAtRef.current = 0
       endedRef.current = false
