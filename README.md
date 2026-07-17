@@ -6,7 +6,7 @@ An original arcade game where players split bouncing orbs with vertical shots. H
 
 ## Play Now
 
-**<a href="https://jihoonlee91.github.io/pang/" target="_blank" rel="noopener noreferrer">Play in your browser</a>** — no install required. The site is built and deployed automatically from `master` via GitHub Actions (see `.github/workflows/deploy-pages.yml`).
+**<a href="https://jihoonlee91.github.io/orbit/" target="_blank" rel="noopener noreferrer">Play in your browser</a>** — no install required, and installable as a PWA. The site is built and deployed automatically from `master` via GitHub Actions (see `.github/workflows/deploy-pages.yml`).
 
 ## Gameplay
 
@@ -14,7 +14,7 @@ An original arcade game where players split bouncing orbs with vertical shots. H
 - Only one harpoon can exist at a time, and you can't fire again while it's still on screen.
 - When a harpoon hits a ball, that ball is removed; if it isn't already the smallest size, it splits into two balls one size smaller. The smallest-size ball disappears completely without splitting when hit.
 - Getting hit by a ball doesn't kill you instantly — it reduces HP by 1 and grants a brief period of invulnerability. Game over occurs when HP reaches 0.
-- Clearing all the balls on screen clears the stage. Clear all 5 stages in order (Mt. Fuji → Guilin → Emerald Temple → Angkor Wat → Ayers Rock themes) to clear the game.
+- Clearing all the balls on screen clears the stage. There are 50 stages: a world-tour of real landmarks (1-20), dimension-warp portals (21-30), an undersea current (31-40, "The Trench"), and a gravity well (41-50, "Stellar Forge"). Clear all 50 to clear the game, with a certificate-style celebration every 10 stages.
 - Hitting balls consecutively within a short time builds up a combo, increasing your score multiplier.
 - The striped platform obstacle in the center of the screen blocks harpoons and bounces balls off of it.
 - Your high score is saved in the browser's `localStorage` and shown on the game-end screen.

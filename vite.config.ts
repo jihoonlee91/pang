@@ -26,7 +26,7 @@ function versionMetaPlugin(): Plugin {
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/pang/',
+  base: '/orbit/',
   plugins: [react(), versionMetaPlugin()],
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
