@@ -8,7 +8,7 @@
 ## 2. Core Gameplay
 
 - The player fires a harpoon to hit the balls on screen, splitting them and eventually removing them.
-- Removing all the balls clears the stage and progresses to the next one, across 10 stages total.
+- Removing all the balls clears the stage and progresses to the next one, across 50 stages total, escalating through several distinct environmental hazards (ladders, dimension portals, undersea currents, gravity wells).
 - Getting hit by a ball doesn't cause instant death — it reduces HP by a set amount, and game over occurs when HP reaches 0.
 - Power-ups occasionally drop from hit balls, applying a temporary effect (double wire, clock, hourglass, barrier, 1UP, or the risky dynamite).
 

@@ -98,3 +98,15 @@ A file laying out the goals for each phase.
 ### Phase 4-4. Polish
 
 - Finish up polish with sound/effects and other presentation elements
+
+## Phase 5. World Expansion II
+
+### Phase 5-1. The Trench (Stages 31-40)
+
+- Add 10 more stages themed as a deep-sea trench, with a new periodic
+  "current" hazard that pushes balls laterally
+
+### Phase 5-2. Stellar Forge (Stages 41-50)
+
+- Add the final 10 stages themed as deep space, with a new "gravity
+  well" hazard that pulls balls toward a fixed point

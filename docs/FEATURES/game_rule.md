@@ -7,9 +7,10 @@ treat the design docs as authoritative.
 ## Basic Rules
 
 - The player fires a harpoon to hit the balls on screen, splitting them and eventually removing them.
-- Removing all the balls on screen clears the stage and progresses to the next one. There are 10 stages
-  total; the 5 world-tour themed backgrounds (Mt. Fuji -> Guilin -> Emerald Temple -> Angkor Wat ->
-  Ayers Rock) repeat for stages 6-10 at higher difficulty (see `docs/design/phase3_1.md`, `phase3_3.md`).
+- Removing all the balls on screen clears the stage and progresses to the next one. There are 50 stages
+  total, escalating through several distinct environmental hazards across the run: a vertical ladder
+  section (stages 6-10), dimension-warp portals (stages 21-30), undersea currents (stages 31-40, see
+  `docs/design/phase5_1.md`), and gravity wells (stages 41-50, see `docs/design/phase5_2.md`).
 - Getting hit by a ball doesn't cause instant death — HP decreases by 1, and after being hit you become
   invulnerable for a set period (1.2 seconds). Game over occurs when HP reaches 0. HP is shown on the HUD
   as a filled gauge (segmented bar) plus a "current/max" number, for colorblind/screen-reader accessibility
@@ -55,7 +56,7 @@ treat the design docs as authoritative.
 
 ## Other Screens
 
-- **Stage Map**: a read-only screen (from the main menu) showing all 10 stages with live background
+- **Stage Map**: a read-only screen (from the main menu) showing all 50 stages with live background
   previews (see `docs/design/phase1_5.md`).
 - **Demo Mode**: a "Watch Demo" option that runs an AI-controlled, invulnerable playthrough on loop, with
   on-screen indicators of the AI's inputs (see `docs/design/phase1_6.md`).
@@ -63,4 +64,4 @@ treat the design docs as authoritative.
 ## End Conditions
 
 - Game over: when HP reaches 0
-- Clear: when all 10 stages are cleared
+- Clear: when all 50 stages are cleared
