@@ -26,4 +26,26 @@ describe('getItemWeights', () => {
     expect(weights.some(([type]) => type === 'novaSurge')).toBe(true)
     expect(weights.some(([type]) => type === 'stabilizer')).toBe(true)
   })
+
+  it('excludes fireproof before Hell starts', () => {
+    const weights = getItemWeights(79)
+    expect(weights.some(([type]) => type === 'fireproof')).toBe(false)
+  })
+
+  it('includes fireproof from stage 81 (0-indexed 80) onward', () => {
+    const weights = getItemWeights(80)
+    expect(weights.some(([type]) => type === 'fireproof')).toBe(true)
+    expect(weights.some(([type]) => type === 'novaSurge')).toBe(true)
+  })
+
+  it('excludes anchor before Void starts', () => {
+    const weights = getItemWeights(89)
+    expect(weights.some(([type]) => type === 'anchor')).toBe(false)
+  })
+
+  it('includes anchor from stage 91 (0-indexed 90) onward', () => {
+    const weights = getItemWeights(90)
+    expect(weights.some(([type]) => type === 'anchor')).toBe(true)
+    expect(weights.some(([type]) => type === 'fireproof')).toBe(true)
+  })
 })

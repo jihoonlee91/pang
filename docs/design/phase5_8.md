@@ -46,4 +46,6 @@
 - `src/game/constants.ts` — `STAGE_COUNT` raised to 100, 10 new
   `STAGE_OBSTACLES` entries, `getStageTimeSeconds` given a 12-second floor
   (see `phase3_2.md`) — without it, `STAGE_TIME_SECONDS - stageIndex` went
-  to zero/negative for every Void stage and ended the run instantly
+  to zero/negative for every Void stage and ended the run instantly,
+  `ANCHOR_START_STAGE`/`ANCHOR_DURATION_MS` (see `phase3_4.md`'s Anchor
+  section)

@@ -52,4 +52,24 @@ describe('stage terrain', () => {
     expect(next.x).toBe(20)
     expect(next.y).toBe(PLAYER_Y)
   })
+
+  it('varies platform layouts across the 8 layout families from stage 21 onward', () => {
+    // Stage 20 (0-indexed) is the first stage past the hand-placed
+    // EXTRA_PLATFORMS range, where LAYOUT_FAMILIES takes over.
+    const layouts = Array.from({ length: 8 }, (_, i) =>
+      getStageTerrain(20 + i)
+        .platforms.map((p) => `${p.x},${p.y}`)
+        .join('|'),
+    )
+    const distinctLayouts = new Set(layouts)
+    expect(distinctLayouts.size).toBe(8)
+  })
+
+  it('jitters the same layout family differently one cycle apart', () => {
+    // Stages 20 and 28 both land on family index 4 (20 % 8 === 28 % 8),
+    // but per-stage jitter should still make their exact platforms differ.
+    const first = getStageTerrain(20).platforms
+    const second = getStageTerrain(28).platforms
+    expect(first).not.toEqual(second)
+  })
 })

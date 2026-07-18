@@ -31,3 +31,19 @@
 - Rolled into the item pool from stage 61 onward (`NOVA_SURGE_START_STAGE`), staying in the pool for every later stage, same pattern as Stabilizer.
 - Doubles the score gained from hitting balls for 10 seconds (`NOVA_SURGE_DURATION_MS`, `NOVA_SURGE_MULTIPLIER`) — does not affect scoreBonus/timePlus or other flat bonuses.
 - Weight 9 among that pool's items (same tier as oneUp/dynamite).
+
+## Hell item: Fireproof, Void item: Anchor
+
+- The two hazards Stabilizer explicitly doesn't cover (fire zones, low
+  gravity — see `phase3_4.md`'s Stabilizer section above) each get their
+  own dedicated item instead, so every hazard block still pairs with
+  something new per rule "테마가 바뀌면 새로운 아이템이나 맵 장치같은게
+  등장해야한다" (a theme change should bring a new item or map device).
+- **Fireproof** (`FIREPROOF_START_STAGE`, stage 81 onward): 8 seconds
+  (`FIREPROOF_DURATION_MS`) of immunity to Hell's fire-zone damage
+  specifically — touching an active zone while Fireproof is up does
+  nothing. Weight 10.
+- **Anchor** (`ANCHOR_START_STAGE`, stage 91 onward): 8 seconds
+  (`ANCHOR_DURATION_MS`) of restored normal gravity in Void — balls fall
+  predictably again instead of drifting, letting the player briefly read
+  landing spots the normal way. Weight 10.

@@ -46,6 +46,8 @@ import {
   STABILIZER_DURATION_MS,
   NOVA_SURGE_DURATION_MS,
   NOVA_SURGE_MULTIPLIER,
+  FIREPROOF_DURATION_MS,
+  ANCHOR_DURATION_MS,
   getItemWeights,
 } from './game/constants'
 import type { Obstacle } from './game/constants'
@@ -131,6 +133,8 @@ const ITEM_LABELS: Record<ItemType, string> = {
   scoreBonus: '$',
   stabilizer: 'A',
   novaSurge: '2',
+  fireproof: 'F',
+  anchor: 'X',
 }
 
 const ITEM_COLORS: Record<ItemType, string> = {
@@ -148,6 +152,8 @@ const ITEM_COLORS: Record<ItemType, string> = {
   scoreBonus: '#fde047',
   stabilizer: '#22d3ee',
   novaSurge: '#fb923c',
+  fireproof: '#f87171',
+  anchor: '#94a3b8',
 }
 
 const BUFF_LABELS: Record<
@@ -159,7 +165,9 @@ const BUFF_LABELS: Record<
   | 'speedBoost'
   | 'invincible'
   | 'stabilizer'
-  | 'novaSurge',
+  | 'novaSurge'
+  | 'fireproof'
+  | 'anchor',
   string
 > = {
   doubleWire: 'Double Wire',
@@ -171,6 +179,8 @@ const BUFF_LABELS: Record<
   invincible: 'Invincible',
   stabilizer: 'Stabilizer',
   novaSurge: 'Nova Surge (x2 Score)',
+  fireproof: 'Fireproof',
+  anchor: 'Anchor',
 }
 
 // Timed buffs start blinking in the HUD once this many seconds remain, so
@@ -187,6 +197,8 @@ const TIMED_BUFF_KEYS = [
   'invincible',
   'stabilizer',
   'novaSurge',
+  'fireproof',
+  'anchor',
 ] as const
 
 const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
@@ -204,6 +216,8 @@ const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
   scoreBonus: 'Bonus +1000!',
   stabilizer: 'Stabilizer!',
   novaSurge: 'Nova Surge!',
+  fireproof: 'Fireproof!',
+  anchor: 'Anchor!',
 }
 
 const ITEM_TITLES: Record<ItemType, string> = {
@@ -221,6 +235,8 @@ const ITEM_TITLES: Record<ItemType, string> = {
   scoreBonus: 'Score Bonus',
   stabilizer: 'Stabilizer',
   novaSurge: 'Nova Surge',
+  fireproof: 'Fireproof',
+  anchor: 'Anchor',
 }
 
 const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
@@ -239,6 +255,8 @@ const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
   scoreBonus: '누적 점수를 즉시 1,000점 추가합니다.',
   stabilizer: '8초 동안 조류/중력 우물/성운/소용돌이 효과를 무력화합니다.',
   novaSurge: '10초 동안 공을 맞혀 얻는 점수가 2배가 됩니다.',
+  fireproof: '8초 동안 화염 지대에 닿아도 피해를 받지 않습니다.',
+  anchor: '8초 동안 중력을 정상으로 되돌립니다.',
 }
 
 type Particle = {
@@ -903,6 +921,39 @@ function drawFallingItemIcon(
         ctx.stroke()
       }
       break
+    case 'fireproof':
+      ctx.beginPath()
+      ctx.moveTo(0, -10)
+      ctx.quadraticCurveTo(-7, -2, -4, 4)
+      ctx.quadraticCurveTo(-6, 8, 0, 9)
+      ctx.quadraticCurveTo(6, 8, 4, 2)
+      ctx.quadraticCurveTo(7, 0, 4, -6)
+      ctx.quadraticCurveTo(2, -2, 0, -10)
+      ctx.closePath()
+      ctx.fill()
+      ctx.strokeStyle = '#f8fafc'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(-9, 9)
+      ctx.lineTo(9, -9)
+      ctx.stroke()
+      break
+    case 'anchor':
+      ctx.lineWidth = 2.4
+      ctx.beginPath()
+      ctx.arc(0, -7, 3, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(0, -4)
+      ctx.lineTo(0, 8)
+      ctx.moveTo(-7, -1)
+      ctx.lineTo(7, -1)
+      ctx.moveTo(-6, 5)
+      ctx.quadraticCurveTo(-6, 9, 0, 9)
+      ctx.moveTo(6, 5)
+      ctx.quadraticCurveTo(6, 9, 0, 9)
+      ctx.stroke()
+      break
   }
 }
 
@@ -1353,6 +1404,8 @@ type BuffDisplay = {
   invincible: number
   stabilizer: number
   novaSurge: number
+  fireproof: number
+  anchor: number
 }
 
 const NO_BUFFS: BuffDisplay = {
@@ -1366,6 +1419,8 @@ const NO_BUFFS: BuffDisplay = {
   invincible: 0,
   stabilizer: 0,
   novaSurge: 0,
+  fireproof: 0,
+  anchor: 0,
 }
 
 function GamePlay({
@@ -1451,6 +1506,8 @@ function GamePlay({
   const invincibleUntilRef = useRef(0)
   const stabilizerUntilRef = useRef(0)
   const novaSurgeUntilRef = useRef(0)
+  const fireproofUntilRef = useRef(0)
+  const anchorUntilRef = useRef(0)
   const barrierCountRef = useRef(0)
   const portalCooldownsRef = useRef(new Map<number, number>())
   const buffsDisplayRef = useRef<BuffDisplay>(NO_BUFFS)
@@ -1492,6 +1549,8 @@ function GamePlay({
       speedBoostUntilRef.current = 0
       invincibleUntilRef.current = 0
       novaSurgeUntilRef.current = 0
+      fireproofUntilRef.current = 0
+      anchorUntilRef.current = 0
       barrierCountRef.current = 0
       portalCooldownsRef.current.clear()
       playerXRef.current = CANVAS_WIDTH / 2
@@ -1557,6 +1616,8 @@ function GamePlay({
     speedBoostUntilRef.current += pausedFor
     invincibleUntilRef.current += pausedFor
     novaSurgeUntilRef.current += pausedFor
+    fireproofUntilRef.current += pausedFor
+    anchorUntilRef.current += pausedFor
     lastHitAtRef.current += pausedFor
     harpoonsRef.current = harpoonsRef.current.map((harpoon) => ({
       ...harpoon,
@@ -1714,12 +1775,15 @@ function GamePlay({
               : MAX_HARPOONS_DEFAULT
           const isStabilizerActive = time < stabilizerUntilRef.current
           const isNovaSurgeActive = time < novaSurgeUntilRef.current
+          const isFireproofActive = time < fireproofUntilRef.current
+          const isAnchorActive = time < anchorUntilRef.current
           const windAx = isStabilizerActive
             ? 0
             : getCurrentWindAx(stageCurrent, time)
           const activeGravityWell = isStabilizerActive
             ? undefined
             : (gravityWell ?? undefined)
+          const activeGravityScale = isAnchorActive ? 1 : gravityScale
 
           if (!demo) {
             timeRemainingRef.current = Math.max(
@@ -1766,7 +1830,7 @@ function GamePlay({
                 windAx,
                 activeGravityWell,
                 ballTimeScale,
-                gravityScale,
+                activeGravityScale,
               ),
             }))
             const targetPrediction = predictions.reduce<
@@ -1960,7 +2024,7 @@ function GamePlay({
                 terrain.platforms,
                 windAx,
                 activeGravityWell,
-                gravityScale,
+                activeGravityScale,
               )
               if (
                 portalPairs.length === 0 ||
@@ -2080,13 +2144,15 @@ function GamePlay({
             time >= invulnUntilRef.current
           ) {
             const hitByFireZone =
-              fireZones?.some((zone) => {
+              !isFireproofActive &&
+              (fireZones?.some((zone) => {
                 if (getFireZoneState(zone, time) !== 'active') return false
                 return (
                   playerXRef.current + PLAYER_WIDTH / 2 > zone.x &&
                   playerXRef.current - PLAYER_WIDTH / 2 < zone.x + zone.width
                 )
-              }) ?? false
+              }) ??
+                false)
             const hit =
               hitByFireZone ||
               ballsRef.current.some((b) =>
@@ -2239,6 +2305,12 @@ function GamePlay({
               case 'novaSurge':
                 novaSurgeUntilRef.current = time + NOVA_SURGE_DURATION_MS
                 break
+              case 'fireproof':
+                fireproofUntilRef.current = time + FIREPROOF_DURATION_MS
+                break
+              case 'anchor':
+                anchorUntilRef.current = time + ANCHOR_DURATION_MS
+                break
             }
           }
 
@@ -2278,6 +2350,14 @@ function GamePlay({
             0,
             Math.ceil((novaSurgeUntilRef.current - time) / 1000),
           )
+          const fireproofSec = Math.max(
+            0,
+            Math.ceil((fireproofUntilRef.current - time) / 1000),
+          )
+          const anchorSec = Math.max(
+            0,
+            Math.ceil((anchorUntilRef.current - time) / 1000),
+          )
           const barrierCount = barrierCountRef.current
           const prevBuffs = buffsDisplayRef.current
           if (
@@ -2290,6 +2370,8 @@ function GamePlay({
             prevBuffs.invincible !== invincibleSec ||
             prevBuffs.stabilizer !== stabilizerSec ||
             prevBuffs.novaSurge !== novaSurgeSec ||
+            prevBuffs.fireproof !== fireproofSec ||
+            prevBuffs.anchor !== anchorSec ||
             prevBuffs.barrier !== barrierCount
           ) {
             const nextBuffs: BuffDisplay = {
@@ -2302,6 +2384,8 @@ function GamePlay({
               invincible: invincibleSec,
               stabilizer: stabilizerSec,
               novaSurge: novaSurgeSec,
+              fireproof: fireproofSec,
+              anchor: anchorSec,
               barrier: barrierCount,
             }
             buffsDisplayRef.current = nextBuffs
@@ -2751,6 +2835,8 @@ function GamePlay({
                 buffs.invincible === 0 &&
                 buffs.stabilizer === 0 &&
                 buffs.novaSurge === 0 &&
+                buffs.fireproof === 0 &&
+                buffs.anchor === 0 &&
                 buffs.barrier === 0 && <li>None</li>}
             </ul>
           </div>

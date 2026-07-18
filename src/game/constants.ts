@@ -219,10 +219,19 @@ const STABILIZER_START_STAGE = 40
 // as Stabilizer.
 const NOVA_SURGE_START_STAGE = 60
 
+// Fireproof neutralizes Hell's fire zones (stage 81, 0-indexed 80 onward)
+// and Anchor neutralizes Void's low gravity (stage 91, 0-indexed 90
+// onward) — same "introduced once, stays in the pool forever after"
+// pattern as Stabilizer/Nova Surge.
+const FIREPROOF_START_STAGE = 80
+const ANCHOR_START_STAGE = 90
+
 export function getItemWeights(stageIndex: number): [ItemType, number][] {
   const weights: [ItemType, number][] = [...ITEM_WEIGHTS]
   if (stageIndex >= STABILIZER_START_STAGE) weights.push(['stabilizer', 12])
   if (stageIndex >= NOVA_SURGE_START_STAGE) weights.push(['novaSurge', 9])
+  if (stageIndex >= FIREPROOF_START_STAGE) weights.push(['fireproof', 10])
+  if (stageIndex >= ANCHOR_START_STAGE) weights.push(['anchor', 10])
   return weights
 }
 
@@ -246,3 +255,5 @@ export const SCORE_BONUS_POINTS = 1000
 export const STABILIZER_DURATION_MS = 8000
 export const NOVA_SURGE_DURATION_MS = 10000
 export const NOVA_SURGE_MULTIPLIER = 2
+export const FIREPROOF_DURATION_MS = 8000
+export const ANCHOR_DURATION_MS = 8000

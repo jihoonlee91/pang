@@ -78,7 +78,13 @@ describe('createStage', () => {
 
     for (let stage = 1; stage < STAGE_COUNT; stage += 1) {
       expect(workload(stage)).toBeGreaterThanOrEqual(workload(stage - 1))
-      expect(averageSpeed(stage)).toBeGreaterThan(averageSpeed(stage - 1))
+      // Speed climbs stage over stage until it hits its intentional cap
+      // (see createStage's Math.min in engine.ts), where it plateaus so
+      // late stages differentiate via their own hazard instead of raw
+      // ball speed alone.
+      expect(averageSpeed(stage)).toBeGreaterThanOrEqual(
+        averageSpeed(stage - 1),
+      )
       // Time budget decreases stage over stage until it hits its intentional
       // floor (see getStageTimeSeconds' Math.max in constants.ts), where it
       // levels off rather than continuing to shrink toward zero.
@@ -97,6 +103,13 @@ describe('createStage', () => {
   it('floors stage time at 12 seconds instead of hitting zero or negative', () => {
     expect(getStageTimeSeconds(STAGE_COUNT - 1)).toBe(12)
     expect(getStageTimeSeconds(STAGE_COUNT - 1)).toBeGreaterThan(0)
+  })
+
+  it('caps ball speed at stage 80 instead of climbing unbounded to stage 100', () => {
+    const speedAt = (stageIndex: number) =>
+      Math.abs(createStage(stageIndex)[0].vx)
+    expect(speedAt(79)).toBe(speedAt(80))
+    expect(speedAt(79)).toBe(speedAt(STAGE_COUNT - 1))
   })
 })
 

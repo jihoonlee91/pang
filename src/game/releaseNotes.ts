@@ -9,6 +9,15 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.16.0',
+    date: '2026-07-18',
+    notes: [
+      'Platform layouts stopped repeating the same shape past stage 20 — 8 distinct hand-designed arrangements now cycle across stages 21-100.',
+      'Two new items: Fireproof (Hell, stage 81+) grants brief immunity to fire zones, and Anchor (Void, stage 91+) briefly restores normal gravity.',
+      'Fixed ball speed climbing unbounded past stage 80 — it now caps at the same speed as the original 80-stage design, so Hell and Void stay winnable.',
+    ],
+  },
+  {
     version: '1.15.0',
     date: '2026-07-17',
     notes: [
@@ -51,13 +60,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-07-17',
     notes: [
       'AI Play dodges much more reliably now — it plans further ahead and searches for genuinely safe ground instead of just nudging away from danger.',
-    ],
-  },
-  {
-    version: '1.10.0',
-    date: '2026-07-17',
-    notes: [
-      'Watch AI Play is a real playthrough now: the AI takes damage, dodges incoming balls, and can lose a run — no more scripted invincibility.',
     ],
   },
 ]

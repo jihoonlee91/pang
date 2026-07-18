@@ -52,7 +52,11 @@ export function createStage(stageIndex: number): Ball[] {
   }
 
   const count = Math.min(Math.floor((stageIndex - 5) / 2) + 3, 8)
-  const speedMultiplier = 1 + stageIndex * 0.08
+  // Caps at the speed the original 80-stage design already topped out at
+  // (stage 80) — otherwise this climbs unbounded and stages 81-100 (Hell,
+  // Void) would be raw-speed-unplayable well before their own hazards
+  // (fire zones, near-zero gravity) get a chance to be the challenge.
+  const speedMultiplier = 1 + Math.min(stageIndex, 79) * 0.08
   const baseVx = 100 * speedMultiplier
   const balls: Ball[] = []
   for (let i = 0; i < count; i++) {

@@ -30,6 +30,8 @@ export type ItemType =
   | 'scoreBonus'
   | 'stabilizer'
   | 'novaSurge'
+  | 'fireproof'
+  | 'anchor'
 
 export type Item = {
   id: number
