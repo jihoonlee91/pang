@@ -43,4 +43,5 @@
 - `src/game/backgrounds.ts` — 10 new backgrounds + `STAGE_NAMES`
   entries
 - `src/game/constants.ts` — `STAGE_COUNT` raised to 90 (later 100, see
-  `phase5_8.md`), 10 new `STAGE_OBSTACLES` entries
+  `phase5_8.md`), 10 new `STAGE_OBSTACLES` entries, `FIREPROOF_START_STAGE`/
+  `FIREPROOF_DURATION_MS` (see `phase3_4.md`'s Fireproof section)
