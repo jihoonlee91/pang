@@ -1786,9 +1786,17 @@ function GamePlay({
           const activeGravityScale = isAnchorActive ? 1 : gravityScale
 
           if (!demo) {
+            // Clock/Hourglass slow or stop balls, so the stage clock should
+            // read the same way — otherwise a 6-second Clock still burns 6
+            // real seconds off the timer while nothing on screen is moving.
+            const timeDtScale = isClockActive
+              ? 0
+              : isHourglassActive
+                ? HOURGLASS_SLOW_FACTOR
+                : 1
             timeRemainingRef.current = Math.max(
               0,
-              timeRemainingRef.current - dtSec,
+              timeRemainingRef.current - dtSec * timeDtScale,
             )
             const displayedTime = Math.ceil(timeRemainingRef.current)
             if (displayedTime !== lastDisplayedTimeRef.current) {
