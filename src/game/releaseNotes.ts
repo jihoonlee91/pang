@@ -9,6 +9,15 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.16.3',
+    date: '2026-07-19',
+    notes: [
+      "Fixed a timing bug where the 3-second start invulnerability could already be expired the instant a new stage began, letting Hell's fire zones (or balls) hit before you'd even had a chance to move.",
+      "Hell's fire zones now telegraph longer and clearer before igniting — a visibly rising glow previews where and how tall the flame will be, instead of a brief blinking floor strip.",
+      'Running out of time now shows "Time Over" on the end screen instead of a generic "Game Over", so it\'s clear why the run ended.',
+    ],
+  },
+  {
     version: '1.16.2',
     date: '2026-07-18',
     notes: [
@@ -52,13 +61,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-07-17',
     notes: [
       '10 new stages! Cosmic Frontier travels outward from the solar system through the galaxy into deep space, ending on a Hellfire finale.',
-    ],
-  },
-  {
-    version: '1.12.1',
-    date: '2026-07-17',
-    notes: [
-      'Fixed AI Play permanently freezing if it died on stage 1 (the attract loop now always recovers, no matter which stage it dies on).',
     ],
   },
 ]

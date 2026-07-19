@@ -66,6 +66,7 @@ import { getStageVortex } from './game/vortices'
 import {
   getStageFireZones,
   getFireZoneState,
+  getFireZoneWarningProgress,
   type FireZone,
 } from './game/fireZones'
 import { getStageGravityScale } from './game/voidGravity'
@@ -465,8 +466,24 @@ function drawFireZones(
 
     ctx.save()
     if (state === 'warning') {
-      ctx.globalAlpha = 0.35 + Math.sin(time / 90) * 0.15
-      ctx.fillStyle = '#f97316'
+      // A rising heat-glow preview, growing taller as ignition approaches —
+      // telegraphs the flame's exact position, width, and imminent timing
+      // instead of just a static blinking floor strip.
+      const progress = getFireZoneWarningProgress(zone, time)
+      const pulse = 0.5 + Math.sin(time / 70) * 0.2
+      const previewHeight = 10 + progress * 34
+      const glow = ctx.createLinearGradient(
+        0,
+        floorY - previewHeight,
+        0,
+        floorY,
+      )
+      glow.addColorStop(0, 'rgba(249, 115, 22, 0)')
+      glow.addColorStop(1, '#f97316')
+      ctx.globalAlpha = (0.25 + progress * 0.35) * pulse
+      ctx.fillRect(zone.x, floorY - previewHeight, zone.width, previewHeight)
+      ctx.globalAlpha = 0.5 + pulse * 0.3
+      ctx.fillStyle = '#fb923c'
       ctx.fillRect(zone.x, floorY - 6, zone.width, 10)
     } else {
       ctx.shadowColor = '#fb923c'
@@ -1379,7 +1396,7 @@ type Props = {
   initialScore?: number
   startCountdown?: number
   onClear: (score: number) => void
-  onGameOver: (score: number) => void
+  onGameOver: (score: number, reason?: 'timeUp') => void
   demo?: boolean
   settings: GameSettings
   onQuit: () => void
@@ -1471,6 +1488,7 @@ function GamePlay({
   const itemsRef = useRef<Item[]>([])
   const hpRef = useRef(MAX_HP)
   const invulnUntilRef = useRef(0)
+  const wasStartingRef = useRef(isStarting)
   const hitEffectUntilRef = useRef(0)
   const comboRef = useRef(0)
   const lastHitAtRef = useRef(0)
@@ -1628,6 +1646,20 @@ function GamePlay({
     }))
     pausedAtRef.current = null
   }, [paused])
+
+  useEffect(() => {
+    // The "get ready" countdown before the next stage (stageAdvanceCountdown,
+    // ~5s) shares this same GamePlay instance and runs after resetStageState
+    // already armed the 3s start invulnerability — so by the time the
+    // countdown ends and real gameplay begins, that grace window had already
+    // expired mid-countdown, leaving zero actual invulnerability. Re-arm it
+    // fresh the moment isStarting flips to false, so hazards like Hell's
+    // fire zones can't hit the player before they've even gotten to move.
+    if (wasStartingRef.current && !isStarting) {
+      invulnUntilRef.current = performance.now() + STAGE_START_INVULN_MS
+    }
+    wasStartingRef.current = isStarting
+  }, [isStarting])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1807,7 +1839,7 @@ function GamePlay({
               endedRef.current = true
               playGameOverSound()
               stopBgm()
-              onGameOver(scoreRef.current)
+              onGameOver(scoreRef.current, 'timeUp')
               continue
             }
           }

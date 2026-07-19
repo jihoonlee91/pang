@@ -75,6 +75,9 @@ function App() {
   const [demoRunId, setDemoRunId] = useState(0)
   const [finalScore, setFinalScore] = useState(0)
   const [result, setResult] = useState<StageResult>('gameover')
+  const [gameOverReason, setGameOverReason] = useState<'timeUp' | undefined>(
+    undefined,
+  )
   const [rank, setRank] = useState(1)
   const [topScores, setTopScores] = useState<ScoreEntry[]>([])
   const [playedAt, setPlayedAt] = useState('')
@@ -303,9 +306,10 @@ function App() {
     return () => window.clearTimeout(timer)
   }, [screen, stageAdvanceCountdown, continueToNextStage])
 
-  const finish = (outcome: StageResult, score: number) => {
+  const finish = (outcome: StageResult, score: number, reason?: 'timeUp') => {
     setFinalScore(score)
     setResult(outcome)
+    setGameOverReason(reason)
     if (outcome === 'clear') playVictoryFanfare()
 
     const {
@@ -351,8 +355,8 @@ function App() {
     setScreen('stageClear')
   }
 
-  const handleGameOver = (score: number) => {
-    finish('gameover', score)
+  const handleGameOver = (score: number, reason?: 'timeUp') => {
+    finish('gameover', score, reason)
   }
 
   // Demo mode loops forever and never records a real score.
@@ -674,9 +678,19 @@ function App() {
         </p>
       )}
       <p className="main-kicker">
-        {result === 'clear' ? 'Certificate of Completion' : 'Game Over'}
+        {result === 'clear'
+          ? 'Certificate of Completion'
+          : gameOverReason === 'timeUp'
+            ? 'Time Over'
+            : 'Game Over'}
       </p>
-      <h1>{result === 'clear' ? 'Game Clear' : 'Game Over'}</h1>
+      <h1>
+        {result === 'clear'
+          ? 'Game Clear'
+          : gameOverReason === 'timeUp'
+            ? 'Time Over'
+            : 'Game Over'}
+      </h1>
       <p className="result-score">Score {finalScore}</p>
       <p className="result-high-score">All-time #{rank}</p>
       <p className="result-detail">

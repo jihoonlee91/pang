@@ -11,7 +11,10 @@ export type FireZone = {
 export type FireZoneState = 'dormant' | 'warning' | 'active'
 
 const ACTIVE_MS = 850
-const WARNING_MS = 550
+// Long enough to actually read and react to before the flame erupts —
+// 550ms didn't give players real reaction time, so a zone flaring up
+// felt unpredictable rather than telegraphed.
+const WARNING_MS = 800
 
 const ZONE_LAYOUTS: readonly (readonly Omit<
   FireZone,
@@ -86,16 +89,34 @@ export function getStageFireZones(stageIndex: number): FireZone[] | null {
   }))
 }
 
+function cyclePosition(zone: FireZone, elapsedMs: number): number {
+  return (
+    (((elapsedMs + zone.phaseMs) % zone.periodMs) + zone.periodMs) %
+    zone.periodMs
+  )
+}
+
 export function getFireZoneState(
   zone: FireZone,
   elapsedMs: number,
 ): FireZoneState {
-  const t =
-    (((elapsedMs + zone.phaseMs) % zone.periodMs) + zone.periodMs) %
-    zone.periodMs
+  const t = cyclePosition(zone, elapsedMs)
   const activeStart = zone.periodMs - ACTIVE_MS
   const warningStart = activeStart - WARNING_MS
   if (t >= activeStart) return 'active'
   if (t >= warningStart) return 'warning'
   return 'dormant'
+}
+
+// 0 at the start of the warning telegraph, 1 the instant it ignites — lets
+// the renderer grow the preview glow so the buildup itself reads as a
+// countdown, not just a static blinking strip.
+export function getFireZoneWarningProgress(
+  zone: FireZone,
+  elapsedMs: number,
+): number {
+  const t = cyclePosition(zone, elapsedMs)
+  const activeStart = zone.periodMs - ACTIVE_MS
+  const warningStart = activeStart - WARNING_MS
+  return Math.max(0, Math.min(1, (t - warningStart) / WARNING_MS))
 }
