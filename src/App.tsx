@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import GamePlay from './GamePlay'
 import StageMap from './StageMap'
+import Glossary from './Glossary'
 import { STAGE_COUNT } from './game/constants'
 import type { StageResult } from './game/types'
 import { getPlayerName, recordScore, renameEntry } from './game/scoreHistory'
@@ -30,6 +31,7 @@ type Screen =
   | 'map'
   | 'settings'
   | 'whatsNew'
+  | 'glossary'
   | 'end'
 
 const MILESTONE_INTERVAL = 10
@@ -45,6 +47,7 @@ const BACK_TO_MAIN_SCREENS: readonly Screen[] = [
   'demo',
   'end',
   'whatsNew',
+  'glossary',
 ]
 
 // Most back-to-main screens really do go to 'main'; 'whatsNew' is opened
@@ -75,6 +78,9 @@ function App() {
   const [demoRunId, setDemoRunId] = useState(0)
   const [finalScore, setFinalScore] = useState(0)
   const [result, setResult] = useState<StageResult>('gameover')
+  const [gameOverReason, setGameOverReason] = useState<'timeUp' | undefined>(
+    undefined,
+  )
   const [rank, setRank] = useState(1)
   const [topScores, setTopScores] = useState<ScoreEntry[]>([])
   const [playedAt, setPlayedAt] = useState('')
@@ -252,6 +258,11 @@ function App() {
     }
   }
 
+  const continueGame = () => {
+    unlockAudio()
+    beginCountdown(highestUnlockedStage)
+  }
+
   const advanceTutorial = () => {
     const isLastStep = tutorialStep === TUTORIAL_STEPS.length - 1
     if (!isLastStep) setTutorialStep((step) => step + 1)
@@ -303,9 +314,10 @@ function App() {
     return () => window.clearTimeout(timer)
   }, [screen, stageAdvanceCountdown, continueToNextStage])
 
-  const finish = (outcome: StageResult, score: number) => {
+  const finish = (outcome: StageResult, score: number, reason?: 'timeUp') => {
     setFinalScore(score)
     setResult(outcome)
+    setGameOverReason(reason)
     if (outcome === 'clear') playVictoryFanfare()
 
     const {
@@ -351,8 +363,8 @@ function App() {
     setScreen('stageClear')
   }
 
-  const handleGameOver = (score: number) => {
-    finish('gameover', score)
+  const handleGameOver = (score: number, reason?: 'timeUp') => {
+    finish('gameover', score, reason)
   }
 
   // Demo mode loops forever and never records a real score.
@@ -458,6 +470,9 @@ function App() {
         <p className="main-kicker">Classic World Tour • 1 Player</p>
         <h1>ORBIT</h1>
         <p className="main-tagline">Pop • Split • Clear the Stage</p>
+        <p className="main-unlock-progress">
+          Unlocked: Stage {highestUnlockedStage + 1} / {STAGE_COUNT}
+        </p>
         <p className="controls-summary main-controls">{CONTROLS_SUMMARY}</p>
         <div className="main-actions">
           <button
@@ -467,6 +482,15 @@ function App() {
           >
             Start Game
           </button>
+          {highestUnlockedStage > 0 && (
+            <button
+              type="button"
+              className="screen-button screen-button-secondary"
+              onClick={continueGame}
+            >
+              Continue (Stage {highestUnlockedStage + 1})
+            </button>
+          )}
           <button
             type="button"
             className="screen-button screen-button-secondary"
@@ -480,6 +504,13 @@ function App() {
             onClick={() => setScreen('map')}
           >
             Stage Map
+          </button>
+          <button
+            type="button"
+            className="screen-button screen-button-secondary"
+            onClick={() => setScreen('glossary')}
+          >
+            Glossary
           </button>
           <button
             type="button"
@@ -520,6 +551,10 @@ function App() {
         highestUnlockedStage={highestUnlockedStage}
       />
     )
+  }
+
+  if (screen === 'glossary') {
+    return <Glossary onBack={() => setScreen('main')} />
   }
 
   if (screen === 'settings') {
@@ -674,9 +709,19 @@ function App() {
         </p>
       )}
       <p className="main-kicker">
-        {result === 'clear' ? 'Certificate of Completion' : 'Game Over'}
+        {result === 'clear'
+          ? 'Certificate of Completion'
+          : gameOverReason === 'timeUp'
+            ? 'Time Over'
+            : 'Game Over'}
       </p>
-      <h1>{result === 'clear' ? 'Game Clear' : 'Game Over'}</h1>
+      <h1>
+        {result === 'clear'
+          ? 'Game Clear'
+          : gameOverReason === 'timeUp'
+            ? 'Time Over'
+            : 'Game Over'}
+      </h1>
       <p className="result-score">Score {finalScore}</p>
       <p className="result-high-score">All-time #{rank}</p>
       <p className="result-detail">

@@ -10,17 +10,46 @@
 ## New mechanic: Fire Zones
 
 - One or more floor zones per stage cycle dormant → warning (a
-  telegraphed pulsing glow) → active (a rising flame that damages the
-  player on contact) on a fixed period. Zone count and cycle speed
-  both escalate across the block, so later Hell stages leave less safe
-  floor space at any given moment.
+  telegraphed, growing heat-glow preview — 800ms, `WARNING_MS` in
+  `fireZones.ts`) → active (a rising flame that damages the player on
+  contact) on a fixed period. Zone count and cycle speed both escalate
+  across the block, so later Hell stages leave less safe floor space
+  at any given moment. The warning glow's height grows with
+  `getFireZoneWarningProgress` (0 at the start of the telegraph, 1 the
+  instant it ignites), so the buildup itself reads as a countdown
+  rather than a static blinking strip — originally 550ms and just a
+  thin floor strip, which didn't give real reaction time or preview
+  the flame's eventual height.
 - Player-contact damage reuses the exact same invulnerability/barrier
   path as a ball hit (`GamePlay.tsx`'s existing HP-loss block), so a
   fire zone hit costs an HP and grants the usual brief invulnerability
   — no new damage/invulnerability system needed.
+- The stage-start 3s invulnerability (`STAGE_START_INVULN_MS`) is now
+  correctly re-armed at the moment real gameplay actually begins, not
+  just at stage-clear time — see "Start invulnerability re-arm fix"
+  below. Without that fix, fire zones (unlike balls, which take a
+  moment to reach the player) could hit the instant a Hell stage
+  became playable.
 - AI/demo mode treats any non-dormant zone as an immediate danger zone
   (`chooseSafeX`'s existing `DangerZone` list), so it dodges Hell
   stages instead of walking into them.
+
+## Start invulnerability re-arm fix
+
+- The "get ready" countdown before the next stage
+  (`stageAdvanceCountdown`, ~5s) reuses the same `GamePlay` instance as
+  the stage that follows it, and `resetStageState` (which arms the 3s
+  start invulnerability) only re-runs when `stageIndex` changes — which
+  happens once, at the start of that countdown, not when it ends. So by
+  the time the countdown finished and real gameplay began, the 3s grace
+  window had already silently expired mid-countdown, leaving the player
+  with zero actual invulnerability the instant a new stage (including
+  Hell) became playable.
+- Fixed by re-arming `invulnUntilRef` the moment `isStarting` transitions
+  from true to false (`GamePlay.tsx`), instead of relying solely on the
+  stage-index-keyed reset. Applies to every stage, not just Hell, but is
+  most consequential there since fire zones can already be active the
+  instant the stage starts.
 
 ## Theme
 

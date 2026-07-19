@@ -48,6 +48,8 @@ import {
   NOVA_SURGE_MULTIPLIER,
   FIREPROOF_DURATION_MS,
   ANCHOR_DURATION_MS,
+  MAGNET_DURATION_MS,
+  COMBO_LOCK_DURATION_MS,
   getItemWeights,
 } from './game/constants'
 import type { Obstacle } from './game/constants'
@@ -66,6 +68,7 @@ import { getStageVortex } from './game/vortices'
 import {
   getStageFireZones,
   getFireZoneState,
+  getFireZoneWarningProgress,
   type FireZone,
 } from './game/fireZones'
 import { getStageGravityScale } from './game/voidGravity'
@@ -105,6 +108,14 @@ import {
   FIXED_DELTA_SECONDS,
   MAX_FRAME_DELTA_SECONDS,
 } from './game/loop/GameLoop'
+import {
+  ITEM_COLORS,
+  ITEM_TITLES,
+  ITEM_DESCRIPTIONS,
+  drawFallingItemIcon,
+} from './game/itemDisplay'
+import { getHazardIntroForStage, type HazardEntry } from './game/hazardCatalog'
+import { hasSeenHazard, markHazardSeen } from './game/seenHazards'
 
 const BALL_COLORS = ['#ff1744', '#ffea00', '#00b0ff']
 
@@ -135,25 +146,9 @@ const ITEM_LABELS: Record<ItemType, string> = {
   novaSurge: '2',
   fireproof: 'F',
   anchor: 'X',
-}
-
-const ITEM_COLORS: Record<ItemType, string> = {
-  doubleWire: '#38bdf8',
-  powerWire: '#22c55e',
-  vulcan: '#f97316',
-  clock: '#a5b4fc',
-  hourglass: '#fbbf24',
-  barrier: '#34d399',
-  oneUp: '#f472b6',
-  dynamite: '#f87171',
-  speedBoost: '#2dd4bf',
-  invincible: '#c084fc',
-  timePlus: '#60a5fa',
-  scoreBonus: '#fde047',
-  stabilizer: '#22d3ee',
-  novaSurge: '#fb923c',
-  fireproof: '#f87171',
-  anchor: '#94a3b8',
+  magnet: 'M',
+  comboLock: 'L',
+  shockwave: 'W',
 }
 
 const BUFF_LABELS: Record<
@@ -167,7 +162,9 @@ const BUFF_LABELS: Record<
   | 'stabilizer'
   | 'novaSurge'
   | 'fireproof'
-  | 'anchor',
+  | 'anchor'
+  | 'magnet'
+  | 'comboLock',
   string
 > = {
   doubleWire: 'Double Wire',
@@ -181,6 +178,8 @@ const BUFF_LABELS: Record<
   novaSurge: 'Nova Surge (x2 Score)',
   fireproof: 'Fireproof',
   anchor: 'Anchor',
+  magnet: 'Magnet',
+  comboLock: 'Combo Lock',
 }
 
 // Timed buffs start blinking in the HUD once this many seconds remain, so
@@ -199,6 +198,8 @@ const TIMED_BUFF_KEYS = [
   'novaSurge',
   'fireproof',
   'anchor',
+  'magnet',
+  'comboLock',
 ] as const
 
 const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
@@ -218,45 +219,9 @@ const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
   novaSurge: 'Nova Surge!',
   fireproof: 'Fireproof!',
   anchor: 'Anchor!',
-}
-
-const ITEM_TITLES: Record<ItemType, string> = {
-  doubleWire: 'Double Wire',
-  powerWire: 'Power Harpoon',
-  vulcan: 'Vulcan',
-  clock: 'Time Stop',
-  hourglass: 'Slow Motion',
-  barrier: 'Barrier',
-  oneUp: '1UP',
-  dynamite: 'Dynamite',
-  speedBoost: 'Speed Boost',
-  invincible: 'Invincible',
-  timePlus: 'Time Plus',
-  scoreBonus: 'Score Bonus',
-  stabilizer: 'Stabilizer',
-  novaSurge: 'Nova Surge',
-  fireproof: 'Fireproof',
-  anchor: 'Anchor',
-}
-
-const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
-  doubleWire: '12초 동안 작살을 2개까지 동시에 발사합니다.',
-  powerWire:
-    '12초 동안 장애물이나 천장까지 닿아 5초간 남는 강화 작살을 발사합니다.',
-  vulcan: '12초 동안 빠른 탄환을 연속 발사합니다.',
-  clock: '6초 동안 모든 공의 움직임을 멈춥니다.',
-  hourglass: '8초 동안 모든 공을 느리게 만듭니다.',
-  barrier: '공과 충돌했을 때 피해를 한 번 막아줍니다.',
-  oneUp: 'HP를 1 회복합니다.',
-  dynamite: '모든 공을 즉시 가장 작은 크기로 분열시킵니다.',
-  speedBoost: '10초 동안 이동 속도가 60% 증가합니다.',
-  invincible: '8초 동안 공에 닿아도 피해를 받지 않습니다.',
-  timePlus: '남은 제한시간이 즉시 15초 증가합니다.',
-  scoreBonus: '누적 점수를 즉시 1,000점 추가합니다.',
-  stabilizer: '8초 동안 조류/중력 우물/성운/소용돌이 효과를 무력화합니다.',
-  novaSurge: '10초 동안 공을 맞혀 얻는 점수가 2배가 됩니다.',
-  fireproof: '8초 동안 화염 지대에 닿아도 피해를 받지 않습니다.',
-  anchor: '8초 동안 중력을 정상으로 되돌립니다.',
+  magnet: 'Magnet!',
+  comboLock: 'Combo Lock!',
+  shockwave: 'Shockwave!',
 }
 
 type Particle = {
@@ -465,8 +430,24 @@ function drawFireZones(
 
     ctx.save()
     if (state === 'warning') {
-      ctx.globalAlpha = 0.35 + Math.sin(time / 90) * 0.15
-      ctx.fillStyle = '#f97316'
+      // A rising heat-glow preview, growing taller as ignition approaches —
+      // telegraphs the flame's exact position, width, and imminent timing
+      // instead of just a static blinking floor strip.
+      const progress = getFireZoneWarningProgress(zone, time)
+      const pulse = 0.5 + Math.sin(time / 70) * 0.2
+      const previewHeight = 10 + progress * 34
+      const glow = ctx.createLinearGradient(
+        0,
+        floorY - previewHeight,
+        0,
+        floorY,
+      )
+      glow.addColorStop(0, 'rgba(249, 115, 22, 0)')
+      glow.addColorStop(1, '#f97316')
+      ctx.globalAlpha = (0.25 + progress * 0.35) * pulse
+      ctx.fillRect(zone.x, floorY - previewHeight, zone.width, previewHeight)
+      ctx.globalAlpha = 0.5 + pulse * 0.3
+      ctx.fillStyle = '#fb923c'
       ctx.fillRect(zone.x, floorY - 6, zone.width, 10)
     } else {
       ctx.shadowColor = '#fb923c'
@@ -671,290 +652,6 @@ function drawBall(ctx: CanvasRenderingContext2D, ball: Ball) {
   ctx.strokeStyle = '#020617'
   ctx.stroke()
   ctx.restore()
-}
-
-function traceShield(ctx: CanvasRenderingContext2D, scale = 1) {
-  ctx.beginPath()
-  ctx.moveTo(0, -11 * scale)
-  ctx.lineTo(9 * scale, -7 * scale)
-  ctx.lineTo(8 * scale, 3 * scale)
-  ctx.quadraticCurveTo(6 * scale, 10 * scale, 0, 13 * scale)
-  ctx.quadraticCurveTo(-6 * scale, 10 * scale, -8 * scale, 3 * scale)
-  ctx.lineTo(-9 * scale, -7 * scale)
-  ctx.closePath()
-}
-
-function traceStar(
-  ctx: CanvasRenderingContext2D,
-  outer: number,
-  inner: number,
-) {
-  ctx.beginPath()
-  for (let point = 0; point < 10; point += 1) {
-    const radius = point % 2 === 0 ? outer : inner
-    const angle = -Math.PI / 2 + (Math.PI * point) / 5
-    const x = Math.cos(angle) * radius
-    const y = Math.sin(angle) * radius
-    if (point === 0) ctx.moveTo(x, y)
-    else ctx.lineTo(x, y)
-  }
-  ctx.closePath()
-}
-
-function drawFallingItemIcon(
-  ctx: CanvasRenderingContext2D,
-  type: ItemType,
-  color: string,
-) {
-  ctx.lineCap = 'round'
-  ctx.lineJoin = 'round'
-  ctx.strokeStyle = '#ffffff'
-  ctx.fillStyle = color
-  ctx.lineWidth = 2.2
-
-  switch (type) {
-    case 'doubleWire':
-      for (const x of [-5, 5]) {
-        ctx.beginPath()
-        ctx.moveTo(x, 10)
-        ctx.lineTo(x, -8)
-        ctx.moveTo(x - 3, -5)
-        ctx.lineTo(x, -10)
-        ctx.lineTo(x + 3, -5)
-        ctx.stroke()
-      }
-      break
-    case 'powerWire':
-      ctx.lineWidth = 5
-      ctx.beginPath()
-      ctx.moveTo(0, 10)
-      ctx.lineTo(0, -7)
-      ctx.stroke()
-      ctx.fillStyle = '#fef08a'
-      ctx.beginPath()
-      ctx.moveTo(0, -13)
-      ctx.lineTo(-6, -5)
-      ctx.lineTo(6, -5)
-      ctx.closePath()
-      ctx.fill()
-      break
-    case 'vulcan':
-      ctx.save()
-      ctx.rotate(-0.18)
-      ctx.fillStyle = '#fb923c'
-      ctx.fillRect(-8, -5, 11, 11)
-      ctx.fillStyle = '#e2e8f0'
-      for (const y of [-6, -1, 4]) ctx.fillRect(2, y, 11, 3)
-      ctx.fillStyle = '#64748b'
-      ctx.fillRect(-3, 5, 5, 8)
-      ctx.strokeStyle = '#ffffff'
-      ctx.lineWidth = 1.5
-      ctx.strokeRect(-8, -5, 11, 11)
-      ctx.restore()
-      break
-    case 'clock':
-      ctx.beginPath()
-      ctx.arc(0, 0, 10, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
-      ctx.strokeStyle = '#0f172a'
-      ctx.beginPath()
-      ctx.moveTo(0, 0)
-      ctx.lineTo(0, -6)
-      ctx.moveTo(0, 0)
-      ctx.lineTo(5, 3)
-      ctx.stroke()
-      break
-    case 'hourglass':
-      ctx.strokeStyle = '#fef3c7'
-      ctx.beginPath()
-      ctx.moveTo(-8, -11)
-      ctx.lineTo(8, -11)
-      ctx.moveTo(-8, 11)
-      ctx.lineTo(8, 11)
-      ctx.moveTo(-6, -9)
-      ctx.quadraticCurveTo(-5, -2, 0, 0)
-      ctx.quadraticCurveTo(5, 3, 6, 9)
-      ctx.moveTo(6, -9)
-      ctx.quadraticCurveTo(5, -2, 0, 0)
-      ctx.quadraticCurveTo(-5, 3, -6, 9)
-      ctx.stroke()
-      ctx.fillStyle = '#fbbf24'
-      ctx.beginPath()
-      ctx.moveTo(-4, 7)
-      ctx.lineTo(4, 7)
-      ctx.lineTo(0, 2)
-      ctx.closePath()
-      ctx.fill()
-      break
-    case 'barrier':
-      traceShield(ctx)
-      ctx.fillStyle = '#34d399'
-      ctx.fill()
-      ctx.stroke()
-      ctx.strokeStyle = '#064e3b'
-      ctx.beginPath()
-      ctx.moveTo(0, -7)
-      ctx.lineTo(0, 8)
-      ctx.moveTo(-6, -4)
-      ctx.lineTo(6, -4)
-      ctx.stroke()
-      break
-    case 'oneUp':
-      ctx.fillStyle = '#f472b6'
-      ctx.beginPath()
-      ctx.moveTo(0, 10)
-      ctx.bezierCurveTo(-13, 1, -11, -9, -5, -9)
-      ctx.bezierCurveTo(-2, -9, 0, -6, 0, -4)
-      ctx.bezierCurveTo(0, -6, 2, -9, 5, -9)
-      ctx.bezierCurveTo(11, -9, 13, 1, 0, 10)
-      ctx.fill()
-      ctx.stroke()
-      ctx.strokeStyle = '#ffffff'
-      ctx.beginPath()
-      ctx.moveTo(0, -4)
-      ctx.lineTo(0, 4)
-      ctx.moveTo(-4, 0)
-      ctx.lineTo(4, 0)
-      ctx.stroke()
-      break
-    case 'dynamite':
-      ctx.save()
-      ctx.rotate(-0.12)
-      ctx.fillStyle = '#ef4444'
-      for (const x of [-7, 0, 7]) {
-        ctx.fillRect(x - 3, -9, 6, 18)
-      }
-      ctx.fillStyle = '#111827'
-      ctx.fillRect(-11, -3, 22, 6)
-      ctx.strokeStyle = '#fef3c7'
-      ctx.beginPath()
-      ctx.moveTo(7, -9)
-      ctx.quadraticCurveTo(12, -15, 14, -10)
-      ctx.stroke()
-      ctx.fillStyle = '#fde047'
-      ctx.beginPath()
-      ctx.arc(14, -10, 3, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.restore()
-      break
-    case 'speedBoost':
-      ctx.strokeStyle = '#5eead4'
-      ctx.lineWidth = 3
-      for (const offset of [-6, 1, 8]) {
-        ctx.beginPath()
-        ctx.moveTo(-9, offset - 6)
-        ctx.lineTo(0, offset)
-        ctx.lineTo(-9, offset + 6)
-        ctx.moveTo(1, offset - 6)
-        ctx.lineTo(10, offset)
-        ctx.lineTo(1, offset + 6)
-        ctx.stroke()
-      }
-      break
-    case 'invincible':
-      traceShield(ctx, 1.05)
-      ctx.fillStyle = '#7e22ce'
-      ctx.fill()
-      ctx.stroke()
-      traceStar(ctx, 7, 3.2)
-      ctx.fillStyle = '#fef08a'
-      ctx.fill()
-      break
-    case 'timePlus':
-      ctx.beginPath()
-      ctx.arc(-3, 1, 9, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
-      ctx.strokeStyle = '#0f172a'
-      ctx.beginPath()
-      ctx.moveTo(-3, 1)
-      ctx.lineTo(-3, -5)
-      ctx.moveTo(-3, 1)
-      ctx.lineTo(1, 4)
-      ctx.stroke()
-      ctx.strokeStyle = '#ffffff'
-      ctx.lineWidth = 2.5
-      ctx.beginPath()
-      ctx.moveTo(7, -7)
-      ctx.lineTo(7, 3)
-      ctx.moveTo(2, -2)
-      ctx.lineTo(12, -2)
-      ctx.stroke()
-      break
-    case 'scoreBonus':
-      ctx.beginPath()
-      ctx.arc(0, 0, 11, 0, Math.PI * 2)
-      ctx.fillStyle = '#facc15'
-      ctx.fill()
-      ctx.stroke()
-      traceStar(ctx, 7, 3.2)
-      ctx.fillStyle = '#fff7b2'
-      ctx.fill()
-      break
-    case 'stabilizer':
-      ctx.lineWidth = 2.4
-      ctx.beginPath()
-      ctx.arc(0, -8, 3, 0, Math.PI * 2)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(0, -5)
-      ctx.lineTo(0, 9)
-      ctx.moveTo(-6, -1)
-      ctx.lineTo(6, -1)
-      ctx.moveTo(0, 9)
-      ctx.quadraticCurveTo(-7, 9, -7, 2)
-      ctx.moveTo(0, 9)
-      ctx.quadraticCurveTo(7, 9, 7, 2)
-      ctx.stroke()
-      break
-    case 'novaSurge':
-      ctx.beginPath()
-      ctx.arc(0, 0, 4, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.lineWidth = 2
-      for (let ray = 0; ray < 8; ray += 1) {
-        const angle = (ray / 8) * Math.PI * 2
-        ctx.beginPath()
-        ctx.moveTo(Math.cos(angle) * 6, Math.sin(angle) * 6)
-        ctx.lineTo(Math.cos(angle) * 11, Math.sin(angle) * 11)
-        ctx.stroke()
-      }
-      break
-    case 'fireproof':
-      ctx.beginPath()
-      ctx.moveTo(0, -10)
-      ctx.quadraticCurveTo(-7, -2, -4, 4)
-      ctx.quadraticCurveTo(-6, 8, 0, 9)
-      ctx.quadraticCurveTo(6, 8, 4, 2)
-      ctx.quadraticCurveTo(7, 0, 4, -6)
-      ctx.quadraticCurveTo(2, -2, 0, -10)
-      ctx.closePath()
-      ctx.fill()
-      ctx.strokeStyle = '#f8fafc'
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(-9, 9)
-      ctx.lineTo(9, -9)
-      ctx.stroke()
-      break
-    case 'anchor':
-      ctx.lineWidth = 2.4
-      ctx.beginPath()
-      ctx.arc(0, -7, 3, 0, Math.PI * 2)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(0, -4)
-      ctx.lineTo(0, 8)
-      ctx.moveTo(-7, -1)
-      ctx.lineTo(7, -1)
-      ctx.moveTo(-6, 5)
-      ctx.quadraticCurveTo(-6, 9, 0, 9)
-      ctx.moveTo(6, 5)
-      ctx.quadraticCurveTo(6, 9, 0, 9)
-      ctx.stroke()
-      break
-  }
 }
 
 function drawItem(ctx: CanvasRenderingContext2D, item: Item) {
@@ -1379,7 +1076,7 @@ type Props = {
   initialScore?: number
   startCountdown?: number
   onClear: (score: number) => void
-  onGameOver: (score: number) => void
+  onGameOver: (score: number, reason?: 'timeUp') => void
   demo?: boolean
   settings: GameSettings
   onQuit: () => void
@@ -1406,6 +1103,8 @@ type BuffDisplay = {
   novaSurge: number
   fireproof: number
   anchor: number
+  magnet: number
+  comboLock: number
 }
 
 const NO_BUFFS: BuffDisplay = {
@@ -1421,6 +1120,8 @@ const NO_BUFFS: BuffDisplay = {
   novaSurge: 0,
   fireproof: 0,
   anchor: 0,
+  magnet: 0,
+  comboLock: 0,
 }
 
 function GamePlay({
@@ -1471,6 +1172,7 @@ function GamePlay({
   const itemsRef = useRef<Item[]>([])
   const hpRef = useRef(MAX_HP)
   const invulnUntilRef = useRef(0)
+  const wasStartingRef = useRef(isStarting)
   const hitEffectUntilRef = useRef(0)
   const comboRef = useRef(0)
   const lastHitAtRef = useRef(0)
@@ -1508,6 +1210,8 @@ function GamePlay({
   const novaSurgeUntilRef = useRef(0)
   const fireproofUntilRef = useRef(0)
   const anchorUntilRef = useRef(0)
+  const magnetUntilRef = useRef(0)
+  const comboLockUntilRef = useRef(0)
   const barrierCountRef = useRef(0)
   const portalCooldownsRef = useRef(new Map<number, number>())
   const buffsDisplayRef = useRef<BuffDisplay>(NO_BUFFS)
@@ -1520,6 +1224,8 @@ function GamePlay({
   const [timeRemaining, setTimeRemaining] = useState(stageTimeSeconds)
   const [itemNotice, setItemNotice] = useState<ItemType | null>(null)
   const [paused, setPaused] = useState(false)
+  const [hazardIntro, setHazardIntro] = useState<HazardEntry | null>(null)
+  const hazardIntroCheckedStageRef = useRef<number | null>(null)
   const [fps, setFps] = useState(60)
   const [buffs, setBuffs] = useState<BuffDisplay>(NO_BUFFS)
   const [aiKeys, setAiKeys] = useState({
@@ -1551,6 +1257,8 @@ function GamePlay({
       novaSurgeUntilRef.current = 0
       fireproofUntilRef.current = 0
       anchorUntilRef.current = 0
+      magnetUntilRef.current = 0
+      comboLockUntilRef.current = 0
       barrierCountRef.current = 0
       portalCooldownsRef.current.clear()
       playerXRef.current = CANVAS_WIDTH / 2
@@ -1587,6 +1295,17 @@ function GamePlay({
   }, [resetStageState])
 
   useEffect(() => {
+    if (demo || isStarting) return
+    if (hazardIntroCheckedStageRef.current === stageIndex) return
+    hazardIntroCheckedStageRef.current = stageIndex
+    const hazard = getHazardIntroForStage(stageIndex)
+    if (hazard && !hasSeenHazard(hazard.id)) {
+      setHazardIntro(hazard)
+      setPaused(true)
+    }
+  }, [stageIndex, isStarting, demo])
+
+  useEffect(() => {
     if (hp < prevHpRef.current) setHpPulseKey((key) => key + 1)
     prevHpRef.current = hp
   }, [hp])
@@ -1618,6 +1337,8 @@ function GamePlay({
     novaSurgeUntilRef.current += pausedFor
     fireproofUntilRef.current += pausedFor
     anchorUntilRef.current += pausedFor
+    magnetUntilRef.current += pausedFor
+    comboLockUntilRef.current += pausedFor
     lastHitAtRef.current += pausedFor
     harpoonsRef.current = harpoonsRef.current.map((harpoon) => ({
       ...harpoon,
@@ -1628,6 +1349,20 @@ function GamePlay({
     }))
     pausedAtRef.current = null
   }, [paused])
+
+  useEffect(() => {
+    // The "get ready" countdown before the next stage (stageAdvanceCountdown,
+    // ~5s) shares this same GamePlay instance and runs after resetStageState
+    // already armed the 3s start invulnerability — so by the time the
+    // countdown ends and real gameplay begins, that grace window had already
+    // expired mid-countdown, leaving zero actual invulnerability. Re-arm it
+    // fresh the moment isStarting flips to false, so hazards like Hell's
+    // fire zones can't hit the player before they've even gotten to move.
+    if (wasStartingRef.current && !isStarting) {
+      invulnUntilRef.current = performance.now() + STAGE_START_INVULN_MS
+    }
+    wasStartingRef.current = isStarting
+  }, [isStarting])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1777,6 +1512,8 @@ function GamePlay({
           const isNovaSurgeActive = time < novaSurgeUntilRef.current
           const isFireproofActive = time < fireproofUntilRef.current
           const isAnchorActive = time < anchorUntilRef.current
+          const isMagnetActive = time < magnetUntilRef.current
+          const isComboLockActive = time < comboLockUntilRef.current
           const windAx = isStabilizerActive
             ? 0
             : getCurrentWindAx(stageCurrent, time)
@@ -1807,7 +1544,7 @@ function GamePlay({
               endedRef.current = true
               playGameOverSound()
               stopBgm()
-              onGameOver(scoreRef.current)
+              onGameOver(scoreRef.current, 'timeUp')
               continue
             }
           }
@@ -2088,7 +1825,10 @@ function GamePlay({
               const hitBall = ballsRef.current[hitIndex]
               const children = splitBall(hitBall, nextId)
 
-              if (time - lastHitAtRef.current <= COMBO_WINDOW_MS) {
+              if (
+                isComboLockActive ||
+                time - lastHitAtRef.current <= COMBO_WINDOW_MS
+              ) {
                 comboRef.current += 1
               } else {
                 comboRef.current = 0
@@ -2208,7 +1948,13 @@ function GamePlay({
           }
 
           itemsRef.current = itemsRef.current
-            .map((item) => stepItem(item, dtSec))
+            .map((item) =>
+              stepItem(
+                item,
+                dtSec,
+                isMagnetActive ? playerXRef.current : undefined,
+              ),
+            )
             .filter((item) => item.y - ITEM_RADIUS < CANVAS_HEIGHT)
 
           const pickupIndex = itemsRef.current.findIndex((item) =>
@@ -2319,6 +2065,46 @@ function GamePlay({
               case 'anchor':
                 anchorUntilRef.current = time + ANCHOR_DURATION_MS
                 break
+              case 'magnet':
+                magnetUntilRef.current = time + MAGNET_DURATION_MS
+                break
+              case 'comboLock':
+                comboLockUntilRef.current = time + COMBO_LOCK_DURATION_MS
+                break
+              case 'shockwave': {
+                let shockwaveGained = 0
+                const shockwaveChildren: Ball[] = []
+                for (const b of ballsRef.current) {
+                  spawnBurst(
+                    particlesRef.current,
+                    b.x,
+                    b.y,
+                    BALL_COLORS[b.level],
+                  )
+                  const gained = Math.round(
+                    SCORE_BY_LEVEL[b.level] *
+                      (1 + comboRef.current * 0.1) *
+                      (isNovaSurgeActive ? NOVA_SURGE_MULTIPLIER : 1),
+                  )
+                  shockwaveGained += gained
+                  popupsRef.current.push({
+                    x: b.x,
+                    y: b.y,
+                    text: `+${gained}`,
+                    life: 700,
+                    maxLife: 700,
+                  })
+                  shockwaveChildren.push(...splitBall(b, nextId))
+                }
+                scoreRef.current = addToTotalScore(
+                  scoreRef.current,
+                  shockwaveGained,
+                )
+                setScore(scoreRef.current)
+                ballsRef.current = shockwaveChildren
+                playHitSound(2)
+                break
+              }
             }
           }
 
@@ -2366,6 +2152,14 @@ function GamePlay({
             0,
             Math.ceil((anchorUntilRef.current - time) / 1000),
           )
+          const magnetSec = Math.max(
+            0,
+            Math.ceil((magnetUntilRef.current - time) / 1000),
+          )
+          const comboLockSec = Math.max(
+            0,
+            Math.ceil((comboLockUntilRef.current - time) / 1000),
+          )
           const barrierCount = barrierCountRef.current
           const prevBuffs = buffsDisplayRef.current
           if (
@@ -2380,6 +2174,8 @@ function GamePlay({
             prevBuffs.novaSurge !== novaSurgeSec ||
             prevBuffs.fireproof !== fireproofSec ||
             prevBuffs.anchor !== anchorSec ||
+            prevBuffs.magnet !== magnetSec ||
+            prevBuffs.comboLock !== comboLockSec ||
             prevBuffs.barrier !== barrierCount
           ) {
             const nextBuffs: BuffDisplay = {
@@ -2394,6 +2190,8 @@ function GamePlay({
               novaSurge: novaSurgeSec,
               fireproof: fireproofSec,
               anchor: anchorSec,
+              magnet: magnetSec,
+              comboLock: comboLockSec,
               barrier: barrierCount,
             }
             buffsDisplayRef.current = nextBuffs
@@ -2845,6 +2643,8 @@ function GamePlay({
                 buffs.novaSurge === 0 &&
                 buffs.fireproof === 0 &&
                 buffs.anchor === 0 &&
+                buffs.magnet === 0 &&
+                buffs.comboLock === 0 &&
                 buffs.barrier === 0 && <li>None</li>}
             </ul>
           </div>
@@ -2858,7 +2658,32 @@ function GamePlay({
           </div>
         </aside>
       </div>
-      {paused && !demo && (
+      {hazardIntro && !demo && (
+        <div
+          className="pause-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="hazard-intro-title"
+        >
+          <div className="pause-panel">
+            <h2 id="hazard-intro-title">New Hazard: {hazardIntro.name}</h2>
+            <p className="hazard-intro-desc">{hazardIntro.description}</p>
+            <button
+              type="button"
+              className="screen-button"
+              autoFocus
+              onClick={() => {
+                markHazardSeen(hazardIntro.id)
+                setHazardIntro(null)
+                setPaused(false)
+              }}
+            >
+              Got It
+            </button>
+          </div>
+        </div>
+      )}
+      {paused && !demo && !hazardIntro && (
         <div
           className="pause-backdrop"
           role="dialog"

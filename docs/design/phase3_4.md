@@ -16,8 +16,13 @@
   - Dynamite: a hazard — on pickup, all balls on screen recursively split down to the smallest size (level 0) instantly (`explodeToSmallest`), and awards no score
 - Items have a small chance of dropping randomly when a ball is split/removed by a hit (`ITEM_DROP_CHANCE` = 14%), then fall under gravity and despawn if they go off-screen. Touching one as the player applies its effect immediately and plays a sound effect
 - The dropped item's type is decided via a weighted draw (`ITEM_WEIGHTS`): double wire/clock/hourglass/barrier appear relatively often (20-22 each), while 1UP and dynamite appear rarely (9 each)
-- The Vulcan missile/power wire (weapon-swap types) are excluded from this scope
+- Vulcan missile and power wire were later implemented too (see "Vulcan and Power Harpoon tuning" below) — the "excluded from this scope" note above no longer applies
 - When an item is picked up, a short-lived popup announces which effect just triggered (e.g. "Double Wire!", "Barrier!") at the pickup location, using the same popup mechanism as score-gain text (`phase4_1.md`), so the effect is never a mystery to the player
+
+## Vulcan and Power Harpoon tuning
+
+- **Vulcan** (rapid-fire, `MAX_VULCAN_SHOTS`/`VULCAN_DURATION_MS`) trivialized the early-mid game once picked up, so it's capped to only drop through stage 30 (0-indexed, `VULCAN_END_STAGE` in `getItemWeights`) — the same range World Tour II covers — and steps out of the pool for every stage after.
+- **Power Harpoon** (`powerWire`, pierces through balls for `POWER_WIRE_DURATION_MS`) had its duration halved (12s → 6s) and its drop weight doubled (10 → 20, now the second-most-common item after Double Wire) — shows up much more often but each pickup is a shorter, punchier burst rather than a long stretch of trivial clearing.
 
 ## Late-stage item: Stabilizer
 
@@ -47,3 +52,31 @@
   (`ANCHOR_DURATION_MS`) of restored normal gravity in Void — balls fall
   predictably again instead of drifting, letting the player briefly read
   landing spots the normal way. Weight 10.
+
+## New general-purpose items: Magnet, Combo Lock, Shockwave
+
+Three items rolled into the base pool from stage 1 onward (not tied to any
+specific hazard block), rounding out the roster with effects distinct from
+every existing item:
+
+- **Magnet** (`MAGNET_DURATION_MS` = 8s): for the duration, every dropped
+  item on screen steers toward the player instead of falling straight down.
+  Implemented as an exponential horizontal approach in `stepItem`
+  (`engine.ts`) — a `magnetTargetX` parameter that, when given, closes a
+  fraction (`MAGNET_PULL_RATE` = 4/sec) of the remaining gap each frame, so
+  nearby items snap in fast while far ones still take a moment. Weight 10
+  (same tier as barrier/speedBoost).
+- **Combo Lock** (`COMBO_LOCK_DURATION_MS` = 10s): the combo counter no
+  longer resets from missing the `COMBO_WINDOW_MS` timing gap while active
+  — every hit increments it regardless of pacing. Pure QoL/scoring item,
+  no interaction with any hazard. Weight 8 (same tier as timePlus/scoreBonus).
+- **Shockwave**: an instant "positive Dynamite" — every ball currently on
+  screen splits down exactly one level (not recursively to the smallest,
+  unlike Dynamite), each split awarding the same per-ball score a normal
+  harpoon hit would (combo multiplier and Nova Surge included). A burst of
+  score at the cost of leaving more (smaller) balls to clear. Weight 6
+  (same tier as invincible — a powerful effect, kept rarer).
+
+All three follow the same "apply an effect" model and popup-announcement
+pattern as every other item; Magnet and Combo Lock are timed buffs shown
+in the HUD buff list, Shockwave is instant like Dynamite/1UP/Score Bonus.

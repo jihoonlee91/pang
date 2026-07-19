@@ -25,8 +25,9 @@ import {
   chooseSafeX,
   harpoonHitsObstacle,
   getPowerHarpoonStopY,
+  stepItem,
 } from './engine'
-import type { Ball } from './types'
+import type { Ball, Item } from './types'
 
 function makeCounter(start = 0) {
   let n = start
@@ -290,10 +291,10 @@ describe('rollItemDrop', () => {
     expect(rollItemDrop(rand)).toBe('doubleWire')
   })
 
-  it('can select the newly added bonus items', () => {
+  it('can select the last item in the weighted pool', () => {
     const values = [0, 0.999]
     const rand = () => values.shift() ?? 0
-    expect(rollItemDrop(rand)).toBe('scoreBonus')
+    expect(rollItemDrop(rand)).toBe('shockwave')
   })
 
   it('draws from a custom weight table when one is passed', () => {
@@ -462,5 +463,32 @@ describe('chooseSafeX', () => {
     // target's own predicted zone in the array it passes in.
     const x = chooseSafeX(400, 400, [], bounds)
     expect(x).toBe(400)
+  })
+})
+
+describe('stepItem', () => {
+  const item: Item = { id: 1, x: 100, y: 0, vy: 0, type: 'clock' }
+
+  it('falls straight down when no magnet target is given', () => {
+    const next = stepItem(item, 0.1)
+    expect(next.x).toBe(100)
+    expect(next.y).toBeGreaterThan(0)
+  })
+
+  it('pulls horizontally toward the magnet target when one is given', () => {
+    const next = stepItem(item, 0.1, 400)
+    expect(next.x).toBeGreaterThan(100)
+    expect(next.x).toBeLessThan(400)
+  })
+
+  it('never overshoots the magnet target in a single step', () => {
+    const next = stepItem(item, 5, 400)
+    expect(next.x).toBe(400)
+  })
+
+  it('pulls toward the target from either side', () => {
+    const right = stepItem({ ...item, x: 500 }, 0.1, 400)
+    expect(right.x).toBeLessThan(500)
+    expect(right.x).toBeGreaterThan(400)
   })
 })

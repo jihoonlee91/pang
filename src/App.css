@@ -581,6 +581,14 @@
   margin: 0 0 6px;
 }
 
+.hazard-intro-desc {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  color: #334155;
+  text-align: left;
+}
+
 .settings-screen {
   width: min(520px, 100%);
   max-height: calc(100dvh - 24px);
@@ -1003,6 +1011,84 @@
   }
 }
 
+.glossary-screen {
+  max-width: min(1000px, 92vw);
+}
+
+.glossary-intro {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: #475569;
+}
+
+.glossary-section-title {
+  align-self: flex-start;
+  margin: 8px 0 0;
+  font-size: var(--fs-md);
+}
+
+.glossary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+
+.glossary-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid rgba(30, 41, 59, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  text-align: left;
+}
+
+.glossary-icon {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+}
+
+.glossary-hazard-badge {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #67e8f9;
+  font-weight: 700;
+  font-size: var(--fs-xs);
+}
+
+.glossary-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.glossary-card-title {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.glossary-card-desc {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: #475569;
+  line-height: 1.4;
+}
+
+.glossary-actions {
+  margin-top: 8px;
+}
+
 .gameplay-hud > .hud-buffs {
   display: flex;
   flex: 1 1 260px;
@@ -1264,6 +1350,13 @@
   font-size: var(--fs-sm) !important;
   letter-spacing: 1.6px !important;
   text-transform: uppercase;
+}
+
+.main-unlock-progress {
+  margin: 0 !important;
+  color: #94a3b8 !important;
+  font-size: var(--fs-xs) !important;
+  letter-spacing: 0.6px !important;
 }
 
 .main-controls {

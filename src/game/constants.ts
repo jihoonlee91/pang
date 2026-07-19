@@ -183,6 +183,11 @@ export const OBSTACLE_Y = DEFAULT_OBSTACLE.y
 // --- Power-up items ---
 export const ITEM_RADIUS = 16
 export const ITEM_GRAVITY = 260
+// Fraction of the remaining horizontal gap to the player an item closes
+// per second while Magnet is active — an exponential approach rather than
+// a fixed speed, so items snap in fast from nearby but don't teleport from
+// across the arena.
+export const MAGNET_PULL_RATE = 4
 export const ITEM_DROP_CHANCE = 0.14
 
 export function getStageItemDropChance(stageIndex: number): number {
@@ -194,10 +199,10 @@ export function getStageItemDropChance(stageIndex: number): number {
 }
 // Relative weights within a drop: double wire/clock/hourglass/barrier are common,
 // 1UP and dynamite are intentionally rare (dynamite is a risk item, 1UP is a reward item).
+// Vulcan is handled separately below — it only drops through stage 30.
 export const ITEM_WEIGHTS: [ItemType, number][] = [
   ['doubleWire', 14],
-  ['powerWire', 10],
-  ['vulcan', 10],
+  ['powerWire', 20],
   ['clock', 12],
   ['hourglass', 12],
   ['barrier', 10],
@@ -207,7 +212,15 @@ export const ITEM_WEIGHTS: [ItemType, number][] = [
   ['invincible', 6],
   ['timePlus', 8],
   ['scoreBonus', 8],
+  ['magnet', 10],
+  ['comboLock', 8],
+  ['shockwave', 6],
 ]
+
+// Vulcan (rapid-fire) was originally always in the pool, but it trivializes
+// the early-mid game — only drops through stage 30 (0-indexed 29), the same
+// range World Tour II covers, then steps aside for the harder stages after.
+const VULCAN_END_STAGE = 30
 
 // Stabilizer only does anything from stage 41 (0-indexed 40) onward, where
 // the current/gravity-well/nebula-field/vortex hazards begin — hardcoded
@@ -230,6 +243,7 @@ const ANCHOR_START_STAGE = 90
 
 export function getItemWeights(stageIndex: number): [ItemType, number][] {
   const weights: [ItemType, number][] = [...ITEM_WEIGHTS]
+  if (stageIndex < VULCAN_END_STAGE) weights.push(['vulcan', 10])
   if (stageIndex >= STABILIZER_START_STAGE) weights.push(['stabilizer', 12])
   if (stageIndex >= NOVA_SURGE_START_STAGE) weights.push(['novaSurge', 9])
   if (stageIndex >= FIREPROOF_START_STAGE) weights.push(['fireproof', 10])
@@ -242,7 +256,7 @@ export const MAX_HARPOONS_DOUBLE_WIRE = 2
 export const MAX_VULCAN_SHOTS = 5
 
 export const DOUBLE_WIRE_DURATION_MS = 12000
-export const POWER_WIRE_DURATION_MS = 12000
+export const POWER_WIRE_DURATION_MS = 6000
 export const POWER_WIRE_STAY_MS = 5000
 export const VULCAN_DURATION_MS = 12000
 export const VULCAN_FIRE_INTERVAL_MS = 120
@@ -259,3 +273,5 @@ export const NOVA_SURGE_DURATION_MS = 10000
 export const NOVA_SURGE_MULTIPLIER = 2
 export const FIREPROOF_DURATION_MS = 8000
 export const ANCHOR_DURATION_MS = 8000
+export const MAGNET_DURATION_MS = 8000
+export const COMBO_LOCK_DURATION_MS = 10000
