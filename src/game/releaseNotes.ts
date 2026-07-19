@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.21.1',
+    date: '2026-07-19',
+    notes: [
+      'Stage Map now has a "Jump to stage" quick-nav, so finding a specific stage in the now much longer list takes one search instead of a long scroll.',
+    ],
+  },
+  {
     version: '1.21.0',
     date: '2026-07-19',
     notes: [

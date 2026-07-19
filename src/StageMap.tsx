@@ -12,6 +12,11 @@ import { getStageNebulaWells } from './game/nebulae'
 import { getStageVortex } from './game/vortices'
 import { getStageFireZones } from './game/fireZones'
 import { getStageGravityScale } from './game/voidGravity'
+import { getStageAcidRainZones } from './game/acidRain'
+import { getStageIceWind } from './game/iceWinds'
+import { getStageSolarFlare } from './game/solarFlares'
+import { getQuantumJitterStrength } from './game/quantumRifts'
+import { getStageOverdriveBaseWells } from './game/overdriveWells'
 
 type ThumbnailProps = {
   stageIndex: number
@@ -67,6 +72,7 @@ function StageMap({
   highestUnlockedStage = STAGE_COUNT - 1,
 }: Props) {
   const [selectedStage, setSelectedStage] = useState<number | null>(null)
+  const [jumpValue, setJumpValue] = useState('')
   const currentCardRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -75,12 +81,41 @@ function StageMap({
     }
   }, [compact, currentStage])
 
+  const jumpToStage = () => {
+    const target = Number(jumpValue)
+    if (!Number.isInteger(target) || target < 1 || target > STAGE_COUNT) return
+    document
+      .getElementById(`stage-map-card-${target - 1}`)
+      ?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
+
   return (
     <div
       className={`screen stage-map-screen ${compact ? 'stage-map-transition' : ''}`}
     >
       <h1>{title}</h1>
       {statusText && <p className="stage-map-status">{statusText}</p>}
+      <form
+        className="stage-map-jump"
+        onSubmit={(e) => {
+          e.preventDefault()
+          jumpToStage()
+        }}
+      >
+        <label htmlFor="stage-map-jump-input">Jump to stage</label>
+        <input
+          id="stage-map-jump-input"
+          type="number"
+          min={1}
+          max={STAGE_COUNT}
+          value={jumpValue}
+          placeholder={`1-${STAGE_COUNT}`}
+          onChange={(e) => setJumpValue(e.target.value)}
+        />
+        <button type="submit" className="screen-button screen-button-small">
+          Go
+        </button>
+      </form>
       {onStartStage && (
         <p className="stage-map-status">
           {selectedStage === null
@@ -119,8 +154,15 @@ function StageMap({
           const fireZoneCount = getStageFireZones(i)?.length ?? 0
           const isFireZoneStage = fireZoneCount > 0
           const isVoidStage = getStageGravityScale(i) < 1
+          const acidRainCount = getStageAcidRainZones(i)?.length ?? 0
+          const isAcidRainStage = acidRainCount > 0
+          const isIceWindStage = getStageIceWind(i) !== null
+          const isSolarFlareStage = getStageSolarFlare(i) !== null
+          const isQuantumRiftStage = getQuantumJitterStrength(i) !== null
+          const isOverdriveStage = getStageOverdriveBaseWells(i) !== null
           const card = (
             <div
+              id={`stage-map-card-${i}`}
               className={`stage-map-card ${isCleared ? 'stage-map-card-cleared' : ''} ${isCurrent ? 'stage-map-card-current' : ''} ${isNext ? 'stage-map-card-next' : ''} ${selectedStage === i ? 'stage-map-card-selected' : ''} ${isLocked ? 'stage-map-card-locked' : ''}`}
               ref={isCurrent ? currentCardRef : undefined}
               aria-current={isCurrent ? 'step' : undefined}
@@ -176,6 +218,31 @@ function StageMap({
                 {isVoidStage && (
                   <span className="stage-map-badge stage-map-badge-current-hazard">
                     LOW GRAVITY
+                  </span>
+                )}
+                {isAcidRainStage && (
+                  <span className="stage-map-badge stage-map-badge-portal">
+                    ACID RAIN
+                  </span>
+                )}
+                {isIceWindStage && (
+                  <span className="stage-map-badge stage-map-badge-current-hazard">
+                    ICE WIND
+                  </span>
+                )}
+                {isSolarFlareStage && (
+                  <span className="stage-map-badge stage-map-badge-portal">
+                    SOLAR FLARE
+                  </span>
+                )}
+                {isQuantumRiftStage && (
+                  <span className="stage-map-badge stage-map-badge-gravity">
+                    QUANTUM JITTER
+                  </span>
+                )}
+                {isOverdriveStage && (
+                  <span className="stage-map-badge stage-map-badge-gravity">
+                    POLARITY WELLS
                   </span>
                 )}
               </div>

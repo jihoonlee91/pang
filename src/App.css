@@ -966,6 +966,29 @@
   font-size: var(--fs-sm) !important;
 }
 
+.stage-map-jump {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0 12px;
+  font-size: var(--fs-sm);
+  color: #334155;
+}
+
+.stage-map-jump input {
+  width: 5em;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-family: var(--font-game);
+  font-size: var(--fs-sm);
+}
+
+.screen-button-small {
+  padding: 8px 18px;
+}
+
 .stage-map-actions {
   display: flex;
   justify-content: center;
