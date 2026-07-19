@@ -40,11 +40,13 @@ export function getStageTimeSeconds(stageIndex: number): number {
     0,
     Math.min(STAGE_COUNT - 1, Math.floor(stageIndex)),
   )
-  // Floors at the same value late stages already converged toward before
-  // stage count grew past ~80 (90 - 78 = 12) — without this floor, stages
-  // beyond 90 (0-indexed) hit zero or negative time and the run ends the
-  // instant it starts.
-  return Math.max(12, STAGE_TIME_SECONDS - normalizedStage)
+  // Floored at 20s: with the default single harpoon (~0.6s round trip to
+  // the top of the arena and back), a player lands roughly 1.5 hits/sec,
+  // and clearing 8 max-size balls needs up to 56 hits (each level-2 ball
+  // takes 7: itself, its 2 level-1 children, their 4 level-0 grandchildren).
+  // A 12s floor allowed for only ~18 hits — unwinnable without power-ups,
+  // which just reads as running out of time rather than a real challenge.
+  return Math.max(20, STAGE_TIME_SECONDS - normalizedStage)
 }
 
 export type Obstacle = {

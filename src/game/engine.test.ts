@@ -100,8 +100,8 @@ describe('createStage', () => {
     }
   })
 
-  it('floors stage time at 12 seconds instead of hitting zero or negative', () => {
-    expect(getStageTimeSeconds(STAGE_COUNT - 1)).toBe(12)
+  it('floors stage time at 20 seconds instead of hitting zero or negative', () => {
+    expect(getStageTimeSeconds(STAGE_COUNT - 1)).toBe(20)
     expect(getStageTimeSeconds(STAGE_COUNT - 1)).toBeGreaterThan(0)
   })
 

@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.16.2',
+    date: '2026-07-18',
+    notes: [
+      'Raised the minimum stage time budget from 12 to 20 seconds — the old floor left barely enough time to land the hits needed to clear a full board of balls, even with perfect aim.',
+    ],
+  },
+  {
     version: '1.16.1',
     date: '2026-07-18',
     notes: [
@@ -52,14 +59,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-07-17',
     notes: [
       'Fixed AI Play permanently freezing if it died on stage 1 (the attract loop now always recovers, no matter which stage it dies on).',
-    ],
-  },
-  {
-    version: '1.12.0',
-    date: '2026-07-17',
-    notes: [
-      'AI Play clears balls much faster now — it commits to shots instead of over-cautiously avoiding the very ball it just aimed at.',
-      'AI Play also plays smarter around items: no false predictions during Clock/Hourglass, and it plays fearless while Invincible is active.',
     ],
   },
 ]
