@@ -32,6 +32,9 @@ export type ItemType =
   | 'novaSurge'
   | 'fireproof'
   | 'anchor'
+  | 'magnet'
+  | 'comboLock'
+  | 'shockwave'
 
 export type Item = {
   id: number

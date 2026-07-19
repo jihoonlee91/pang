@@ -58,4 +58,11 @@ describe('getItemWeights', () => {
     expect(weights.some(([type]) => type === 'anchor')).toBe(true)
     expect(weights.some(([type]) => type === 'fireproof')).toBe(true)
   })
+
+  it('includes magnet, comboLock, and shockwave from stage 1 onward', () => {
+    const weights = getItemWeights(0)
+    expect(weights.some(([type]) => type === 'magnet')).toBe(true)
+    expect(weights.some(([type]) => type === 'comboLock')).toBe(true)
+    expect(weights.some(([type]) => type === 'shockwave')).toBe(true)
+  })
 })

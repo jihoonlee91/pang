@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.18.0',
+    date: '2026-07-19',
+    notes: [
+      'Three new items: Magnet pulls dropped items toward you, Combo Lock keeps your combo alive even if you miss the timing window, and Shockwave instantly splits every ball on screen for a burst of score.',
+    ],
+  },
+  {
     version: '1.17.0',
     date: '2026-07-19',
     notes: [
@@ -54,14 +61,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     notes: [
       '20 more stages! Hell (81-90) adds periodic lava-burst floor zones, and Void (91-100) drops gravity to near-zero — the game now runs 100 stages deep.',
       'Cosmic Frontier (61-70) reworked into one continuous "flight into a nebula" theme, with a new hazard (Nebula Field) and a new item, Nova Surge, that doubles score gained from hitting balls for 10 seconds.',
-    ],
-  },
-  {
-    version: '1.14.0',
-    date: '2026-07-17',
-    notes: [
-      '20 new stages! World Tour II (21-30) adds 10 more real-world landmarks, and the game now ends with Vortex Frontier (71-80) — a spinning gravity well that curves balls into an orbit.',
-      'Every stage from 21 onward shifted up by 10 to make room: Dimension X is now 31-40, The Trench 41-50, Stellar Forge 51-60, Cosmic Frontier 61-70.',
     ],
   },
 ]

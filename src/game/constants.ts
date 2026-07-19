@@ -183,6 +183,11 @@ export const OBSTACLE_Y = DEFAULT_OBSTACLE.y
 // --- Power-up items ---
 export const ITEM_RADIUS = 16
 export const ITEM_GRAVITY = 260
+// Fraction of the remaining horizontal gap to the player an item closes
+// per second while Magnet is active — an exponential approach rather than
+// a fixed speed, so items snap in fast from nearby but don't teleport from
+// across the arena.
+export const MAGNET_PULL_RATE = 4
 export const ITEM_DROP_CHANCE = 0.14
 
 export function getStageItemDropChance(stageIndex: number): number {
@@ -207,6 +212,9 @@ export const ITEM_WEIGHTS: [ItemType, number][] = [
   ['invincible', 6],
   ['timePlus', 8],
   ['scoreBonus', 8],
+  ['magnet', 10],
+  ['comboLock', 8],
+  ['shockwave', 6],
 ]
 
 // Vulcan (rapid-fire) was originally always in the pool, but it trivializes
@@ -265,3 +273,5 @@ export const NOVA_SURGE_DURATION_MS = 10000
 export const NOVA_SURGE_MULTIPLIER = 2
 export const FIREPROOF_DURATION_MS = 8000
 export const ANCHOR_DURATION_MS = 8000
+export const MAGNET_DURATION_MS = 8000
+export const COMBO_LOCK_DURATION_MS = 10000

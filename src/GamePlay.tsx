@@ -48,6 +48,8 @@ import {
   NOVA_SURGE_MULTIPLIER,
   FIREPROOF_DURATION_MS,
   ANCHOR_DURATION_MS,
+  MAGNET_DURATION_MS,
+  COMBO_LOCK_DURATION_MS,
   getItemWeights,
 } from './game/constants'
 import type { Obstacle } from './game/constants'
@@ -136,6 +138,9 @@ const ITEM_LABELS: Record<ItemType, string> = {
   novaSurge: '2',
   fireproof: 'F',
   anchor: 'X',
+  magnet: 'M',
+  comboLock: 'L',
+  shockwave: 'W',
 }
 
 const ITEM_COLORS: Record<ItemType, string> = {
@@ -155,6 +160,9 @@ const ITEM_COLORS: Record<ItemType, string> = {
   novaSurge: '#fb923c',
   fireproof: '#f87171',
   anchor: '#94a3b8',
+  magnet: '#f43f5e',
+  comboLock: '#facc15',
+  shockwave: '#818cf8',
 }
 
 const BUFF_LABELS: Record<
@@ -168,7 +176,9 @@ const BUFF_LABELS: Record<
   | 'stabilizer'
   | 'novaSurge'
   | 'fireproof'
-  | 'anchor',
+  | 'anchor'
+  | 'magnet'
+  | 'comboLock',
   string
 > = {
   doubleWire: 'Double Wire',
@@ -182,6 +192,8 @@ const BUFF_LABELS: Record<
   novaSurge: 'Nova Surge (x2 Score)',
   fireproof: 'Fireproof',
   anchor: 'Anchor',
+  magnet: 'Magnet',
+  comboLock: 'Combo Lock',
 }
 
 // Timed buffs start blinking in the HUD once this many seconds remain, so
@@ -200,6 +212,8 @@ const TIMED_BUFF_KEYS = [
   'novaSurge',
   'fireproof',
   'anchor',
+  'magnet',
+  'comboLock',
 ] as const
 
 const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
@@ -219,6 +233,9 @@ const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
   novaSurge: 'Nova Surge!',
   fireproof: 'Fireproof!',
   anchor: 'Anchor!',
+  magnet: 'Magnet!',
+  comboLock: 'Combo Lock!',
+  shockwave: 'Shockwave!',
 }
 
 const ITEM_TITLES: Record<ItemType, string> = {
@@ -238,12 +255,15 @@ const ITEM_TITLES: Record<ItemType, string> = {
   novaSurge: 'Nova Surge',
   fireproof: 'Fireproof',
   anchor: 'Anchor',
+  magnet: 'Magnet',
+  comboLock: 'Combo Lock',
+  shockwave: 'Shockwave',
 }
 
 const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
   doubleWire: '12초 동안 작살을 2개까지 동시에 발사합니다.',
   powerWire:
-    '12초 동안 장애물이나 천장까지 닿아 5초간 남는 강화 작살을 발사합니다.',
+    '6초 동안 장애물이나 천장까지 닿아 5초간 남는 강화 작살을 발사합니다.',
   vulcan: '12초 동안 빠른 탄환을 연속 발사합니다.',
   clock: '6초 동안 모든 공의 움직임을 멈춥니다.',
   hourglass: '8초 동안 모든 공을 느리게 만듭니다.',
@@ -257,6 +277,9 @@ const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
   stabilizer: '8초 동안 조류/중력 우물/성운/소용돌이 효과를 무력화합니다.',
   novaSurge: '10초 동안 공을 맞혀 얻는 점수가 2배가 됩니다.',
   fireproof: '8초 동안 화염 지대에 닿아도 피해를 받지 않습니다.',
+  magnet: '8초 동안 떨어지는 아이템이 플레이어 쪽으로 끌려옵니다.',
+  comboLock: '10초 동안 콤보가 시간이 지나도 끊기지 않습니다.',
+  shockwave: '화면의 모든 공을 즉시 한 단계씩 작게 분열시키고 점수를 얻습니다.',
   anchor: '8초 동안 중력을 정상으로 되돌립니다.',
 }
 
@@ -971,6 +994,48 @@ function drawFallingItemIcon(
       ctx.quadraticCurveTo(6, 9, 0, 9)
       ctx.stroke()
       break
+    case 'magnet':
+      ctx.lineWidth = 5
+      ctx.lineCap = 'butt'
+      ctx.strokeStyle = '#e2e8f0'
+      ctx.beginPath()
+      ctx.arc(0, -1, 7, Math.PI, Math.PI * 2)
+      ctx.stroke()
+      ctx.strokeStyle = '#ef4444'
+      ctx.beginPath()
+      ctx.moveTo(-7, -1)
+      ctx.lineTo(-7, 8)
+      ctx.stroke()
+      ctx.strokeStyle = '#60a5fa'
+      ctx.beginPath()
+      ctx.moveTo(7, -1)
+      ctx.lineTo(7, 8)
+      ctx.stroke()
+      break
+    case 'comboLock':
+      ctx.lineWidth = 2.4
+      ctx.beginPath()
+      ctx.arc(0, -4, 5, Math.PI, 0)
+      ctx.stroke()
+      ctx.fillStyle = '#facc15'
+      ctx.fillRect(-7, -3, 14, 12)
+      ctx.strokeRect(-7, -3, 14, 12)
+      ctx.fillStyle = '#78350f'
+      ctx.beginPath()
+      ctx.arc(0, 3, 2, 0, Math.PI * 2)
+      ctx.fill()
+      break
+    case 'shockwave':
+      ctx.lineWidth = 2
+      ctx.strokeStyle = color
+      for (const r of [4, 8, 12]) {
+        ctx.globalAlpha = 1 - r / 14
+        ctx.beginPath()
+        ctx.arc(0, 0, r, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+      ctx.globalAlpha = 1
+      break
   }
 }
 
@@ -1423,6 +1488,8 @@ type BuffDisplay = {
   novaSurge: number
   fireproof: number
   anchor: number
+  magnet: number
+  comboLock: number
 }
 
 const NO_BUFFS: BuffDisplay = {
@@ -1438,6 +1505,8 @@ const NO_BUFFS: BuffDisplay = {
   novaSurge: 0,
   fireproof: 0,
   anchor: 0,
+  magnet: 0,
+  comboLock: 0,
 }
 
 function GamePlay({
@@ -1526,6 +1595,8 @@ function GamePlay({
   const novaSurgeUntilRef = useRef(0)
   const fireproofUntilRef = useRef(0)
   const anchorUntilRef = useRef(0)
+  const magnetUntilRef = useRef(0)
+  const comboLockUntilRef = useRef(0)
   const barrierCountRef = useRef(0)
   const portalCooldownsRef = useRef(new Map<number, number>())
   const buffsDisplayRef = useRef<BuffDisplay>(NO_BUFFS)
@@ -1569,6 +1640,8 @@ function GamePlay({
       novaSurgeUntilRef.current = 0
       fireproofUntilRef.current = 0
       anchorUntilRef.current = 0
+      magnetUntilRef.current = 0
+      comboLockUntilRef.current = 0
       barrierCountRef.current = 0
       portalCooldownsRef.current.clear()
       playerXRef.current = CANVAS_WIDTH / 2
@@ -1636,6 +1709,8 @@ function GamePlay({
     novaSurgeUntilRef.current += pausedFor
     fireproofUntilRef.current += pausedFor
     anchorUntilRef.current += pausedFor
+    magnetUntilRef.current += pausedFor
+    comboLockUntilRef.current += pausedFor
     lastHitAtRef.current += pausedFor
     harpoonsRef.current = harpoonsRef.current.map((harpoon) => ({
       ...harpoon,
@@ -1809,6 +1884,8 @@ function GamePlay({
           const isNovaSurgeActive = time < novaSurgeUntilRef.current
           const isFireproofActive = time < fireproofUntilRef.current
           const isAnchorActive = time < anchorUntilRef.current
+          const isMagnetActive = time < magnetUntilRef.current
+          const isComboLockActive = time < comboLockUntilRef.current
           const windAx = isStabilizerActive
             ? 0
             : getCurrentWindAx(stageCurrent, time)
@@ -2120,7 +2197,10 @@ function GamePlay({
               const hitBall = ballsRef.current[hitIndex]
               const children = splitBall(hitBall, nextId)
 
-              if (time - lastHitAtRef.current <= COMBO_WINDOW_MS) {
+              if (
+                isComboLockActive ||
+                time - lastHitAtRef.current <= COMBO_WINDOW_MS
+              ) {
                 comboRef.current += 1
               } else {
                 comboRef.current = 0
@@ -2240,7 +2320,13 @@ function GamePlay({
           }
 
           itemsRef.current = itemsRef.current
-            .map((item) => stepItem(item, dtSec))
+            .map((item) =>
+              stepItem(
+                item,
+                dtSec,
+                isMagnetActive ? playerXRef.current : undefined,
+              ),
+            )
             .filter((item) => item.y - ITEM_RADIUS < CANVAS_HEIGHT)
 
           const pickupIndex = itemsRef.current.findIndex((item) =>
@@ -2351,6 +2437,46 @@ function GamePlay({
               case 'anchor':
                 anchorUntilRef.current = time + ANCHOR_DURATION_MS
                 break
+              case 'magnet':
+                magnetUntilRef.current = time + MAGNET_DURATION_MS
+                break
+              case 'comboLock':
+                comboLockUntilRef.current = time + COMBO_LOCK_DURATION_MS
+                break
+              case 'shockwave': {
+                let shockwaveGained = 0
+                const shockwaveChildren: Ball[] = []
+                for (const b of ballsRef.current) {
+                  spawnBurst(
+                    particlesRef.current,
+                    b.x,
+                    b.y,
+                    BALL_COLORS[b.level],
+                  )
+                  const gained = Math.round(
+                    SCORE_BY_LEVEL[b.level] *
+                      (1 + comboRef.current * 0.1) *
+                      (isNovaSurgeActive ? NOVA_SURGE_MULTIPLIER : 1),
+                  )
+                  shockwaveGained += gained
+                  popupsRef.current.push({
+                    x: b.x,
+                    y: b.y,
+                    text: `+${gained}`,
+                    life: 700,
+                    maxLife: 700,
+                  })
+                  shockwaveChildren.push(...splitBall(b, nextId))
+                }
+                scoreRef.current = addToTotalScore(
+                  scoreRef.current,
+                  shockwaveGained,
+                )
+                setScore(scoreRef.current)
+                ballsRef.current = shockwaveChildren
+                playHitSound(2)
+                break
+              }
             }
           }
 
@@ -2398,6 +2524,14 @@ function GamePlay({
             0,
             Math.ceil((anchorUntilRef.current - time) / 1000),
           )
+          const magnetSec = Math.max(
+            0,
+            Math.ceil((magnetUntilRef.current - time) / 1000),
+          )
+          const comboLockSec = Math.max(
+            0,
+            Math.ceil((comboLockUntilRef.current - time) / 1000),
+          )
           const barrierCount = barrierCountRef.current
           const prevBuffs = buffsDisplayRef.current
           if (
@@ -2412,6 +2546,8 @@ function GamePlay({
             prevBuffs.novaSurge !== novaSurgeSec ||
             prevBuffs.fireproof !== fireproofSec ||
             prevBuffs.anchor !== anchorSec ||
+            prevBuffs.magnet !== magnetSec ||
+            prevBuffs.comboLock !== comboLockSec ||
             prevBuffs.barrier !== barrierCount
           ) {
             const nextBuffs: BuffDisplay = {
@@ -2426,6 +2562,8 @@ function GamePlay({
               novaSurge: novaSurgeSec,
               fireproof: fireproofSec,
               anchor: anchorSec,
+              magnet: magnetSec,
+              comboLock: comboLockSec,
               barrier: barrierCount,
             }
             buffsDisplayRef.current = nextBuffs
@@ -2877,6 +3015,8 @@ function GamePlay({
                 buffs.novaSurge === 0 &&
                 buffs.fireproof === 0 &&
                 buffs.anchor === 0 &&
+                buffs.magnet === 0 &&
+                buffs.comboLock === 0 &&
                 buffs.barrier === 0 && <li>None</li>}
             </ul>
           </div>

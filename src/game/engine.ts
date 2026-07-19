@@ -17,6 +17,7 @@ import {
   OBSTACLE_HEIGHT,
   ITEM_RADIUS,
   ITEM_GRAVITY,
+  MAGNET_PULL_RATE,
   ITEM_DROP_CHANCE,
   ITEM_WEIGHTS,
   type Obstacle,
@@ -294,10 +295,19 @@ export function rollItemDrop(
   return weights[weights.length - 1][0]
 }
 
-export function stepItem(item: Item, dtSec: number): Item {
+export function stepItem(
+  item: Item,
+  dtSec: number,
+  magnetTargetX?: number,
+): Item {
   const vy = item.vy + ITEM_GRAVITY * dtSec
   const y = item.y + vy * dtSec
-  return { ...item, y, vy }
+  const x =
+    magnetTargetX === undefined
+      ? item.x
+      : item.x +
+        (magnetTargetX - item.x) * Math.min(1, MAGNET_PULL_RATE * dtSec)
+  return { ...item, x, y, vy }
 }
 
 export function itemHitsPlayer(
