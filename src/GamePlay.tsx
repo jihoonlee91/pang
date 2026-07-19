@@ -50,6 +50,12 @@ import {
   ANCHOR_DURATION_MS,
   MAGNET_DURATION_MS,
   COMBO_LOCK_DURATION_MS,
+  UMBRELLA_DURATION_MS,
+  GRIP_BOOTS_DURATION_MS,
+  VISOR_DURATION_MS,
+  LOCK_ON_DURATION_MS,
+  OVERDRIVE_DURATION_MS,
+  OVERDRIVE_SCORE_MULTIPLIER,
   getItemWeights,
 } from './game/constants'
 import type { Obstacle } from './game/constants'
@@ -72,6 +78,27 @@ import {
   type FireZone,
 } from './game/fireZones'
 import { getStageGravityScale } from './game/voidGravity'
+import {
+  getStageAcidRainZones,
+  getAcidRainState,
+  getAcidRainWarningProgress,
+  type AcidRainZone,
+} from './game/acidRain'
+import { getStageIceWind, getIceWindPush } from './game/iceWinds'
+import {
+  getStageSolarFlare,
+  getSolarFlareState,
+  getSolarFlareWarningProgress,
+  type SolarFlare,
+} from './game/solarFlares'
+import {
+  getQuantumJitterStrength,
+  applyQuantumJitter,
+} from './game/quantumRifts'
+import {
+  getStageOverdriveBaseWells,
+  getOverdriveWellsAtTime,
+} from './game/overdriveWells'
 import {
   createStage,
   stepBall,
@@ -149,6 +176,11 @@ const ITEM_LABELS: Record<ItemType, string> = {
   magnet: 'M',
   comboLock: 'L',
   shockwave: 'W',
+  umbrella: 'U',
+  gripBoots: 'G',
+  visor: 'Z',
+  lockOn: 'K',
+  overdrive: 'O',
 }
 
 const BUFF_LABELS: Record<
@@ -164,7 +196,12 @@ const BUFF_LABELS: Record<
   | 'fireproof'
   | 'anchor'
   | 'magnet'
-  | 'comboLock',
+  | 'comboLock'
+  | 'umbrella'
+  | 'gripBoots'
+  | 'visor'
+  | 'lockOn'
+  | 'overdrive',
   string
 > = {
   doubleWire: 'Double Wire',
@@ -180,6 +217,11 @@ const BUFF_LABELS: Record<
   anchor: 'Anchor',
   magnet: 'Magnet',
   comboLock: 'Combo Lock',
+  umbrella: 'Umbrella',
+  gripBoots: 'Grip Boots',
+  visor: 'Visor',
+  lockOn: 'Lock-On',
+  overdrive: 'Overdrive (x1.5 Score)',
 }
 
 // Timed buffs start blinking in the HUD once this many seconds remain, so
@@ -200,6 +242,11 @@ const TIMED_BUFF_KEYS = [
   'anchor',
   'magnet',
   'comboLock',
+  'umbrella',
+  'gripBoots',
+  'visor',
+  'lockOn',
+  'overdrive',
 ] as const
 
 const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
@@ -222,6 +269,11 @@ const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
   magnet: 'Magnet!',
   comboLock: 'Combo Lock!',
   shockwave: 'Shockwave!',
+  umbrella: 'Umbrella!',
+  gripBoots: 'Grip Boots!',
+  visor: 'Visor!',
+  lockOn: 'Lock-On!',
+  overdrive: 'Overdrive!',
 }
 
 type Particle = {
@@ -470,6 +522,165 @@ function drawFireZones(
     }
     ctx.restore()
   }
+}
+
+function drawAcidRain(
+  ctx: CanvasRenderingContext2D,
+  zones: readonly AcidRainZone[],
+  time: number,
+) {
+  const floorY = PLAYER_Y + 26
+  for (const zone of zones) {
+    const state = getAcidRainState(zone, time)
+    if (state === 'dormant') continue
+
+    ctx.save()
+    if (state === 'warning') {
+      // Falling drips that grow denser as impact approaches — telegraphs
+      // exactly where and how wide the rain column will land.
+      const progress = getAcidRainWarningProgress(zone, time)
+      const pulse = 0.5 + Math.sin(time / 80) * 0.2
+      ctx.strokeStyle = '#a3e635'
+      ctx.lineWidth = 3
+      ctx.globalAlpha = (0.3 + progress * 0.4) * pulse
+      const dripCount = 3 + Math.floor(progress * 4)
+      for (let i = 0; i < dripCount; i += 1) {
+        const dripX = zone.x + ((i + 0.5) / dripCount) * zone.width
+        const dripY = ((time / 4 + i * 90) % 220) * progress
+        ctx.beginPath()
+        ctx.moveTo(dripX, dripY)
+        ctx.lineTo(dripX, dripY + 18)
+        ctx.stroke()
+      }
+      ctx.globalAlpha = 0.4 + pulse * 0.3
+      ctx.fillStyle = '#84cc16'
+      ctx.fillRect(zone.x, floorY - 6, zone.width, 8)
+    } else {
+      ctx.shadowColor = '#a3e635'
+      ctx.shadowBlur = 20
+      const rain = ctx.createLinearGradient(0, 0, 0, floorY + 8)
+      rain.addColorStop(0, 'rgba(163, 230, 53, 0)')
+      rain.addColorStop(0.6, '#84cc16')
+      rain.addColorStop(1, '#4d7c0f')
+      ctx.fillStyle = rain
+      ctx.globalAlpha = 0.85
+      ctx.fillRect(zone.x, 0, zone.width, floorY)
+      ctx.globalAlpha = 1
+      ctx.fillStyle = '#bef264'
+      const bubbleCount = 8
+      for (let i = 0; i < bubbleCount; i += 1) {
+        const bx = zone.x + ((i * 37 + time / 3) % zone.width)
+        const by = floorY - 4 - ((time / 5 + i * 40) % 30)
+        ctx.beginPath()
+        ctx.arc(bx, by, 3, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
+    ctx.restore()
+  }
+}
+
+function drawSolarFlareOverlay(
+  ctx: CanvasRenderingContext2D,
+  flare: SolarFlare | null,
+  time: number,
+) {
+  const state = getSolarFlareState(flare, time)
+  if (state === 'dormant') return
+
+  ctx.save()
+  if (state === 'warning') {
+    const progress = getSolarFlareWarningProgress(flare, time)
+    ctx.globalAlpha = progress * 0.35
+    const glow = ctx.createRadialGradient(
+      CANVAS_WIDTH / 2,
+      CANVAS_HEIGHT * 0.3,
+      20,
+      CANVAS_WIDTH / 2,
+      CANVAS_HEIGHT * 0.3,
+      CANVAS_WIDTH * 0.7,
+    )
+    glow.addColorStop(0, '#fde047')
+    glow.addColorStop(1, 'rgba(253, 224, 71, 0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  } else {
+    const pulse = 0.55 + Math.sin(time / 90) * 0.15
+    ctx.globalAlpha = pulse * 0.5
+    ctx.fillStyle = '#fff7ed'
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  }
+  ctx.restore()
+}
+
+function drawIceGusts(
+  ctx: CanvasRenderingContext2D,
+  push: number,
+  time: number,
+) {
+  if (Math.abs(push) < 3) return
+  const direction = push > 0 ? 1 : -1
+  const period = CANVAS_WIDTH + 60
+  const drift = ((time / 1000) * 90 * direction) % period
+
+  ctx.save()
+  ctx.globalAlpha = Math.min(0.5, 0.2 + Math.abs(push) / 90)
+  ctx.strokeStyle = '#e0f2fe'
+  ctx.lineWidth = 2
+  for (const y of [140, 220, 300, 400]) {
+    for (let i = 0; i < 5; i += 1) {
+      const raw = (i * (period / 5) + drift) % period
+      const x = ((raw + period) % period) - 30
+      ctx.beginPath()
+      ctx.moveTo(x - 16 * direction, y)
+      ctx.lineTo(x, y - 4)
+      ctx.lineTo(x - 16 * direction, y - 8)
+      ctx.stroke()
+    }
+  }
+  ctx.restore()
+}
+
+function drawOverdriveWell(
+  ctx: CanvasRenderingContext2D,
+  well: { x: number; y: number; strength: number },
+  time: number,
+) {
+  const attracting = well.strength >= 0
+  const color = attracting ? '#60a5fa' : '#ef4444'
+  ctx.save()
+  ctx.translate(well.x, well.y)
+  ctx.shadowColor = color
+  ctx.shadowBlur = 28
+
+  for (let arm = 0; arm < 3; arm += 1) {
+    ctx.strokeStyle = color
+    ctx.globalAlpha = 0.5 - arm * 0.12
+    ctx.lineWidth = 3 - arm * 0.6
+    const armOffset = (arm * (Math.PI * 2)) / 3
+    const spinTime = (time / 400) * (attracting ? 1 : -1)
+    ctx.beginPath()
+    for (let t = 0; t <= 1; t += 0.05) {
+      const radius = attracting ? 6 + t * 46 : 52 - t * 46
+      const angle = armOffset + spinTime + t * 6
+      const x = Math.cos(angle) * radius
+      const y = Math.sin(angle) * radius
+      if (t === 0) ctx.moveTo(x, y)
+      else ctx.lineTo(x, y)
+    }
+    ctx.stroke()
+  }
+
+  ctx.globalAlpha = 0.9
+  const core = ctx.createRadialGradient(0, 0, 2, 0, 0, 16)
+  core.addColorStop(0, '#ffffff')
+  core.addColorStop(0.5, color)
+  core.addColorStop(1, '#1e0b33')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(0, 0, 16, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
 }
 
 function drawBrickFrame(ctx: CanvasRenderingContext2D) {
@@ -1105,6 +1316,11 @@ type BuffDisplay = {
   anchor: number
   magnet: number
   comboLock: number
+  umbrella: number
+  gripBoots: number
+  visor: number
+  lockOn: number
+  overdrive: number
 }
 
 const NO_BUFFS: BuffDisplay = {
@@ -1122,6 +1338,11 @@ const NO_BUFFS: BuffDisplay = {
   anchor: 0,
   magnet: 0,
   comboLock: 0,
+  umbrella: 0,
+  gripBoots: 0,
+  visor: 0,
+  lockOn: 0,
+  overdrive: 0,
 }
 
 function GamePlay({
@@ -1156,6 +1377,20 @@ function GamePlay({
   const fireZones = useMemo(() => getStageFireZones(stageIndex), [stageIndex])
   const gravityScale = useMemo(
     () => getStageGravityScale(stageIndex),
+    [stageIndex],
+  )
+  const acidRainZones = useMemo(
+    () => getStageAcidRainZones(stageIndex),
+    [stageIndex],
+  )
+  const iceWind = useMemo(() => getStageIceWind(stageIndex), [stageIndex])
+  const solarFlare = useMemo(() => getStageSolarFlare(stageIndex), [stageIndex])
+  const quantumJitterStrength = useMemo(
+    () => getQuantumJitterStrength(stageIndex),
+    [stageIndex],
+  )
+  const overdriveBaseWells = useMemo(
+    () => getStageOverdriveBaseWells(stageIndex),
     [stageIndex],
   )
   const stageTimeSeconds = getStageTimeSeconds(stageIndex)
@@ -1212,6 +1447,11 @@ function GamePlay({
   const anchorUntilRef = useRef(0)
   const magnetUntilRef = useRef(0)
   const comboLockUntilRef = useRef(0)
+  const umbrellaUntilRef = useRef(0)
+  const gripBootsUntilRef = useRef(0)
+  const visorUntilRef = useRef(0)
+  const lockOnUntilRef = useRef(0)
+  const overdriveUntilRef = useRef(0)
   const barrierCountRef = useRef(0)
   const portalCooldownsRef = useRef(new Map<number, number>())
   const buffsDisplayRef = useRef<BuffDisplay>(NO_BUFFS)
@@ -1259,6 +1499,11 @@ function GamePlay({
       anchorUntilRef.current = 0
       magnetUntilRef.current = 0
       comboLockUntilRef.current = 0
+      umbrellaUntilRef.current = 0
+      gripBootsUntilRef.current = 0
+      visorUntilRef.current = 0
+      lockOnUntilRef.current = 0
+      overdriveUntilRef.current = 0
       barrierCountRef.current = 0
       portalCooldownsRef.current.clear()
       playerXRef.current = CANVAS_WIDTH / 2
@@ -1339,6 +1584,11 @@ function GamePlay({
     anchorUntilRef.current += pausedFor
     magnetUntilRef.current += pausedFor
     comboLockUntilRef.current += pausedFor
+    umbrellaUntilRef.current += pausedFor
+    gripBootsUntilRef.current += pausedFor
+    visorUntilRef.current += pausedFor
+    lockOnUntilRef.current += pausedFor
+    overdriveUntilRef.current += pausedFor
     lastHitAtRef.current += pausedFor
     harpoonsRef.current = harpoonsRef.current.map((harpoon) => ({
       ...harpoon,
@@ -1501,26 +1751,50 @@ function GamePlay({
           const isVulcanActive = time < vulcanUntilRef.current
           const isSpeedBoostActive = time < speedBoostUntilRef.current
           const isInvincibleActive = time < invincibleUntilRef.current
-          const playerSpeed =
-            PLAYER_SPEED * (isSpeedBoostActive ? SPEED_BOOST_MULTIPLIER : 1)
-          const maxHarpoons = isVulcanActive
-            ? MAX_VULCAN_SHOTS
-            : time < doubleWireUntilRef.current
-              ? MAX_HARPOONS_DOUBLE_WIRE
-              : MAX_HARPOONS_DEFAULT
           const isStabilizerActive = time < stabilizerUntilRef.current
           const isNovaSurgeActive = time < novaSurgeUntilRef.current
           const isFireproofActive = time < fireproofUntilRef.current
           const isAnchorActive = time < anchorUntilRef.current
           const isMagnetActive = time < magnetUntilRef.current
           const isComboLockActive = time < comboLockUntilRef.current
+          const isUmbrellaActive = time < umbrellaUntilRef.current
+          const isGripBootsActive = time < gripBootsUntilRef.current
+          const isVisorActive = time < visorUntilRef.current
+          const isLockOnActive = time < lockOnUntilRef.current
+          const isOverdriveActive = time < overdriveUntilRef.current
+          const isSolarFlareActive =
+            getSolarFlareState(solarFlare, time) === 'active'
+          const playerSpeed =
+            PLAYER_SPEED *
+            (isSpeedBoostActive ? SPEED_BOOST_MULTIPLIER : 1) *
+            (isSolarFlareActive && !isVisorActive && !isOverdriveActive
+              ? (solarFlare?.slowFactor ?? 1)
+              : 1)
+          const maxHarpoons = isVulcanActive
+            ? MAX_VULCAN_SHOTS
+            : time < doubleWireUntilRef.current
+              ? MAX_HARPOONS_DOUBLE_WIRE
+              : MAX_HARPOONS_DEFAULT
           const windAx = isStabilizerActive
             ? 0
             : getCurrentWindAx(stageCurrent, time)
-          const activeGravityWell = isStabilizerActive
-            ? undefined
-            : (gravityWell ?? undefined)
+          const overdriveWellsNow = overdriveBaseWells
+            ? getOverdriveWellsAtTime(overdriveBaseWells, stageIndex, time)
+            : null
+          const activeGravityWell = overdriveWellsNow
+            ? isOverdriveActive
+              ? undefined
+              : overdriveWellsNow
+            : isStabilizerActive
+              ? undefined
+              : (gravityWell ?? undefined)
           const activeGravityScale = isAnchorActive ? 1 : gravityScale
+          const activeIceWindPush =
+            isGripBootsActive || isOverdriveActive
+              ? 0
+              : getIceWindPush(iceWind, time)
+          const activeJitterStrength =
+            isLockOnActive || isOverdriveActive ? null : quantumJitterStrength
 
           if (!demo) {
             // Clock/Hourglass slow or stop balls, so the stage clock should
@@ -1614,6 +1888,13 @@ function GamePlay({
                 time: 0,
                 radius: zone.width / 2 + PLAYER_WIDTH / 2 + AI_DODGE_BUFFER,
               }))
+            const acidRainDangers: DangerZone[] = (acidRainZones ?? [])
+              .filter((zone) => getAcidRainState(zone, time) !== 'dormant')
+              .map((zone) => ({
+                x: zone.x + zone.width / 2,
+                time: 0,
+                radius: zone.width / 2 + PLAYER_WIDTH / 2 + AI_DODGE_BUFFER,
+              }))
             const dangerZones: DangerZone[] = [
               ...predictions
                 .filter(
@@ -1629,6 +1910,7 @@ function GamePlay({
                     AI_DODGE_BUFFER,
                 })),
               ...fireZoneDangers,
+              ...acidRainDangers,
             ]
             // While invincible, nothing is actually a threat — go straight
             // for the goal instead of routing around ghosts.
@@ -1684,6 +1966,16 @@ function GamePlay({
           )
           playerXRef.current = nextPlayerPosition.x
           playerYRef.current = nextPlayerPosition.y
+
+          if (activeIceWindPush !== 0) {
+            playerXRef.current = Math.min(
+              CANVAS_WIDTH - PLAYER_WIDTH / 2,
+              Math.max(
+                PLAYER_WIDTH / 2,
+                playerXRef.current + activeIceWindPush * dtSec,
+              ),
+            )
+          }
 
           if (dragTargetXRef.current !== null) {
             const diff = dragTargetXRef.current - playerXRef.current
@@ -1763,8 +2055,16 @@ function GamePlay({
               ? dtSec * HOURGLASS_SLOW_FACTOR
               : dtSec
             ballsRef.current = ballsRef.current.map((ball) => {
-              const steppedBall = stepBall(
+              const jitteredBall = applyQuantumJitter(
                 ball,
+                activeJitterStrength,
+                Math.random,
+              )
+              if (!demo && jitteredBall !== ball) {
+                spawnBurst(particlesRef.current, ball.x, ball.y, '#a855f7')
+              }
+              const steppedBall = stepBall(
+                jitteredBall,
                 ballDt,
                 terrain.platforms,
                 windAx,
@@ -1838,7 +2138,8 @@ function GamePlay({
               const gained = Math.round(
                 SCORE_BY_LEVEL[hitBall.level] *
                   (1 + comboRef.current * 0.1) *
-                  (isNovaSurgeActive ? NOVA_SURGE_MULTIPLIER : 1),
+                  (isNovaSurgeActive ? NOVA_SURGE_MULTIPLIER : 1) *
+                  (isOverdriveActive ? OVERDRIVE_SCORE_MULTIPLIER : 1),
               )
               scoreRef.current = addToTotalScore(scoreRef.current, gained)
               setScore(scoreRef.current)
@@ -1889,6 +2190,7 @@ function GamePlay({
           if (
             !isClockActive &&
             !isInvincibleActive &&
+            !isOverdriveActive &&
             time >= invulnUntilRef.current
           ) {
             const hitByFireZone =
@@ -1901,8 +2203,19 @@ function GamePlay({
                 )
               }) ??
                 false)
+            const hitByAcidRain =
+              !isUmbrellaActive &&
+              (acidRainZones?.some((zone) => {
+                if (getAcidRainState(zone, time) !== 'active') return false
+                return (
+                  playerXRef.current + PLAYER_WIDTH / 2 > zone.x &&
+                  playerXRef.current - PLAYER_WIDTH / 2 < zone.x + zone.width
+                )
+              }) ??
+                false)
             const hit =
               hitByFireZone ||
+              hitByAcidRain ||
               ballsRef.current.some((b) =>
                 ballHitsPlayer(b, playerXRef.current, playerYRef.current),
               )
@@ -2071,6 +2384,21 @@ function GamePlay({
               case 'comboLock':
                 comboLockUntilRef.current = time + COMBO_LOCK_DURATION_MS
                 break
+              case 'umbrella':
+                umbrellaUntilRef.current = time + UMBRELLA_DURATION_MS
+                break
+              case 'gripBoots':
+                gripBootsUntilRef.current = time + GRIP_BOOTS_DURATION_MS
+                break
+              case 'visor':
+                visorUntilRef.current = time + VISOR_DURATION_MS
+                break
+              case 'lockOn':
+                lockOnUntilRef.current = time + LOCK_ON_DURATION_MS
+                break
+              case 'overdrive':
+                overdriveUntilRef.current = time + OVERDRIVE_DURATION_MS
+                break
               case 'shockwave': {
                 let shockwaveGained = 0
                 const shockwaveChildren: Ball[] = []
@@ -2084,7 +2412,8 @@ function GamePlay({
                   const gained = Math.round(
                     SCORE_BY_LEVEL[b.level] *
                       (1 + comboRef.current * 0.1) *
-                      (isNovaSurgeActive ? NOVA_SURGE_MULTIPLIER : 1),
+                      (isNovaSurgeActive ? NOVA_SURGE_MULTIPLIER : 1) *
+                      (isOverdriveActive ? OVERDRIVE_SCORE_MULTIPLIER : 1),
                   )
                   shockwaveGained += gained
                   popupsRef.current.push({
@@ -2160,6 +2489,26 @@ function GamePlay({
             0,
             Math.ceil((comboLockUntilRef.current - time) / 1000),
           )
+          const umbrellaSec = Math.max(
+            0,
+            Math.ceil((umbrellaUntilRef.current - time) / 1000),
+          )
+          const gripBootsSec = Math.max(
+            0,
+            Math.ceil((gripBootsUntilRef.current - time) / 1000),
+          )
+          const visorSec = Math.max(
+            0,
+            Math.ceil((visorUntilRef.current - time) / 1000),
+          )
+          const lockOnSec = Math.max(
+            0,
+            Math.ceil((lockOnUntilRef.current - time) / 1000),
+          )
+          const overdriveSec = Math.max(
+            0,
+            Math.ceil((overdriveUntilRef.current - time) / 1000),
+          )
           const barrierCount = barrierCountRef.current
           const prevBuffs = buffsDisplayRef.current
           if (
@@ -2176,6 +2525,11 @@ function GamePlay({
             prevBuffs.anchor !== anchorSec ||
             prevBuffs.magnet !== magnetSec ||
             prevBuffs.comboLock !== comboLockSec ||
+            prevBuffs.umbrella !== umbrellaSec ||
+            prevBuffs.gripBoots !== gripBootsSec ||
+            prevBuffs.visor !== visorSec ||
+            prevBuffs.lockOn !== lockOnSec ||
+            prevBuffs.overdrive !== overdriveSec ||
             prevBuffs.barrier !== barrierCount
           ) {
             const nextBuffs: BuffDisplay = {
@@ -2192,6 +2546,11 @@ function GamePlay({
               anchor: anchorSec,
               magnet: magnetSec,
               comboLock: comboLockSec,
+              umbrella: umbrellaSec,
+              gripBoots: gripBootsSec,
+              visor: visorSec,
+              lockOn: lockOnSec,
+              overdrive: overdriveSec,
               barrier: barrierCount,
             }
             buffsDisplayRef.current = nextBuffs
@@ -2261,7 +2620,14 @@ function GamePlay({
         const wells = Array.isArray(gravityWell) ? gravityWell : [gravityWell]
         for (const well of wells) drawGravityWell(ctx, well, time)
       }
+      if (overdriveBaseWells) {
+        const wellsNow =
+          getOverdriveWellsAtTime(overdriveBaseWells, stageIndex, time) ?? []
+        for (const well of wellsNow) drawOverdriveWell(ctx, well, time)
+      }
+      if (iceWind) drawIceGusts(ctx, getIceWindPush(iceWind, time), time)
       if (fireZones) drawFireZones(ctx, fireZones, time)
+      if (acidRainZones) drawAcidRain(ctx, acidRainZones, time)
       for (const platform of terrain.platforms) drawObstacle(ctx, platform)
       for (const pair of portalPairs) {
         drawPortal(ctx, pair.entry, time)
@@ -2345,6 +2711,8 @@ function GamePlay({
 
       ctx.restore()
 
+      if (solarFlare) drawSolarFlareOverlay(ctx, solarFlare, time)
+
       if (hitEffectProgress > 0) {
         ctx.save()
         ctx.globalAlpha = 0.35 * hitEffectProgress
@@ -2375,6 +2743,11 @@ function GamePlay({
     gravityWell,
     fireZones,
     gravityScale,
+    acidRainZones,
+    iceWind,
+    solarFlare,
+    quantumJitterStrength,
+    overdriveBaseWells,
     onClear,
     onGameOver,
     demo,
@@ -2413,6 +2786,15 @@ function GamePlay({
         )}
         {fireZones && <span className="hud-hazard">Fire Zones</span>}
         {gravityScale < 1 && <span className="hud-hazard">Low Gravity</span>}
+        {acidRainZones && <span className="hud-hazard">Acid Rain</span>}
+        {iceWind && <span className="hud-hazard">Ice Wind</span>}
+        {solarFlare && <span className="hud-hazard">Solar Flare</span>}
+        {quantumJitterStrength && (
+          <span className="hud-hazard">Quantum Jitter</span>
+        )}
+        {overdriveBaseWells && (
+          <span className="hud-hazard">Polarity Wells</span>
+        )}
         <div
           className="hp-bar hp-bar-pulse"
           key={hpPulseKey}
@@ -2645,6 +3027,11 @@ function GamePlay({
                 buffs.anchor === 0 &&
                 buffs.magnet === 0 &&
                 buffs.comboLock === 0 &&
+                buffs.umbrella === 0 &&
+                buffs.gripBoots === 0 &&
+                buffs.visor === 0 &&
+                buffs.lockOn === 0 &&
+                buffs.overdrive === 0 &&
                 buffs.barrier === 0 && <li>None</li>}
             </ul>
           </div>

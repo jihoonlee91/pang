@@ -20,6 +20,11 @@ export const ITEM_COLORS: Record<ItemType, string> = {
   magnet: '#f43f5e',
   comboLock: '#facc15',
   shockwave: '#818cf8',
+  umbrella: '#84cc16',
+  gripBoots: '#38bdf8',
+  visor: '#fbbf24',
+  lockOn: '#a855f7',
+  overdrive: '#ef4444',
 }
 
 export const ITEM_TITLES: Record<ItemType, string> = {
@@ -42,6 +47,11 @@ export const ITEM_TITLES: Record<ItemType, string> = {
   magnet: 'Magnet',
   comboLock: 'Combo Lock',
   shockwave: 'Shockwave',
+  umbrella: 'Umbrella',
+  gripBoots: 'Grip Boots',
+  visor: 'Visor',
+  lockOn: 'Lock-On',
+  overdrive: 'Overdrive',
 }
 
 export const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
@@ -65,6 +75,11 @@ export const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
   comboLock: '10초 동안 콤보가 시간이 지나도 끊기지 않습니다.',
   shockwave: '화면의 모든 공을 즉시 한 단계씩 작게 분열시키고 점수를 얻습니다.',
   anchor: '8초 동안 중력을 정상으로 되돌립니다.',
+  umbrella: '8초 동안 산성비에 맞아도 피해를 받지 않습니다.',
+  gripBoots: '8초 동안 얼음 돌풍에 밀리지 않습니다.',
+  visor: '8초 동안 태양 플레어의 눈부심에도 이동 속도가 느려지지 않습니다.',
+  lockOn: '8초 동안 공의 양자 요동(순간이동)이 발생하지 않습니다.',
+  overdrive: '8초 동안 모든 hazard 피해를 막고 점수를 1.5배로 획득합니다.',
 }
 
 function traceShield(ctx: CanvasRenderingContext2D, scale = 1) {
@@ -389,6 +404,100 @@ export function drawFallingItemIcon(
         ctx.stroke()
       }
       ctx.globalAlpha = 1
+      break
+    case 'umbrella':
+      ctx.beginPath()
+      ctx.moveTo(-10, -2)
+      ctx.quadraticCurveTo(-10, -10, 0, -10)
+      ctx.quadraticCurveTo(10, -10, 10, -2)
+      ctx.lineTo(6, -4)
+      ctx.lineTo(2, -2)
+      ctx.lineTo(-2, -4)
+      ctx.lineTo(-6, -2)
+      ctx.closePath()
+      ctx.fill()
+      ctx.stroke()
+      ctx.strokeStyle = '#365314'
+      ctx.beginPath()
+      ctx.moveTo(0, -2)
+      ctx.lineTo(0, 9)
+      ctx.quadraticCurveTo(-5, 9, -5, 5)
+      ctx.stroke()
+      break
+    case 'gripBoots':
+      ctx.beginPath()
+      ctx.moveTo(-6, -9)
+      ctx.lineTo(2, -9)
+      ctx.lineTo(2, 1)
+      ctx.lineTo(9, 1)
+      ctx.quadraticCurveTo(11, 1, 11, 4)
+      ctx.lineTo(11, 7)
+      ctx.lineTo(-6, 7)
+      ctx.closePath()
+      ctx.fill()
+      ctx.stroke()
+      ctx.strokeStyle = '#0f172a'
+      ctx.lineWidth = 1.6
+      for (const x of [-3, 1, 5, 9]) {
+        ctx.beginPath()
+        ctx.moveTo(x, 7)
+        ctx.lineTo(x, 10)
+        ctx.stroke()
+      }
+      break
+    case 'visor':
+      ctx.beginPath()
+      ctx.ellipse(0, -1, 10, 6, 0, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+      ctx.strokeStyle = '#78350f'
+      ctx.lineWidth = 1.6
+      ctx.beginPath()
+      ctx.moveTo(-9, -1)
+      ctx.lineTo(9, -1)
+      ctx.stroke()
+      ctx.strokeStyle = '#ffffff'
+      ctx.beginPath()
+      ctx.moveTo(-10, -1)
+      ctx.lineTo(-13, -5)
+      ctx.moveTo(10, -1)
+      ctx.lineTo(13, -5)
+      ctx.stroke()
+      break
+    case 'lockOn':
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(0, 0, 9, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.arc(0, 0, 4, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(0, -12)
+      ctx.lineTo(0, -6)
+      ctx.moveTo(0, 6)
+      ctx.lineTo(0, 12)
+      ctx.moveTo(-12, 0)
+      ctx.lineTo(-6, 0)
+      ctx.moveTo(6, 0)
+      ctx.lineTo(12, 0)
+      ctx.stroke()
+      break
+    case 'overdrive':
+      ctx.beginPath()
+      ctx.arc(0, 0, 11, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+      ctx.fillStyle = '#fef08a'
+      ctx.beginPath()
+      ctx.moveTo(2, -9)
+      ctx.lineTo(-5, 1)
+      ctx.lineTo(0, 1)
+      ctx.lineTo(-2, 9)
+      ctx.lineTo(6, -2)
+      ctx.lineTo(1, -2)
+      ctx.closePath()
+      ctx.fill()
       break
   }
 }

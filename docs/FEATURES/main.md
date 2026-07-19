@@ -7,7 +7,7 @@ Defines the first screen shown when entering the game and its flow.
 ## Components
 
 - Title (PANG, with a gradient shimmer animation)
-- Unlock progress text: "Unlocked: Stage N / 100" (`highestUnlockedStage`, `progress.ts`)
+- Unlock progress text: "Unlocked: Stage N / 150" (`highestUnlockedStage`, `progress.ts`, `STAGE_COUNT`)
 - A one-line controls summary
 - "Start" button
 - "Continue (Stage N)" button — only shown once the player has cleared at least one stage

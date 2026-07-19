@@ -65,4 +65,58 @@ describe('getItemWeights', () => {
     expect(weights.some(([type]) => type === 'comboLock')).toBe(true)
     expect(weights.some(([type]) => type === 'shockwave')).toBe(true)
   })
+
+  it('excludes umbrella before Toxic Marsh starts', () => {
+    expect(getItemWeights(99).some(([type]) => type === 'umbrella')).toBe(false)
+  })
+
+  it('includes umbrella from stage 101 (0-indexed 100) onward', () => {
+    const weights = getItemWeights(100)
+    expect(weights.some(([type]) => type === 'umbrella')).toBe(true)
+    expect(weights.some(([type]) => type === 'anchor')).toBe(true)
+  })
+
+  it('excludes gripBoots before Frozen Summit starts', () => {
+    expect(getItemWeights(109).some(([type]) => type === 'gripBoots')).toBe(
+      false,
+    )
+  })
+
+  it('includes gripBoots from stage 111 (0-indexed 110) onward', () => {
+    const weights = getItemWeights(110)
+    expect(weights.some(([type]) => type === 'gripBoots')).toBe(true)
+    expect(weights.some(([type]) => type === 'umbrella')).toBe(true)
+  })
+
+  it('excludes visor before Solar Storm starts', () => {
+    expect(getItemWeights(119).some(([type]) => type === 'visor')).toBe(false)
+  })
+
+  it('includes visor from stage 121 (0-indexed 120) onward', () => {
+    const weights = getItemWeights(120)
+    expect(weights.some(([type]) => type === 'visor')).toBe(true)
+    expect(weights.some(([type]) => type === 'gripBoots')).toBe(true)
+  })
+
+  it('excludes lockOn before Quantum Rift starts', () => {
+    expect(getItemWeights(129).some(([type]) => type === 'lockOn')).toBe(false)
+  })
+
+  it('includes lockOn from stage 131 (0-indexed 130) onward', () => {
+    const weights = getItemWeights(130)
+    expect(weights.some(([type]) => type === 'lockOn')).toBe(true)
+    expect(weights.some(([type]) => type === 'visor')).toBe(true)
+  })
+
+  it('excludes overdrive before Overdrive Nexus starts', () => {
+    expect(getItemWeights(139).some(([type]) => type === 'overdrive')).toBe(
+      false,
+    )
+  })
+
+  it('includes overdrive from stage 141 (0-indexed 140) onward', () => {
+    const weights = getItemWeights(140)
+    expect(weights.some(([type]) => type === 'overdrive')).toBe(true)
+    expect(weights.some(([type]) => type === 'lockOn')).toBe(true)
+  })
 })

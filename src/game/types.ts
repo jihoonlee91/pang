@@ -35,6 +35,11 @@ export type ItemType =
   | 'magnet'
   | 'comboLock'
   | 'shockwave'
+  | 'umbrella'
+  | 'gripBoots'
+  | 'visor'
+  | 'lockOn'
+  | 'overdrive'
 
 export type Item = {
   id: number

@@ -8,7 +8,7 @@
 ## 2. Core Gameplay
 
 - The player fires a harpoon to hit the balls on screen, splitting them and eventually removing them.
-- Removing all the balls clears the stage and progresses to the next one, across 100 stages total, escalating through several distinct environmental hazards (ladders, a second world-tour arc, dimension portals, undersea currents, gravity wells, a spinning "vortex" gravity-well arc, a "nebula field" flight toward a blazing stellar core, periodic damage "fire zones" through a hellscape, and near-zero gravity through an emptying void).
+- Removing all the balls clears the stage and progresses to the next one, across 150 stages total, escalating through several distinct environmental hazards (ladders, a second world-tour arc, dimension portals, undersea currents, gravity wells, a spinning "vortex" gravity-well arc, a "nebula field" flight toward a blazing stellar core, periodic damage "fire zones" through a hellscape, near-zero gravity through an emptying void, telegraphed acid rain through a toxic marsh, player-pushing ice gusts through a frozen summit, a screen-wide slowing solar flare, ball-jittering quantum rift instability, and polarity-flipping twin gravity wells through the finale Overdrive Nexus).
 - Getting hit by a ball doesn't cause instant death — it reduces HP by a set amount, and game over occurs when HP reaches 0.
 - Power-ups occasionally drop from hit balls, applying a temporary effect (double wire, clock, hourglass, barrier, 1UP, or the risky dynamite).
 

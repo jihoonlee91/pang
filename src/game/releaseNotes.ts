@@ -9,6 +9,21 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.21.1',
+    date: '2026-07-19',
+    notes: [
+      'Stage Map now has a "Jump to stage" quick-nav, so finding a specific stage in the now much longer list takes one search instead of a long scroll.',
+    ],
+  },
+  {
+    version: '1.21.0',
+    date: '2026-07-19',
+    notes: [
+      'The game now goes all the way to stage 150! Five new theme blocks: Toxic Marsh (telegraphed acid rain), Frozen Summit (icy gusts that push you sideways), Solar Storm (a screen-wide flare that slows you down), Quantum Rift (balls that randomly phase-jump), and the finale Overdrive Nexus (twin gravity wells that flip between pulling and pushing).',
+      'Five new items pair with the new hazards: Umbrella, Grip Boots, Visor, Lock-On, and the capstone Overdrive (blocks all hazard damage and boosts your score for 8 seconds).',
+    ],
+  },
+  {
     version: '1.20.0',
     date: '2026-07-19',
     notes: [
@@ -45,20 +60,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
       "Fixed a timing bug where the 3-second start invulnerability could already be expired the instant a new stage began, letting Hell's fire zones (or balls) hit before you'd even had a chance to move.",
       "Hell's fire zones now telegraph longer and clearer before igniting — a visibly rising glow previews where and how tall the flame will be, instead of a brief blinking floor strip.",
       'Running out of time now shows "Time Over" on the end screen instead of a generic "Game Over", so it\'s clear why the run ended.',
-    ],
-  },
-  {
-    version: '1.16.2',
-    date: '2026-07-18',
-    notes: [
-      'Raised the minimum stage time budget from 12 to 20 seconds — the old floor left barely enough time to land the hits needed to clear a full board of balls, even with perfect aim.',
-    ],
-  },
-  {
-    version: '1.16.1',
-    date: '2026-07-18',
-    notes: [
-      'Fixed Clock and Hourglass not affecting the stage timer — the clock now stops while Clock is active and slows to match while Hourglass is active, instead of counting down at normal speed.',
     ],
   },
 ]

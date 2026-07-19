@@ -147,9 +147,41 @@ A file laying out the goals for each phase.
 
 ### Phase 5-8. Void (Stages 91-100)
 
-- Add the final 10 stages themed as an emptying void, with near-zero
+- Add 10 more stages themed as an emptying void, with near-zero
   gravity — balls drift instead of falling predictably, changing how
   landing spots have to be read
+
+### Phase 5-9. Toxic Marsh (Stages 101-110)
+
+- Add 10 more stages themed as a toxic swamp, with a new "acid rain"
+  hazard — telegraphed falling-rain columns that damage the player
+  directly on contact, the same dormant/warning/active pattern as Hell's
+  fire zones but falling from above instead of erupting from the floor
+
+### Phase 5-10. Frozen Summit (Stages 111-120)
+
+- Add 10 more stages themed as a glacier ascent, with a new "ice wind"
+  hazard — periodic gusts that push the _player_ sideways instead of
+  the balls, inverting the Trench's current
+
+### Phase 5-11. Solar Storm (Stages 121-130)
+
+- Add 10 more stages themed as a blazing star, with a new "solar flare"
+  hazard — a screen-wide (not positional) dormant/warning/active glare
+  cycle that slows player move speed while active
+
+### Phase 5-12. Quantum Rift (Stages 131-140)
+
+- Add 10 more stages themed as a fracturing lab/dimension, with a new
+  "quantum jitter" hazard — balls occasionally phase-jump to a new
+  velocity, breaking the read a player built up watching their arc
+
+### Phase 5-13. Overdrive Nexus (Stages 141-150)
+
+- Add the final 10 stages as a finale, with a new "polarity wells"
+  hazard — twin gravity wells whose pull flips to a push and back on a
+  fast cycle, plus the capstone Overdrive item (full hazard immunity +
+  score multiplier)
 
 ## Phase 6. Live Ops & Post-Launch Polish
 

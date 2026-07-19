@@ -80,3 +80,35 @@ every existing item:
 All three follow the same "apply an effect" model and popup-announcement
 pattern as every other item; Magnet and Combo Lock are timed buffs shown
 in the HUD buff list, Shockwave is instant like Dynamite/1UP/Score Bonus.
+
+## 101-150 hazard items: Umbrella, Grip Boots, Visor, Lock-On, Overdrive
+
+Same "introduced once, stays in the pool forever after" pattern as
+Fireproof/Anchor above — each of the five new 101-150 theme blocks
+(`phase5_9.md` through `phase5_13.md`) pairs its hazard with a
+dedicated 8-second counter-item, none of them covered by Stabilizer
+(consistent with the precedent that hazards added after Stabilizer's
+original design get their own item rather than folding into its older
+current/gravity-well scope):
+
+- **Umbrella** (`UMBRELLA_START_STAGE`, stage 101 onward,
+  `UMBRELLA_DURATION_MS` = 8s): immunity to Toxic Marsh's acid rain
+  damage specifically. Weight 10.
+- **Grip Boots** (`GRIP_BOOTS_START_STAGE`, stage 111 onward,
+  `GRIP_BOOTS_DURATION_MS` = 8s): zeroes Frozen Summit's ice-wind push
+  on the player. Weight 10.
+- **Visor** (`VISOR_START_STAGE`, stage 121 onward,
+  `VISOR_DURATION_MS` = 8s): keeps move speed at full even while a
+  Solar Storm flare is active. Weight 10.
+- **Lock-On** (`LOCK_ON_START_STAGE`, stage 131 onward,
+  `LOCK_ON_DURATION_MS` = 8s): suppresses Quantum Rift's ball
+  phase-jitter entirely. Weight 10.
+- **Overdrive** (`OVERDRIVE_ITEM_START_STAGE`, stage 141 onward,
+  `OVERDRIVE_DURATION_MS` = 8s): the finale's capstone reward — blocks
+  _all_ hazard damage (folded into the same immunity gate as
+  Invincible) and neutralizes every push/pull/slow/jitter hazard at
+  once (Overdrive Nexus's polarity wells, ice wind, solar flare
+  slowdown, quantum jitter), on top of a 1.5x score multiplier
+  (`OVERDRIVE_SCORE_MULTIPLIER`) that stacks with Nova Surge if both
+  happen to be active. Rarer than the other four — weight 7, since it
+  does substantially more. See `phase5_13.md` for the full mechanic.

@@ -7,15 +7,20 @@ treat the design docs as authoritative.
 ## Basic Rules
 
 - The player fires a harpoon to hit the balls on screen, splitting them and eventually removing them.
-- Removing all the balls on screen clears the stage and progresses to the next one. There are 100 stages
+- Removing all the balls on screen clears the stage and progresses to the next one. There are 150 stages
   total, escalating through several distinct environmental hazards across the run: a vertical ladder
   section (stages 6-10), a second world-tour arc of real landmarks with no new hazard (stages 21-30, see
   `docs/design/phase5_4.md`), dimension-warp portals (stages 31-40), undersea currents (stages 41-50, see
   `docs/design/phase5_1.md`), gravity wells (stages 51-60, see `docs/design/phase5_2.md`), a spinning
   "vortex" gravity well (stages 71-80, see `docs/design/phase5_5.md`), a "nebula field" of two simultaneous
   weaker gravity wells on a flight toward a blazing stellar core (stages 61-70, see `docs/design/phase5_6.md`),
-  periodic damage "fire zones" through a hellscape (stages 81-90, see `docs/design/phase5_7.md`), and
-  near-zero gravity through an emptying void (stages 91-100, see `docs/design/phase5_8.md`).
+  periodic damage "fire zones" through a hellscape (stages 81-90, see `docs/design/phase5_7.md`),
+  near-zero gravity through an emptying void (stages 91-100, see `docs/design/phase5_8.md`), telegraphed
+  "acid rain" through a toxic marsh (stages 101-110, see `docs/design/phase5_9.md`), player-pushing ice
+  gusts through a frozen summit (stages 111-120, see `docs/design/phase5_10.md`), a screen-wide slowing
+  solar flare through a blazing star (stages 121-130, see `docs/design/phase5_11.md`), ball-jittering
+  "quantum rift" instability (stages 131-140, see `docs/design/phase5_12.md`), and polarity-flipping twin
+  gravity wells through the finale Overdrive Nexus (stages 141-150, see `docs/design/phase5_13.md`).
 - Getting hit by a ball doesn't cause instant death — HP decreases by 1, and after being hit you become
   invulnerable for a set period (1.2 seconds). Game over occurs when HP reaches 0. HP is shown on the HUD
   as a filled gauge (segmented bar) plus a "current/max" number, for colorblind/screen-reader accessibility
@@ -41,10 +46,12 @@ treat the design docs as authoritative.
 ## Power-ups
 
 - Hitting a ball has a small chance of dropping an item (double wire, power harpoon, vulcan, clock,
-  hourglass, barrier, 1UP, dynamite, speed boost, invincible, time+, score bonus, or — from stage 41
-  onward — stabilizer, or — from stage 61 onward — Nova Surge, a temporary score multiplier) that falls
-  under gravity; touching it applies its effect immediately, with a popup announcing which effect
-  triggered (see `docs/design/phase3_4.md`, `phase5_6.md`).
+  hourglass, barrier, 1UP, dynamite, speed boost, invincible, time+, score bonus, magnet, combo lock,
+  shockwave, or — from stage 41 onward — stabilizer, or — from stage 61 onward — Nova Surge, a temporary
+  score multiplier, or — from stage 101 onward — a hazard-specific counter-item per theme block (Umbrella,
+  Grip Boots, Visor, Lock-On, and the finale's Overdrive) that falls under gravity; touching it applies its
+  effect immediately, with a popup announcing which effect triggered (see `docs/design/phase3_4.md`,
+  `phase5_6.md`).
 
 ## Controls
 
@@ -63,8 +70,8 @@ treat the design docs as authoritative.
 
 ## Other Screens
 
-- **Stage Map**: a read-only screen (from the main menu) showing all 100 stages with live background
-  previews (see `docs/design/phase1_5.md`).
+- **Stage Map**: a read-only screen (from the main menu) showing all 150 stages with live background
+  previews and a jump-to-stage quick nav (see `docs/design/phase1_5.md`).
 - **Demo Mode**: a "Watch AI Play" option that runs an AI-controlled playthrough on loop with real stakes
   (it takes damage and can lose a run), with on-screen indicators of the AI's inputs (see
   `docs/design/phase1_6.md`).
@@ -72,4 +79,4 @@ treat the design docs as authoritative.
 ## End Conditions
 
 - Game over: when HP reaches 0
-- Clear: when all 100 stages are cleared
+- Clear: when all 150 stages are cleared

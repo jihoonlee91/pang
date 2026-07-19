@@ -31,7 +31,7 @@ export const SCORE_BY_LEVEL = [300, 150, 100]
 
 export const COMBO_WINDOW_MS = 1500
 
-export const STAGE_COUNT = 100
+export const STAGE_COUNT = 150
 export const STAGE_TIME_SECONDS = 90
 export const TIME_BONUS_PER_SECOND = 10
 
@@ -165,6 +165,61 @@ export const STAGE_OBSTACLES: readonly Obstacle[] = [
   { x: 339, y: 293, width: 185, height: 18 },
   { x: 327, y: 228, width: 201, height: 18 },
   { x: 720, y: 234, width: 162, height: 18 },
+  // --- Toxic Marsh (stages 101-110) ---
+  { x: 191, y: 318, width: 218, height: 18 },
+  { x: 406, y: 188, width: 210, height: 18 },
+  { x: 716, y: 300, width: 163, height: 18 },
+  { x: 433, y: 219, width: 219, height: 18 },
+  { x: 479, y: 289, width: 214, height: 18 },
+  { x: 84, y: 330, width: 207, height: 18 },
+  { x: 596, y: 303, width: 235, height: 18 },
+  { x: 572, y: 192, width: 234, height: 18 },
+  { x: 426, y: 258, width: 169, height: 18 },
+  { x: 562, y: 177, width: 150, height: 18 },
+  // --- Frozen Summit (stages 111-120) ---
+  { x: 507, y: 329, width: 229, height: 18 },
+  { x: 260, y: 321, width: 149, height: 18 },
+  { x: 657, y: 334, width: 155, height: 18 },
+  { x: 710, y: 242, width: 199, height: 18 },
+  { x: 386, y: 317, width: 155, height: 18 },
+  { x: 540, y: 166, width: 156, height: 18 },
+  { x: 267, y: 294, width: 245, height: 18 },
+  { x: 65, y: 156, width: 168, height: 18 },
+  { x: 149, y: 322, width: 156, height: 18 },
+  { x: 661, y: 278, width: 177, height: 18 },
+  // --- Solar Storm (stages 121-130) ---
+  { x: 60, y: 195, width: 233, height: 18 },
+  { x: 273, y: 245, width: 182, height: 18 },
+  { x: 46, y: 327, width: 156, height: 18 },
+  { x: 57, y: 187, width: 153, height: 18 },
+  { x: 190, y: 175, width: 149, height: 18 },
+  { x: 711, y: 337, width: 182, height: 18 },
+  { x: 417, y: 310, width: 147, height: 18 },
+  { x: 247, y: 293, width: 172, height: 18 },
+  { x: 440, y: 227, width: 219, height: 18 },
+  { x: 215, y: 305, width: 178, height: 18 },
+  // --- Quantum Rift (stages 131-140) ---
+  { x: 645, y: 234, width: 214, height: 18 },
+  { x: 151, y: 145, width: 179, height: 18 },
+  { x: 576, y: 341, width: 213, height: 18 },
+  { x: 382, y: 219, width: 160, height: 18 },
+  { x: 396, y: 187, width: 236, height: 18 },
+  { x: 191, y: 170, width: 224, height: 18 },
+  { x: 445, y: 234, width: 259, height: 18 },
+  { x: 213, y: 361, width: 195, height: 18 },
+  { x: 670, y: 243, width: 246, height: 18 },
+  { x: 511, y: 272, width: 252, height: 18 },
+  // --- Overdrive Nexus (stages 141-150) ---
+  { x: 530, y: 149, width: 211, height: 18 },
+  { x: 579, y: 355, width: 200, height: 18 },
+  { x: 98, y: 351, width: 173, height: 18 },
+  { x: 105, y: 193, width: 243, height: 18 },
+  { x: 545, y: 238, width: 195, height: 18 },
+  { x: 501, y: 334, width: 223, height: 18 },
+  { x: 329, y: 321, width: 168, height: 18 },
+  { x: 519, y: 216, width: 231, height: 18 },
+  { x: 535, y: 310, width: 157, height: 18 },
+  { x: 225, y: 215, width: 186, height: 18 },
 ]
 
 export function getStageObstacle(stageIndex: number): Obstacle {
@@ -241,6 +296,16 @@ const NOVA_SURGE_START_STAGE = 60
 const FIREPROOF_START_STAGE = 80
 const ANCHOR_START_STAGE = 90
 
+// Same "introduced once, stays in the pool forever after" pattern for the
+// five 101-150 hazard-counter items — hardcoded start stages (not imported
+// from acidRain.ts/iceWinds.ts/etc.) for the same circular-import reason as
+// Stabilizer/Nova Surge/Fireproof/Anchor above.
+const UMBRELLA_START_STAGE = 100
+const GRIP_BOOTS_START_STAGE = 110
+const VISOR_START_STAGE = 120
+const LOCK_ON_START_STAGE = 130
+const OVERDRIVE_ITEM_START_STAGE = 140
+
 export function getItemWeights(stageIndex: number): [ItemType, number][] {
   const weights: [ItemType, number][] = [...ITEM_WEIGHTS]
   if (stageIndex < VULCAN_END_STAGE) weights.push(['vulcan', 10])
@@ -248,6 +313,13 @@ export function getItemWeights(stageIndex: number): [ItemType, number][] {
   if (stageIndex >= NOVA_SURGE_START_STAGE) weights.push(['novaSurge', 9])
   if (stageIndex >= FIREPROOF_START_STAGE) weights.push(['fireproof', 10])
   if (stageIndex >= ANCHOR_START_STAGE) weights.push(['anchor', 10])
+  if (stageIndex >= UMBRELLA_START_STAGE) weights.push(['umbrella', 10])
+  if (stageIndex >= GRIP_BOOTS_START_STAGE) weights.push(['gripBoots', 10])
+  if (stageIndex >= VISOR_START_STAGE) weights.push(['visor', 10])
+  if (stageIndex >= LOCK_ON_START_STAGE) weights.push(['lockOn', 10])
+  // Overdrive is the finale's capstone reward — rarer than the other
+  // hazard-counter items since it does much more (immunity + score boost).
+  if (stageIndex >= OVERDRIVE_ITEM_START_STAGE) weights.push(['overdrive', 7])
   return weights
 }
 
@@ -275,3 +347,9 @@ export const FIREPROOF_DURATION_MS = 8000
 export const ANCHOR_DURATION_MS = 8000
 export const MAGNET_DURATION_MS = 8000
 export const COMBO_LOCK_DURATION_MS = 10000
+export const UMBRELLA_DURATION_MS = 8000
+export const GRIP_BOOTS_DURATION_MS = 8000
+export const VISOR_DURATION_MS = 8000
+export const LOCK_ON_DURATION_MS = 8000
+export const OVERDRIVE_DURATION_MS = 8000
+export const OVERDRIVE_SCORE_MULTIPLIER = 1.5

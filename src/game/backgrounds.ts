@@ -114,6 +114,56 @@ export const STAGE_NAMES = [
   'The Hollow (Void)',
   'Event Zero (Void)',
   'The Absolute Void (Void)',
+  'Fume Bog (Toxic Marsh)',
+  'Sludge Delta (Toxic Marsh)',
+  'Corroded Refinery (Toxic Marsh)',
+  'Weeping Mangrove (Toxic Marsh)',
+  'Caustic Falls (Toxic Marsh)',
+  'Rust Wetlands (Toxic Marsh)',
+  'Miasma Hollow (Toxic Marsh)',
+  'Tainted Reservoir (Toxic Marsh)',
+  'Verdigris Ruins (Toxic Marsh)',
+  'The Toxic Delta (Toxic Marsh)',
+  'Glacier Approach (Frozen Summit)',
+  'Frostbite Ridge (Frozen Summit)',
+  'Crystal Icefall (Frozen Summit)',
+  'Windward Col (Frozen Summit)',
+  'Rime Cavern (Frozen Summit)',
+  'Blizzard Plateau (Frozen Summit)',
+  'Frozen Cathedral (Frozen Summit)',
+  'Aurora Cornice (Frozen Summit)',
+  'Permafrost Spire (Frozen Summit)',
+  'The Frozen Summit (Frozen Summit)',
+  'Flare Horizon (Solar Storm)',
+  'Sunspot Array (Solar Storm)',
+  'Corona Reach (Solar Storm)',
+  'Magnetic Field (Solar Storm)',
+  'Photosphere Rim (Solar Storm)',
+  'Radiant Chasm (Solar Storm)',
+  'Prominence Arc (Solar Storm)',
+  'Ion Cascade (Solar Storm)',
+  'Solar Maximum (Solar Storm)',
+  'The Blinding Zenith (Solar Storm)',
+  'Fractured Lab (Quantum Rift)',
+  'Phase Corridor (Quantum Rift)',
+  'Superposition Hall (Quantum Rift)',
+  'Entangled Chamber (Quantum Rift)',
+  'Probability Well (Quantum Rift)',
+  'Decoherence Zone (Quantum Rift)',
+  'Parallel Fold (Quantum Rift)',
+  'Wavefunction Collapse (Quantum Rift)',
+  'Quantum Foam (Quantum Rift)',
+  'The Rift Core (Quantum Rift)',
+  'Redline Gate (Overdrive Nexus)',
+  'Overclocked Core (Overdrive Nexus)',
+  'Chaos Convergence (Overdrive Nexus)',
+  'Twin Polarity (Overdrive Nexus)',
+  'Maelstrom Grid (Overdrive Nexus)',
+  'Final Ascent (Overdrive Nexus)',
+  'Critical Mass (Overdrive Nexus)',
+  'The Last Stand (Overdrive Nexus)',
+  'Ultimate Overdrive (Overdrive Nexus)',
+  "Orbit's End (Overdrive Nexus)",
 ]
 
 function drawSky(ctx: CanvasRenderingContext2D, top: string, bottom: string) {
@@ -3264,6 +3314,1643 @@ const VOID_BACKGROUNDS = [
   drawTheAbsoluteVoidBackground,
 ]
 
+function drawFumeBogBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0e1400', '#3a4a10')
+
+  ctx.fillStyle = '#0a1200'
+  for (const [x, h] of [
+    [140, 160],
+    [260, 110],
+    [780, 180],
+  ] as const) {
+    ctx.beginPath()
+    ctx.moveTo(x - 6, GROUND_Y)
+    ctx.lineTo(x, GROUND_Y - h)
+    ctx.lineTo(x + 6, GROUND_Y)
+    ctx.closePath()
+    ctx.fill()
+    ctx.strokeStyle = '#0a1200'
+    ctx.lineWidth = 3
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y - h * 0.4)
+    ctx.lineTo(x - 18, GROUND_Y - h * 0.6)
+    ctx.moveTo(x, GROUND_Y - h * 0.5)
+    ctx.lineTo(x + 16, GROUND_Y - h * 0.7)
+    ctx.stroke()
+  }
+
+  ctx.save()
+  for (let plume = 0; plume < 6; plume += 1) {
+    const x = plume * 150 + 60
+    ctx.globalAlpha = 0.18
+    ctx.fillStyle = '#a3e635'
+    ctx.beginPath()
+    ctx.ellipse(x, GROUND_Y - 40 - plume * 8, 40, 90, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#3a4a10', '#141c04')
+}
+
+function drawSludgeDeltaBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#101a02', '#42540f')
+
+  ctx.strokeStyle = '#bef264'
+  ctx.lineWidth = 6
+  ctx.globalAlpha = 0.35
+  for (const dy of [-30, -10, 14]) {
+    ctx.beginPath()
+    ctx.moveTo(0, GROUND_Y + dy)
+    ctx.quadraticCurveTo(
+      320,
+      GROUND_Y + dy - 26,
+      CANVAS_WIDTH,
+      GROUND_Y + dy + 10,
+    )
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#84cc16'
+  ctx.globalAlpha = 0.5
+  for (let bubble = 0; bubble < 10; bubble += 1) {
+    const x = (bubble * 97) % CANVAS_WIDTH
+    const y = GROUND_Y - 4 - ((bubble * 41) % 20)
+    ctx.beginPath()
+    ctx.arc(x, y, 2 + (bubble % 3), 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#42540f', '#161c04')
+}
+
+function drawCorrodedRefineryBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#12160a', '#465210')
+
+  ctx.fillStyle = '#2a3312'
+  ctx.fillRect(120, GROUND_Y - 150, 60, 150)
+  ctx.fillRect(220, GROUND_Y - 190, 70, 190)
+  ctx.beginPath()
+  ctx.ellipse(155, GROUND_Y - 150, 30, 10, 0, 0, Math.PI * 2)
+  ctx.ellipse(255, GROUND_Y - 190, 35, 10, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  ctx.strokeStyle = '#5a6b1a'
+  ctx.lineWidth = 4
+  ctx.beginPath()
+  ctx.moveTo(180, GROUND_Y - 100)
+  ctx.lineTo(220, GROUND_Y - 100)
+  ctx.moveTo(290, GROUND_Y - 160)
+  ctx.lineTo(340, GROUND_Y - 160)
+  ctx.lineTo(340, GROUND_Y)
+  ctx.stroke()
+
+  ctx.save()
+  for (let smoke = 0; smoke < 5; smoke += 1) {
+    ctx.globalAlpha = 0.15 + (smoke % 3) * 0.08
+    ctx.fillStyle = '#a3e635'
+    ctx.beginPath()
+    ctx.ellipse(
+      255 + smoke * 6,
+      GROUND_Y - 200 - smoke * 26,
+      18 + smoke * 4,
+      12,
+      0,
+      0,
+      Math.PI * 2,
+    )
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#465210', '#161c04')
+}
+
+function drawWeepingMangroveBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0c1400', '#384a10')
+
+  ctx.strokeStyle = '#1c2606'
+  ctx.lineWidth = 5
+  for (const x of [90, 230, 700, 850]) {
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y)
+    ctx.lineTo(x - 24, GROUND_Y - 90)
+    ctx.moveTo(x, GROUND_Y)
+    ctx.lineTo(x + 20, GROUND_Y - 100)
+    ctx.moveTo(x, GROUND_Y - 40)
+    ctx.lineTo(x - 34, GROUND_Y)
+    ctx.moveTo(x, GROUND_Y - 40)
+    ctx.lineTo(x + 30, GROUND_Y)
+    ctx.stroke()
+  }
+
+  ctx.strokeStyle = '#65a30d'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.6
+  for (const x of [90, 230, 700, 850]) {
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y - 100)
+    ctx.quadraticCurveTo(x + 6, GROUND_Y - 60, x - 4, GROUND_Y - 20)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#384a10', '#141c04')
+}
+
+function drawCausticFallsBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a1400', '#324410')
+
+  const cx = CANVAS_WIDTH / 2 + 60
+  ctx.fillStyle = '#1c2606'
+  ctx.fillRect(cx - 140, 60, 280, 40)
+
+  const fall = ctx.createLinearGradient(0, 60, 0, GROUND_Y)
+  fall.addColorStop(0, '#bef264')
+  fall.addColorStop(1, '#4d7c0f')
+  ctx.fillStyle = fall
+  ctx.globalAlpha = 0.7
+  ctx.beginPath()
+  ctx.moveTo(cx - 30, 100)
+  ctx.lineTo(cx + 30, 100)
+  ctx.lineTo(cx + 50, GROUND_Y)
+  ctx.lineTo(cx - 50, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+  ctx.globalAlpha = 1
+
+  ctx.save()
+  for (let mist = 0; mist < 16; mist += 1) {
+    const x = cx + ((mist * 37) % 120) - 60
+    const y = GROUND_Y - 4 - ((mist * 23) % 40)
+    ctx.globalAlpha = 0.2 + (mist % 4) * 0.1
+    ctx.fillStyle = '#d9f99d'
+    ctx.beginPath()
+    ctx.arc(x, y, 2 + (mist % 3), 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#324410', '#141c04')
+}
+
+function drawRustWetlandsBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#100c02', '#4a3a0e')
+
+  ctx.strokeStyle = '#78350f'
+  ctx.lineWidth = 6
+  ctx.beginPath()
+  ctx.moveTo(0, GROUND_Y - 60)
+  ctx.lineTo(CANVAS_WIDTH, GROUND_Y - 60)
+  ctx.moveTo(180, GROUND_Y - 60)
+  ctx.lineTo(180, GROUND_Y - 140)
+  ctx.lineTo(320, GROUND_Y - 140)
+  ctx.moveTo(640, GROUND_Y - 60)
+  ctx.lineTo(640, GROUND_Y - 170)
+  ctx.stroke()
+
+  ctx.fillStyle = '#57560a'
+  ctx.globalAlpha = 0.55
+  for (const [x, r] of [
+    [120, 34],
+    [420, 46],
+    [760, 30],
+  ] as const) {
+    ctx.beginPath()
+    ctx.ellipse(x, GROUND_Y - 2, r, 10, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#4a3a0e', '#1a1404')
+}
+
+function drawMiasmaHollowBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a1002', '#2e3c10')
+
+  ctx.fillStyle = '#080e00'
+  ctx.beginPath()
+  ctx.moveTo(0, GROUND_Y)
+  ctx.quadraticCurveTo(CANVAS_WIDTH / 2, GROUND_Y - 130, CANVAS_WIDTH, GROUND_Y)
+  ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT)
+  ctx.lineTo(0, CANVAS_HEIGHT)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.save()
+  for (let band = 0; band < 5; band += 1) {
+    ctx.globalAlpha = 0.1 + band * 0.03
+    ctx.fillStyle = '#a3e635'
+    ctx.beginPath()
+    ctx.ellipse(
+      CANVAS_WIDTH / 2,
+      GROUND_Y - 40 - band * 30,
+      280 - band * 20,
+      26,
+      0,
+      0,
+      Math.PI * 2,
+    )
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#2e3c10', '#0e1402')
+}
+
+function drawTaintedReservoirBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0c1400', '#3a4c12')
+
+  const cx = CANVAS_WIDTH / 2
+  const glow = ctx.createRadialGradient(cx, GROUND_Y, 10, cx, GROUND_Y, 220)
+  glow.addColorStop(0, '#d9f99d')
+  glow.addColorStop(0.5, '#84cc16')
+  glow.addColorStop(1, 'rgba(12,20,0,0)')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, GROUND_Y - 220, CANVAS_WIDTH, 220)
+
+  ctx.strokeStyle = '#a3e635'
+  ctx.lineWidth = 1.5
+  ctx.globalAlpha = 0.4
+  for (let ring = 1; ring <= 3; ring += 1) {
+    ctx.beginPath()
+    ctx.ellipse(cx, GROUND_Y, ring * 60, ring * 14, 0, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.strokeStyle = '#57560a'
+  ctx.lineWidth = 8
+  ctx.beginPath()
+  ctx.moveTo(0, GROUND_Y - 90)
+  ctx.lineTo(cx - 120, GROUND_Y - 90)
+  ctx.lineTo(cx - 60, GROUND_Y - 20)
+  ctx.stroke()
+
+  drawGround(ctx, '#3a4c12', '#141c04')
+}
+
+function drawVerdigrisRuinsBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a1204', '#334410')
+
+  ctx.fillStyle = '#2b3a1a'
+  for (const [x, h] of [
+    [150, 200],
+    [280, 150],
+    [630, 230],
+    [760, 170],
+  ] as const) {
+    ctx.fillRect(x, GROUND_Y - h, 34, h)
+  }
+
+  ctx.fillStyle = '#65a30d'
+  ctx.globalAlpha = 0.5
+  for (const [x, h] of [
+    [150, 200],
+    [280, 150],
+    [630, 230],
+    [760, 170],
+  ] as const) {
+    ctx.fillRect(x, GROUND_Y - h, 34, 14)
+    ctx.fillRect(x + 6, GROUND_Y - h + 40, 6, h - 40)
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#334410', '#101a04')
+}
+
+function drawTheToxicDeltaBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a1200', '#4a5a10')
+
+  ctx.strokeStyle = '#bef264'
+  ctx.lineWidth = 7
+  ctx.globalAlpha = 0.4
+  for (const dy of [-40, -14, 12, 34]) {
+    ctx.beginPath()
+    ctx.moveTo(0, GROUND_Y + dy)
+    ctx.quadraticCurveTo(280, GROUND_Y + dy - 30, 620, GROUND_Y + dy + 6)
+    ctx.quadraticCurveTo(820, GROUND_Y + dy + 20, CANVAS_WIDTH, GROUND_Y + dy)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#1c2606'
+  ctx.beginPath()
+  ctx.moveTo(700, GROUND_Y)
+  ctx.lineTo(720, GROUND_Y - 90)
+  ctx.lineTo(760, GROUND_Y - 60)
+  ctx.lineTo(790, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.save()
+  for (let bubble = 0; bubble < 18; bubble += 1) {
+    const x = (bubble * 71) % CANVAS_WIDTH
+    const y = GROUND_Y - 6 - ((bubble * 29) % 30)
+    ctx.globalAlpha = 0.25 + (bubble % 4) * 0.1
+    ctx.fillStyle = '#d9f99d'
+    ctx.beginPath()
+    ctx.arc(x, y, 1.5 + (bubble % 3), 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#4a5a10', '#161c04')
+}
+
+const TOXIC_MARSH_BACKGROUNDS = [
+  drawFumeBogBackground,
+  drawSludgeDeltaBackground,
+  drawCorrodedRefineryBackground,
+  drawWeepingMangroveBackground,
+  drawCausticFallsBackground,
+  drawRustWetlandsBackground,
+  drawMiasmaHollowBackground,
+  drawTaintedReservoirBackground,
+  drawVerdigrisRuinsBackground,
+  drawTheToxicDeltaBackground,
+]
+
+function drawGlacierApproachBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#03101f', '#a9d8f2')
+
+  const cliff = ctx.createLinearGradient(0, GROUND_Y - 260, 0, GROUND_Y)
+  cliff.addColorStop(0, '#e0f2fe')
+  cliff.addColorStop(1, '#7dabc9')
+  ctx.fillStyle = cliff
+  ctx.beginPath()
+  ctx.moveTo(0, GROUND_Y)
+  ctx.lineTo(60, GROUND_Y - 180)
+  ctx.lineTo(260, GROUND_Y - 260)
+  ctx.lineTo(480, GROUND_Y - 190)
+  ctx.lineTo(720, GROUND_Y - 240)
+  ctx.lineTo(CANVAS_WIDTH, GROUND_Y - 150)
+  ctx.lineTo(CANVAS_WIDTH, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#dbeafe'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.6
+  for (const x of [140, 340, 560, 800]) {
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y - 40)
+    ctx.lineTo(x - 20, GROUND_Y - 130)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#dbeafe', '#93c5fd')
+}
+
+function drawFrostbiteRidgeBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#050f1c', '#9fcbe8')
+
+  ctx.fillStyle = '#5f7f99'
+  ctx.beginPath()
+  ctx.moveTo(0, GROUND_Y)
+  ctx.lineTo(120, GROUND_Y - 140)
+  ctx.lineTo(220, GROUND_Y - 80)
+  ctx.lineTo(360, GROUND_Y - 210)
+  ctx.lineTo(500, GROUND_Y - 100)
+  ctx.lineTo(650, GROUND_Y - 190)
+  ctx.lineTo(800, GROUND_Y - 90)
+  ctx.lineTo(CANVAS_WIDTH, GROUND_Y - 150)
+  ctx.lineTo(CANVAS_WIDTH, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#f8fafc'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.35
+  for (let gust = 0; gust < 10; gust += 1) {
+    const y = 30 + gust * 26
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.lineTo(70, y + 16)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#cfe8fd', '#7dabc9')
+}
+
+function drawCrystalIcefallBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#03101f', '#bfe3f7')
+
+  ctx.fillStyle = '#dbeafe'
+  ctx.globalAlpha = 0.85
+  for (const [x, len] of [
+    [100, 120],
+    [190, 80],
+    [560, 140],
+    [700, 100],
+    [820, 70],
+  ] as const) {
+    ctx.beginPath()
+    ctx.moveTo(x - 14, 0)
+    ctx.lineTo(x + 14, 0)
+    ctx.lineTo(x, len)
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#ffffff'
+  ctx.globalAlpha = 0.6
+  for (const [x, len] of [
+    [100, 120],
+    [560, 140],
+    [820, 70],
+  ] as const) {
+    ctx.beginPath()
+    ctx.moveTo(x - 4, 10)
+    ctx.lineTo(x + 2, 10)
+    ctx.lineTo(x, len - 20)
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#dbeafe', '#93c5fd')
+}
+
+function drawWindwardColBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#04101e', '#a3cfe9')
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.fillStyle = '#6b8ba3'
+  ctx.beginPath()
+  ctx.moveTo(cx - 260, GROUND_Y)
+  ctx.lineTo(cx - 40, GROUND_Y - 220)
+  ctx.lineTo(cx, GROUND_Y - 160)
+  ctx.lineTo(cx + 40, GROUND_Y - 220)
+  ctx.lineTo(cx + 260, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#f1f5f9'
+  ctx.lineWidth = 2.5
+  ctx.globalAlpha = 0.5
+  for (let streak = 0; streak < 8; streak += 1) {
+    const y = 60 + streak * 30
+    ctx.beginPath()
+    ctx.moveTo(CANVAS_WIDTH, y)
+    ctx.lineTo(CANVAS_WIDTH - 90, y + 24)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#cfe8fd', '#6b8ba3')
+}
+
+function drawRimeCavernBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#030a14', '#3a5a72')
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.fillStyle = '#0a1622'
+  ctx.beginPath()
+  ctx.moveTo(-20, GROUND_Y)
+  ctx.lineTo(-20, 40)
+  ctx.quadraticCurveTo(cx, -60, CANVAS_WIDTH + 20, 40)
+  ctx.lineTo(CANVAS_WIDTH + 20, GROUND_Y)
+  ctx.lineTo(760, GROUND_Y)
+  ctx.quadraticCurveTo(cx, 120, 200, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#bae6fd'
+  ctx.lineWidth = 1.5
+  ctx.globalAlpha = 0.5
+  for (let frost = 0; frost < 6; frost += 1) {
+    const x = 240 + frost * 90
+    ctx.beginPath()
+    ctx.moveTo(x, 130)
+    ctx.lineTo(x, 170)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#3a5a72', '#0a1622')
+}
+
+function drawBlizzardPlateauBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a1420', '#c2d9e8')
+
+  ctx.fillStyle = '#8ba7bb'
+  ctx.fillRect(0, GROUND_Y - 30, CANVAS_WIDTH, 30)
+
+  ctx.save()
+  for (let flake = 0; flake < 60; flake += 1) {
+    const x = (flake * 83) % CANVAS_WIDTH
+    const y = 10 + ((flake * 47) % (GROUND_Y - 10))
+    ctx.globalAlpha = 0.3 + (flake % 4) * 0.15
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.arc(x, y, 1.5 + (flake % 2), 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#dbeafe', '#8ba7bb')
+}
+
+function drawFrozenCathedralBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#030c18', '#8ec3e0')
+
+  ctx.fillStyle = '#5f85a3'
+  for (const [x, h] of [
+    [220, 260],
+    [340, 320],
+    [460, 260],
+  ] as const) {
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y)
+    ctx.lineTo(x + 20, GROUND_Y - h)
+    ctx.lineTo(x + 40, GROUND_Y)
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.fillStyle = '#8fb4cf'
+  ctx.fillRect(230, GROUND_Y - 180, 260, 180)
+
+  ctx.strokeStyle = '#e0f2fe'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.5
+  for (let arch = 0; arch < 3; arch += 1) {
+    ctx.beginPath()
+    ctx.arc(280 + arch * 80, GROUND_Y - 40, 30, Math.PI, 0)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#cfe8fd', '#5f85a3')
+}
+
+function drawAuroraCorniceBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#020814', '#0e2436')
+
+  ctx.save()
+  const bands: [string, number][] = [
+    ['#34d399', 90],
+    ['#60a5fa', 150],
+    ['#a78bfa', 210],
+  ]
+  for (const [color, y] of bands) {
+    ctx.strokeStyle = color
+    ctx.lineWidth = 18
+    ctx.globalAlpha = 0.25
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.quadraticCurveTo(CANVAS_WIDTH / 2, y - 60, CANVAS_WIDTH, y + 20)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  ctx.fillStyle = '#0a1622'
+  ctx.beginPath()
+  ctx.moveTo(0, GROUND_Y)
+  ctx.lineTo(0, GROUND_Y - 60)
+  ctx.lineTo(300, GROUND_Y - 100)
+  ctx.lineTo(600, GROUND_Y - 50)
+  ctx.lineTo(CANVAS_WIDTH, GROUND_Y - 90)
+  ctx.lineTo(CANVAS_WIDTH, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  drawGround(ctx, '#0e2436', '#0a1622')
+}
+
+function drawPermafrostSpireBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#03101f', '#96c6e4')
+
+  const cx = CANVAS_WIDTH / 2
+  const glow = ctx.createRadialGradient(
+    cx,
+    GROUND_Y - 200,
+    10,
+    cx,
+    GROUND_Y - 200,
+    180,
+  )
+  glow.addColorStop(0, '#e0f2fe')
+  glow.addColorStop(1, 'rgba(150,198,228,0)')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y)
+
+  ctx.fillStyle = '#bcdcf0'
+  ctx.beginPath()
+  ctx.moveTo(cx - 40, GROUND_Y)
+  ctx.lineTo(cx - 10, GROUND_Y - 260)
+  ctx.lineTo(cx, GROUND_Y - 300)
+  ctx.lineTo(cx + 10, GROUND_Y - 260)
+  ctx.lineTo(cx + 40, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.fillStyle = '#e0f2fe'
+  ctx.globalAlpha = 0.5
+  for (const [dx, h] of [
+    [-70, 60],
+    [70, 90],
+  ] as const) {
+    ctx.beginPath()
+    ctx.moveTo(cx + dx - 10, GROUND_Y)
+    ctx.lineTo(cx + dx, GROUND_Y - h)
+    ctx.lineTo(cx + dx + 10, GROUND_Y)
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#cfe8fd', '#7dabc9')
+}
+
+function drawTheFrozenSummitBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#020814', '#7fb8dc')
+
+  ctx.save()
+  const bands: [string, number][] = [
+    ['#34d399', 70],
+    ['#a78bfa', 130],
+  ]
+  for (const [color, y] of bands) {
+    ctx.strokeStyle = color
+    ctx.lineWidth = 16
+    ctx.globalAlpha = 0.25
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.quadraticCurveTo(CANVAS_WIDTH / 2, y - 40, CANVAS_WIDTH, y + 20)
+    ctx.stroke()
+  }
+  ctx.restore()
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.fillStyle = '#5f85a3'
+  ctx.beginPath()
+  ctx.moveTo(cx - 300, GROUND_Y)
+  ctx.lineTo(cx - 60, GROUND_Y - 300)
+  ctx.lineTo(cx, GROUND_Y - 250)
+  ctx.lineTo(cx + 60, GROUND_Y - 300)
+  ctx.lineTo(cx + 300, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#ffffff'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.4
+  for (let streak = 0; streak < 6; streak += 1) {
+    const y = 40 + streak * 32
+    ctx.beginPath()
+    ctx.moveTo(CANVAS_WIDTH, y)
+    ctx.lineTo(CANVAS_WIDTH - 100, y + 26)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#cfe8fd', '#5f85a3')
+}
+
+const FROZEN_SUMMIT_BACKGROUNDS = [
+  drawGlacierApproachBackground,
+  drawFrostbiteRidgeBackground,
+  drawCrystalIcefallBackground,
+  drawWindwardColBackground,
+  drawRimeCavernBackground,
+  drawBlizzardPlateauBackground,
+  drawFrozenCathedralBackground,
+  drawAuroraCorniceBackground,
+  drawPermafrostSpireBackground,
+  drawTheFrozenSummitBackground,
+]
+
+function drawFlareHorizonBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#1a0500', '#f97316')
+
+  const cx = CANVAS_WIDTH / 2
+  const sun = ctx.createRadialGradient(cx, GROUND_Y, 10, cx, GROUND_Y, 220)
+  sun.addColorStop(0, '#fff7ed')
+  sun.addColorStop(0.4, '#fde047')
+  sun.addColorStop(1, 'rgba(249,115,22,0)')
+  ctx.fillStyle = sun
+  ctx.fillRect(0, GROUND_Y - 220, CANVAS_WIDTH, 220)
+
+  ctx.strokeStyle = '#fde047'
+  ctx.lineWidth = 3
+  ctx.globalAlpha = 0.5
+  for (let ray = 0; ray < 8; ray += 1) {
+    const angle = (ray / 8) * Math.PI - Math.PI / 2
+    ctx.beginPath()
+    ctx.moveTo(cx, GROUND_Y)
+    ctx.lineTo(cx + Math.cos(angle) * 260, GROUND_Y + Math.sin(angle) * 260)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#7c2d12', '#2a0a00')
+}
+
+function drawSunspotArrayBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#200800', '#f59e0b')
+
+  ctx.save()
+  for (let cell = 0; cell < 40; cell += 1) {
+    const x = (cell * 89) % CANVAS_WIDTH
+    const y = 10 + ((cell * 53) % (GROUND_Y - 10))
+    ctx.globalAlpha = 0.1 + (cell % 4) * 0.06
+    ctx.fillStyle = '#fde047'
+    ctx.beginPath()
+    ctx.arc(x, y, 6 + (cell % 3) * 2, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  ctx.fillStyle = '#7c2d12'
+  ctx.globalAlpha = 0.7
+  for (const [x, y, r] of [
+    [200, 140, 16],
+    [560, 220, 22],
+    [720, 100, 12],
+  ] as const) {
+    ctx.beginPath()
+    ctx.ellipse(x, y, r, r * 0.7, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#7c2d12', '#2a0a00')
+}
+
+function drawCoronaReachBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#160300', '#c2410c')
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.strokeStyle = '#fde047'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.4
+  for (let ray = 0; ray < 24; ray += 1) {
+    const angle = (ray / 24) * Math.PI * 2
+    const len = 140 + (ray % 3) * 40
+    ctx.beginPath()
+    ctx.moveTo(cx, 190)
+    ctx.lineTo(cx + Math.cos(angle) * len, 190 + Math.sin(angle) * len)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#fff7ed'
+  ctx.beginPath()
+  ctx.arc(cx, 190, 46, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#7c2d12', '#2a0a00')
+}
+
+function drawMagneticFieldBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#180400', '#9a3412')
+
+  ctx.strokeStyle = '#fb923c'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.55
+  for (let loop = 0; loop < 5; loop += 1) {
+    const x0 = 60 + loop * 170
+    ctx.beginPath()
+    ctx.moveTo(x0, GROUND_Y)
+    ctx.bezierCurveTo(
+      x0 - 20,
+      GROUND_Y - 160,
+      x0 + 140,
+      GROUND_Y - 160,
+      x0 + 120,
+      GROUND_Y,
+    )
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#9a3412', '#2a0a00')
+}
+
+function drawPhotosphereRimBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#1a0400', '#fbbf24')
+
+  const rim = ctx.createLinearGradient(0, GROUND_Y - 260, 0, GROUND_Y)
+  rim.addColorStop(0, 'rgba(255,247,237,0)')
+  rim.addColorStop(1, '#fff7ed')
+  ctx.fillStyle = rim
+  ctx.fillRect(0, GROUND_Y - 260, CANVAS_WIDTH, 260)
+
+  ctx.save()
+  for (let cell = 0; cell < 26; cell += 1) {
+    const x = (cell * 113) % CANVAS_WIDTH
+    const y = GROUND_Y - 20 - ((cell * 37) % 180)
+    ctx.globalAlpha = 0.15 + (cell % 4) * 0.08
+    ctx.fillStyle = '#f97316'
+    ctx.beginPath()
+    ctx.ellipse(x, y, 14, 8, 0, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#fbbf24', '#c2410c')
+}
+
+function drawRadiantChasmBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#160300', '#7c2d12')
+
+  ctx.fillStyle = '#1c0500'
+  ctx.beginPath()
+  ctx.moveTo(0, GROUND_Y)
+  ctx.lineTo(320, GROUND_Y - 60)
+  ctx.lineTo(460, GROUND_Y - 200)
+  ctx.lineTo(560, GROUND_Y - 60)
+  ctx.lineTo(CANVAS_WIDTH, GROUND_Y)
+  ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT)
+  ctx.lineTo(0, CANVAS_HEIGHT)
+  ctx.closePath()
+  ctx.fill()
+
+  const glow = ctx.createLinearGradient(0, GROUND_Y - 200, 0, GROUND_Y)
+  glow.addColorStop(0, '#fde047')
+  glow.addColorStop(1, 'rgba(249,115,22,0)')
+  ctx.fillStyle = glow
+  ctx.beginPath()
+  ctx.moveTo(390, GROUND_Y - 190)
+  ctx.lineTo(460, GROUND_Y - 200)
+  ctx.lineTo(500, GROUND_Y - 100)
+  ctx.lineTo(420, GROUND_Y - 60)
+  ctx.closePath()
+  ctx.fill()
+
+  drawGround(ctx, '#7c2d12', '#1c0500')
+}
+
+function drawProminenceArcBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#180400', '#9a3412')
+
+  ctx.strokeStyle = '#fde047'
+  ctx.lineWidth = 10
+  ctx.globalAlpha = 0.6
+  ctx.beginPath()
+  ctx.moveTo(220, GROUND_Y)
+  ctx.bezierCurveTo(320, GROUND_Y - 320, 620, GROUND_Y - 320, 720, GROUND_Y)
+  ctx.stroke()
+
+  ctx.strokeStyle = '#fff7ed'
+  ctx.lineWidth = 4
+  ctx.globalAlpha = 0.8
+  ctx.beginPath()
+  ctx.moveTo(220, GROUND_Y)
+  ctx.bezierCurveTo(320, GROUND_Y - 320, 620, GROUND_Y - 320, 720, GROUND_Y)
+  ctx.stroke()
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#9a3412', '#2a0a00')
+}
+
+function drawIonCascadeBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#160300', '#c2410c')
+
+  const cx = CANVAS_WIDTH / 2
+  const glow = ctx.createRadialGradient(cx, 40, 10, cx, 40, 260)
+  glow.addColorStop(0, '#fde047')
+  glow.addColorStop(1, 'rgba(22,3,0,0)')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y)
+
+  ctx.save()
+  for (let stream = 0; stream < 30; stream += 1) {
+    const x = (stream * 61) % CANVAS_WIDTH
+    const y = ((stream * 97) % (GROUND_Y - 20)) + 10
+    ctx.globalAlpha = 0.2 + (stream % 5) * 0.1
+    ctx.fillStyle = stream % 2 === 0 ? '#fde047' : '#fb923c'
+    ctx.fillRect(x, y, 1.5, 10)
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#c2410c', '#2a0a00')
+}
+
+function drawSolarMaximumBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#1a0500', '#ea580c')
+
+  ctx.strokeStyle = '#fde047'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.45
+  for (let loop = 0; loop < 4; loop += 1) {
+    const x0 = 80 + loop * 220
+    ctx.beginPath()
+    ctx.moveTo(x0, GROUND_Y)
+    ctx.bezierCurveTo(
+      x0 - 10,
+      GROUND_Y - 140,
+      x0 + 130,
+      GROUND_Y - 140,
+      x0 + 120,
+      GROUND_Y,
+    )
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#7c2d12'
+  ctx.globalAlpha = 0.7
+  for (const [x, y, r] of [
+    [180, 120, 14],
+    [500, 190, 20],
+    [760, 90, 16],
+  ] as const) {
+    ctx.beginPath()
+    ctx.arc(x, y, r, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#7c2d12', '#2a0a00')
+}
+
+function drawTheBlindingZenithBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#1a0500', '#fde047')
+
+  const cx = CANVAS_WIDTH / 2
+  const core = ctx.createRadialGradient(cx, 200, 10, cx, 200, 320)
+  core.addColorStop(0, '#ffffff')
+  core.addColorStop(0.35, '#fef9c3')
+  core.addColorStop(0.7, '#fb923c')
+  core.addColorStop(1, 'rgba(26,5,0,0)')
+  ctx.fillStyle = core
+  ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y)
+
+  ctx.strokeStyle = '#fff7ed'
+  ctx.lineWidth = 3
+  ctx.globalAlpha = 0.5
+  for (let ray = 0; ray < 12; ray += 1) {
+    const angle = (ray / 12) * Math.PI * 2
+    ctx.beginPath()
+    ctx.moveTo(cx, 200)
+    ctx.lineTo(cx + Math.cos(angle) * 340, 200 + Math.sin(angle) * 340)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#fde047', '#c2410c')
+}
+
+const SOLAR_STORM_BACKGROUNDS = [
+  drawFlareHorizonBackground,
+  drawSunspotArrayBackground,
+  drawCoronaReachBackground,
+  drawMagneticFieldBackground,
+  drawPhotosphereRimBackground,
+  drawRadiantChasmBackground,
+  drawProminenceArcBackground,
+  drawIonCascadeBackground,
+  drawSolarMaximumBackground,
+  drawTheBlindingZenithBackground,
+]
+
+function drawFracturedLabBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08021a', '#1c0a30')
+
+  ctx.fillStyle = '#150a28'
+  ctx.fillRect(140, GROUND_Y - 220, 680, 220)
+
+  ctx.strokeStyle = '#22d3ee'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.6
+  ctx.beginPath()
+  ctx.moveTo(300, GROUND_Y - 220)
+  ctx.lineTo(340, GROUND_Y - 120)
+  ctx.lineTo(280, GROUND_Y - 60)
+  ctx.lineTo(360, GROUND_Y)
+  ctx.stroke()
+  ctx.strokeStyle = '#a855f7'
+  ctx.beginPath()
+  ctx.moveTo(600, GROUND_Y - 220)
+  ctx.lineTo(560, GROUND_Y - 130)
+  ctx.lineTo(640, GROUND_Y - 40)
+  ctx.stroke()
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#1c0a30', '#0a0416')
+}
+
+function drawPhaseCorridorBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#06021a', '#1a0c34')
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.strokeStyle = '#22d3ee'
+  ctx.lineWidth = 1.5
+  ctx.globalAlpha = 0.5
+  for (const [x0, y0] of [
+    [0, GROUND_Y],
+    [CANVAS_WIDTH, GROUND_Y],
+    [0, 60],
+    [CANVAS_WIDTH, 60],
+  ] as const) {
+    ctx.beginPath()
+    ctx.moveTo(x0, y0)
+    ctx.lineTo(cx, GROUND_Y / 2)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.strokeStyle = '#f472b6'
+  ctx.lineWidth = 1
+  ctx.globalAlpha = 0.35
+  ctx.beginPath()
+  ctx.moveTo(6, GROUND_Y)
+  ctx.lineTo(cx + 6, GROUND_Y / 2)
+  ctx.stroke()
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#1a0c34', '#06021a')
+}
+
+function drawSuperpositionHallBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08021a', '#220f3c')
+
+  const cx = CANVAS_WIDTH / 2
+  for (const [dx, color, alpha] of [
+    [-6, '#22d3ee', 0.5],
+    [6, '#f472b6', 0.5],
+    [0, '#e2e8f0', 0.9],
+  ] as const) {
+    ctx.strokeStyle = color
+    ctx.globalAlpha = alpha
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.arc(cx + dx, GROUND_Y - 60, 140, Math.PI, 0)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#220f3c', '#08021a')
+}
+
+function drawEntangledChamberBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#06021a', '#1a0c34')
+
+  const y = 170
+  const leftX = 280
+  const rightX = 680
+  ctx.strokeStyle = '#a855f7'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.6
+  ctx.beginPath()
+  ctx.moveTo(leftX, y)
+  for (let i = 1; i <= 20; i += 1) {
+    const t = i / 20
+    ctx.lineTo(leftX + (rightX - leftX) * t, y + Math.sin(t * Math.PI * 6) * 14)
+  }
+  ctx.stroke()
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#22d3ee'
+  ctx.beginPath()
+  ctx.arc(leftX, y, 20, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#f472b6'
+  ctx.beginPath()
+  ctx.arc(rightX, y, 20, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#1a0c34', '#06021a')
+}
+
+function drawProbabilityWellBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08021a', '#1c0a30')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 190
+  ctx.strokeStyle = '#a855f7'
+  ctx.lineWidth = 1.5
+  ctx.globalAlpha = 0.4
+  for (let ring = 1; ring <= 5; ring += 1) {
+    ctx.beginPath()
+    ctx.ellipse(cx, cy, ring * 34, ring * 16, 0, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.save()
+  for (let p = 0; p < 24; p += 1) {
+    const angle = (p / 24) * Math.PI * 2
+    const r = 30 + ((p * 17) % 130)
+    const x = cx + Math.cos(angle) * r
+    const y = cy + Math.sin(angle) * r * 0.5
+    ctx.globalAlpha = 0.3 + (p % 4) * 0.1
+    ctx.fillStyle = p % 2 === 0 ? '#22d3ee' : '#f472b6'
+    ctx.beginPath()
+    ctx.arc(x, y, 2, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#1c0a30', '#0a0416')
+}
+
+function drawDecoherenceZoneBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#06021a', '#1a0c34')
+
+  ctx.save()
+  for (let frag = 0; frag < 34; frag += 1) {
+    const x = (frag * 71) % CANVAS_WIDTH
+    const y = 10 + ((frag * 53) % (GROUND_Y - 10))
+    const size = 3 + (frag % 4)
+    ctx.globalAlpha = 0.3 + (frag % 3) * 0.15
+    ctx.fillStyle = '#22d3ee'
+    ctx.fillRect(x, y, size, size)
+    ctx.fillStyle = '#f472b6'
+    ctx.fillRect(x + 3, y + 2, size, size)
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#1a0c34', '#06021a')
+}
+
+function drawParallelFoldBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08021a', '#1c0a30')
+
+  ctx.save()
+  ctx.beginPath()
+  ctx.moveTo(0, 0)
+  ctx.lineTo(CANVAS_WIDTH / 2 - 40, 0)
+  ctx.lineTo(CANVAS_WIDTH / 2 + 40, GROUND_Y)
+  ctx.lineTo(0, GROUND_Y)
+  ctx.closePath()
+  ctx.clip()
+  ctx.fillStyle = 'rgba(34,211,238,0.12)'
+  ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y)
+  ctx.restore()
+
+  ctx.save()
+  ctx.beginPath()
+  ctx.moveTo(CANVAS_WIDTH / 2 - 40, 0)
+  ctx.lineTo(CANVAS_WIDTH, 0)
+  ctx.lineTo(CANVAS_WIDTH, GROUND_Y)
+  ctx.lineTo(CANVAS_WIDTH / 2 + 40, GROUND_Y)
+  ctx.closePath()
+  ctx.clip()
+  ctx.fillStyle = 'rgba(244,114,182,0.12)'
+  ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y)
+  ctx.restore()
+
+  ctx.strokeStyle = '#e2e8f0'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.6
+  ctx.beginPath()
+  ctx.moveTo(CANVAS_WIDTH / 2 - 40, 0)
+  ctx.lineTo(CANVAS_WIDTH / 2 + 40, GROUND_Y)
+  ctx.stroke()
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#1c0a30', '#0a0416')
+}
+
+function drawWavefunctionCollapseBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#06021a', '#1a0c34')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 190
+  ctx.strokeStyle = '#22d3ee'
+  ctx.lineWidth = 2
+  for (let ring = 5; ring >= 1; ring -= 1) {
+    ctx.globalAlpha = 0.15 * ring
+    ctx.beginPath()
+    ctx.arc(cx, cy, ring * 26, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#ffffff'
+  ctx.beginPath()
+  ctx.arc(cx, cy, 5, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#1a0c34', '#06021a')
+}
+
+function drawQuantumFoamBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08021a', '#1c0a30')
+
+  ctx.save()
+  for (let bubble = 0; bubble < 60; bubble += 1) {
+    const x = (bubble * 47) % CANVAS_WIDTH
+    const y = 10 + ((bubble * 31) % (GROUND_Y - 10))
+    ctx.globalAlpha = 0.15 + (bubble % 5) * 0.06
+    ctx.fillStyle =
+      bubble % 3 === 0 ? '#22d3ee' : bubble % 3 === 1 ? '#f472b6' : '#a855f7'
+    ctx.beginPath()
+    ctx.arc(x, y, 1 + (bubble % 3), 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#1c0a30', '#0a0416')
+}
+
+function drawTheRiftCoreBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#05011a', '#22103c')
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.fillStyle = '#000000'
+  ctx.beginPath()
+  ctx.moveTo(cx - 8, 40)
+  ctx.lineTo(cx + 30, 160)
+  ctx.lineTo(cx - 14, 260)
+  ctx.lineTo(cx + 10, GROUND_Y - 20)
+  ctx.lineTo(cx - 40, GROUND_Y)
+  ctx.lineTo(cx - 60, 220)
+  ctx.lineTo(cx - 10, 120)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#22d3ee'
+  ctx.lineWidth = 3
+  ctx.globalAlpha = 0.7
+  ctx.stroke()
+  ctx.strokeStyle = '#f472b6'
+  ctx.lineWidth = 1.5
+  ctx.save()
+  ctx.translate(4, 0)
+  ctx.stroke()
+  ctx.restore()
+  ctx.globalAlpha = 1
+
+  ctx.save()
+  for (let p = 0; p < 20; p += 1) {
+    const x = cx - 60 + ((p * 37) % 100)
+    const y = 40 + ((p * 53) % (GROUND_Y - 60))
+    ctx.globalAlpha = 0.3 + (p % 4) * 0.1
+    ctx.fillStyle = p % 2 === 0 ? '#22d3ee' : '#f472b6'
+    ctx.beginPath()
+    ctx.arc(x, y, 1.5, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  drawGround(ctx, '#22103c', '#05011a')
+}
+
+const QUANTUM_RIFT_BACKGROUNDS = [
+  drawFracturedLabBackground,
+  drawPhaseCorridorBackground,
+  drawSuperpositionHallBackground,
+  drawEntangledChamberBackground,
+  drawProbabilityWellBackground,
+  drawDecoherenceZoneBackground,
+  drawParallelFoldBackground,
+  drawWavefunctionCollapseBackground,
+  drawQuantumFoamBackground,
+  drawTheRiftCoreBackground,
+]
+
+function drawRedlineGateBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a0018', '#2a0008')
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.fillStyle = '#150010'
+  ctx.beginPath()
+  ctx.moveTo(cx - 200, GROUND_Y)
+  ctx.lineTo(cx - 170, GROUND_Y - 240)
+  ctx.lineTo(cx - 130, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+  ctx.beginPath()
+  ctx.moveTo(cx + 130, GROUND_Y)
+  ctx.lineTo(cx + 170, GROUND_Y - 240)
+  ctx.lineTo(cx + 200, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#ef4444'
+  ctx.lineWidth = 3
+  ctx.globalAlpha = 0.7
+  for (let bar = 0; bar < 4; bar += 1) {
+    const y = GROUND_Y - 30 - bar * 50
+    ctx.beginPath()
+    ctx.moveTo(cx - 170, y)
+    ctx.lineTo(cx + 170, y)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#2a0008', '#0a0004')
+}
+
+function drawOverclockedCoreBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08000c', '#20031c')
+
+  const cx = CANVAS_WIDTH / 2
+  const core = ctx.createRadialGradient(
+    cx,
+    GROUND_Y - 60,
+    6,
+    cx,
+    GROUND_Y - 60,
+    160,
+  )
+  core.addColorStop(0, '#ffffff')
+  core.addColorStop(0.35, '#ef4444')
+  core.addColorStop(0.7, '#3b82f6')
+  core.addColorStop(1, 'rgba(8,0,12,0)')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(cx, GROUND_Y - 60, 160, 0, Math.PI * 2)
+  ctx.fill()
+
+  ctx.strokeStyle = '#f87171'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.6
+  for (let crack = 0; crack < 5; crack += 1) {
+    const angle = (crack / 5) * Math.PI * 2
+    ctx.beginPath()
+    ctx.moveTo(cx, GROUND_Y - 60)
+    ctx.lineTo(cx + Math.cos(angle) * 90, GROUND_Y - 60 + Math.sin(angle) * 90)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#20031c', '#08000c')
+}
+
+function drawChaosConvergenceBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08000c', '#1c0620')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 200
+  const streams: [string, number][] = [
+    ['#ef4444', 0],
+    ['#3b82f6', Math.PI / 2],
+    ['#fb923c', Math.PI],
+    ['#a855f7', (Math.PI * 3) / 2],
+  ]
+  ctx.lineWidth = 3
+  ctx.globalAlpha = 0.55
+  for (const [color, angle] of streams) {
+    ctx.strokeStyle = color
+    ctx.beginPath()
+    ctx.moveTo(cx + Math.cos(angle) * 340, cy + Math.sin(angle) * 220)
+    ctx.lineTo(cx, cy)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#ffffff'
+  ctx.beginPath()
+  ctx.arc(cx, cy, 10, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#1c0620', '#08000c')
+}
+
+function drawTwinPolarityBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08000c', '#1c0620')
+
+  const leftX = 260
+  const rightX = 700
+  const y = 190
+  const redCore = ctx.createRadialGradient(leftX, y, 4, leftX, y, 100)
+  redCore.addColorStop(0, '#fecaca')
+  redCore.addColorStop(0.5, '#ef4444')
+  redCore.addColorStop(1, 'rgba(8,0,12,0)')
+  ctx.fillStyle = redCore
+  ctx.fillRect(leftX - 100, y - 100, 200, 200)
+
+  const blueCore = ctx.createRadialGradient(rightX, y, 4, rightX, y, 100)
+  blueCore.addColorStop(0, '#bfdbfe')
+  blueCore.addColorStop(0.5, '#3b82f6')
+  blueCore.addColorStop(1, 'rgba(8,0,12,0)')
+  ctx.fillStyle = blueCore
+  ctx.fillRect(rightX - 100, y - 100, 200, 200)
+
+  ctx.strokeStyle = '#e2e8f0'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.4
+  for (let arc = 0; arc < 3; arc += 1) {
+    ctx.beginPath()
+    ctx.moveTo(leftX, y - 20 - arc * 14)
+    ctx.quadraticCurveTo(
+      CANVAS_WIDTH / 2,
+      y - 60 - arc * 14,
+      rightX,
+      y - 20 - arc * 14,
+    )
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#1c0620', '#08000c')
+}
+
+function drawMaelstromGridBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08000c', '#1c0620')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 190
+  ctx.strokeStyle = '#3b82f6'
+  ctx.lineWidth = 1.5
+  ctx.globalAlpha = 0.4
+  for (let line = 0; line <= 8; line += 1) {
+    const x = line * 120
+    ctx.beginPath()
+    ctx.moveTo(x, 0)
+    ctx.quadraticCurveTo(cx, cy, cx + (x - cx) * 0.3, GROUND_Y)
+    ctx.stroke()
+  }
+  for (let line = 0; line <= 6; line += 1) {
+    const y = line * 75
+    ctx.beginPath()
+    ctx.moveTo(0, y)
+    ctx.quadraticCurveTo(cx, cy, cx, cy + (y - cy) * 0.3)
+    ctx.lineTo(CANVAS_WIDTH, y)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.fillStyle = '#ef4444'
+  ctx.beginPath()
+  ctx.arc(cx, cy, 6, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#1c0620', '#08000c')
+}
+
+function drawFinalAscentBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#05000a', '#2a0018')
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.fillStyle = '#0e0016'
+  ctx.beginPath()
+  ctx.moveTo(cx - 60, GROUND_Y)
+  ctx.lineTo(cx - 30, 20)
+  ctx.lineTo(cx + 30, 20)
+  ctx.lineTo(cx + 60, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+
+  ctx.strokeStyle = '#60a5fa'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.55
+  for (let trail = 0; trail < 6; trail += 1) {
+    const x = cx - 50 + trail * 20
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y)
+    ctx.lineTo(x + (trail % 2 === 0 ? -10 : 10), 30)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#2a0018', '#05000a')
+}
+
+function drawCriticalMassBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#080004', '#3a0008')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 200
+  const core = ctx.createRadialGradient(cx, cy, 4, cx, cy, 130)
+  core.addColorStop(0, '#ffffff')
+  core.addColorStop(0.4, '#fde047')
+  core.addColorStop(0.7, '#ef4444')
+  core.addColorStop(1, 'rgba(8,0,4,0)')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(cx, cy, 130, 0, Math.PI * 2)
+  ctx.fill()
+
+  ctx.strokeStyle = '#450a0a'
+  ctx.lineWidth = 4
+  for (let shard = 0; shard < 8; shard += 1) {
+    const angle = (shard / 8) * Math.PI * 2
+    ctx.beginPath()
+    ctx.moveTo(cx + Math.cos(angle) * 60, cy + Math.sin(angle) * 60)
+    ctx.lineTo(cx + Math.cos(angle) * 100, cy + Math.sin(angle) * 100)
+    ctx.stroke()
+  }
+
+  drawGround(ctx, '#3a0008', '#080004')
+}
+
+function drawTheLastStandBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#08000c', '#2a0008')
+
+  const cx = CANVAS_WIDTH / 2
+  ctx.fillStyle = '#0c0210'
+  ctx.fillRect(cx - 180, GROUND_Y - 160, 360, 160)
+  ctx.beginPath()
+  for (let merlon = -4; merlon <= 4; merlon += 2) {
+    ctx.rect(cx + merlon * 22 - 14, GROUND_Y - 190, 20, 30)
+  }
+  ctx.fill()
+
+  ctx.strokeStyle = '#f87171'
+  ctx.lineWidth = 2
+  ctx.globalAlpha = 0.6
+  for (let spark = 0; spark < 6; spark += 1) {
+    const x = cx - 150 + spark * 60
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y - 170)
+    ctx.lineTo(x + 10, GROUND_Y - 200)
+    ctx.moveTo(x, GROUND_Y - 170)
+    ctx.lineTo(x - 8, GROUND_Y - 195)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  drawGround(ctx, '#2a0008', '#08000c')
+}
+
+function drawUltimateOverdriveBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#05000a', '#2a0018')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 190
+  const streams: [string, number][] = [
+    ['#ef4444', 0.2],
+    ['#3b82f6', 1.4],
+    ['#fb923c', 2.6],
+    ['#22d3ee', 3.8],
+    ['#a855f7', 5.0],
+  ]
+  ctx.lineWidth = 2.5
+  ctx.globalAlpha = 0.5
+  for (const [color, angle] of streams) {
+    ctx.strokeStyle = color
+    ctx.beginPath()
+    ctx.moveTo(cx + Math.cos(angle) * 360, cy + Math.sin(angle) * 240)
+    ctx.lineTo(cx, cy)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  ctx.save()
+  for (let p = 0; p < 30; p += 1) {
+    const x = (p * 71) % CANVAS_WIDTH
+    const y = 10 + ((p * 43) % (GROUND_Y - 10))
+    ctx.globalAlpha = 0.2 + (p % 4) * 0.1
+    ctx.fillStyle = p % 2 === 0 ? '#f87171' : '#93c5fd'
+    ctx.fillRect(x, y, 2, 2)
+  }
+  ctx.restore()
+
+  ctx.fillStyle = '#ffffff'
+  ctx.beginPath()
+  ctx.arc(cx, cy, 8, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#2a0018', '#05000a')
+}
+
+function drawOrbitsEndBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#03000a', '#20001a')
+
+  const cx = CANVAS_WIDTH / 2
+  const cy = 190
+  ctx.strokeStyle = '#ef4444'
+  ctx.lineWidth = 2
+  for (let ring = 5; ring >= 1; ring -= 1) {
+    ctx.globalAlpha = 0.12 * ring
+    ctx.beginPath()
+    ctx.ellipse(cx, cy, ring * 40, ring * 20, ring * 0.15, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.strokeStyle = '#3b82f6'
+  for (let ring = 5; ring >= 1; ring -= 1) {
+    ctx.globalAlpha = 0.1 * ring
+    ctx.beginPath()
+    ctx.ellipse(cx, cy, ring * 34, ring * 24, -ring * 0.15, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.globalAlpha = 1
+
+  const core = ctx.createRadialGradient(cx, cy, 2, cx, cy, 40)
+  core.addColorStop(0, '#ffffff')
+  core.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = core
+  ctx.beginPath()
+  ctx.arc(cx, cy, 40, 0, Math.PI * 2)
+  ctx.fill()
+
+  drawGround(ctx, '#20001a', '#03000a')
+}
+
+const OVERDRIVE_NEXUS_BACKGROUNDS = [
+  drawRedlineGateBackground,
+  drawOverclockedCoreBackground,
+  drawChaosConvergenceBackground,
+  drawTwinPolarityBackground,
+  drawMaelstromGridBackground,
+  drawFinalAscentBackground,
+  drawCriticalMassBackground,
+  drawTheLastStandBackground,
+  drawUltimateOverdriveBackground,
+  drawOrbitsEndBackground,
+]
+
 const RAW_BACKGROUNDS = [
   ...BASE_BACKGROUNDS,
   ...ILLUSTRATED_BACKGROUNDS,
@@ -3275,6 +4962,11 @@ const RAW_BACKGROUNDS = [
   ...VORTEX_FRONTIER_BACKGROUNDS,
   ...HELL_BACKGROUNDS,
   ...VOID_BACKGROUNDS,
+  ...TOXIC_MARSH_BACKGROUNDS,
+  ...FROZEN_SUMMIT_BACKGROUNDS,
+  ...SOLAR_STORM_BACKGROUNDS,
+  ...QUANTUM_RIFT_BACKGROUNDS,
+  ...OVERDRIVE_NEXUS_BACKGROUNDS,
 ]
 
 export const BACKGROUNDS = RAW_BACKGROUNDS.map(
