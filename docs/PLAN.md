@@ -189,3 +189,16 @@ A file laying out the goals for each phase.
 
 - Show a "What's New" screen from Settings summarizing recent version
   changes, since the version number is already surfaced in-game
+
+### Phase 6-2. Glossary and First-Encounter Hazard Intro
+
+- Add a reference Glossary screen for items/hazards, and proactively
+  explain a hazard the first time a player actually reaches it
+
+### Phase 6-3. Update Highlight & Session Encouragement
+
+- Automatically surface the What's New screen the first time a player
+  encounters a newly-deployed version, instead of requiring a manual
+  Settings visit
+- Add a personal-best encouragement message to the periodic milestone
+  screen to nudge continued play mid-session
