@@ -1658,6 +1658,71 @@ function GamePlay({
   }, [demo, isStarting])
 
   useEffect(() => {
+    // The canvas's own onPointerDown/Move/Up already handle drag-to-move
+    // for touches that land directly on it. In portrait, the canvas is
+    // letterboxed (16:9 inside a narrow, tall viewport) and the whole
+    // play area sits centered with real dead space above/below it — a
+    // swipe that starts there previously did nothing. This mirrors the
+    // exact same drag math against the whole window instead, skipping
+    // any touch that starts on the canvas (already handled) or on an
+    // interactive control (HUD buttons, touch-controls, hint panel),
+    // so existing tap/press behavior is untouched.
+    if (demo) return
+
+    const isOnHandledElement = (target: EventTarget | null) =>
+      target instanceof HTMLElement &&
+      target.closest(
+        '.gameplay-hud, .touch-controls, .hint-panel, canvas, button',
+      ) !== null
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (paused || isStarting) return
+      if (isOnHandledElement(e.target)) return
+      dragRef.current = {
+        startClientX: e.clientX,
+        startPlayerX: playerXRef.current,
+        moved: false,
+      }
+      dragTargetXRef.current = playerXRef.current
+    }
+    const handlePointerMove = (e: PointerEvent) => {
+      const drag = dragRef.current
+      const canvas = canvasRef.current
+      if (!drag || !canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const scale = CANVAS_WIDTH / rect.width
+      const deltaX = (e.clientX - drag.startClientX) * scale
+      if (Math.abs(deltaX) > 4) drag.moved = true
+      // Suppress the browser's own scroll/bounce gesture once this is a
+      // real drag — otherwise a swipe in the dead space below a
+      // letterboxed portrait canvas can rubber-band the page instead of
+      // (or in addition to) moving the player.
+      if (drag.moved) e.preventDefault()
+      dragTargetXRef.current = Math.min(
+        Math.max(drag.startPlayerX + deltaX, PLAYER_WIDTH / 2),
+        CANVAS_WIDTH - PLAYER_WIDTH / 2,
+      )
+    }
+    const handlePointerEnd = () => {
+      if (dragRef.current && !dragRef.current.moved) {
+        inputRef.current.queueFire()
+      }
+      dragRef.current = null
+      dragTargetXRef.current = null
+    }
+    window.addEventListener('pointerdown', handlePointerDown)
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerEnd)
+    window.addEventListener('pointercancel', handlePointerEnd)
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown)
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerEnd)
+      window.removeEventListener('pointercancel', handlePointerEnd)
+    }
+  }, [demo, paused, isStarting])
+
+  useEffect(() => {
     const pauseForLifecycle = () => {
       inputRef.current.releaseAll()
       if (!demo && !isStarting) setPaused(true)
