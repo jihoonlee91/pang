@@ -1659,6 +1659,27 @@ function GamePlay({
   }, [demo, isStarting])
 
   useEffect(() => {
+    // `body` normally allows panning/pinch-zoom (`touch-action: manipulation`,
+    // see index.css) for the menu/map/settings screens, which need to
+    // scroll. During gameplay nothing should scroll, and — critically —
+    // that default `touch-action` lets the browser's own pan-gesture
+    // recognizer compete with the drag-to-move listener below for a touch
+    // that starts outside the canvas: on a lone touch it can win before our
+    // `pointermove` handler gets a chance to call `preventDefault()`,
+    // silently swallowing the drag (a second simultaneous touch, e.g.
+    // holding Fire, happened to avoid this because the browser doesn't
+    // start a new pan gesture once one touch is already claimed). Locking
+    // `touch-action: none` for the lifetime of this screen removes the
+    // competition entirely, and the previous value is restored on unmount.
+    if (demo) return
+    const previousTouchAction = document.body.style.touchAction
+    document.body.style.touchAction = 'none'
+    return () => {
+      document.body.style.touchAction = previousTouchAction
+    }
+  }, [demo])
+
+  useEffect(() => {
     // Sole driver of touch/mouse drag-to-move, covering the canvas *and*
     // the dead space around it (in portrait, the letterboxed 16:9 canvas
     // sits centered in a taller viewport with real unused space above/

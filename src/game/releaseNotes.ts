@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.21.4',
+    date: '2026-07-20',
+    notes: [
+      'Fixed drag-to-move outside the game screen sometimes not registering on a single touch — a page-scroll gesture was quietly competing with it.',
+    ],
+  },
+  {
     version: '1.21.3',
     date: '2026-07-20',
     notes: [
@@ -50,13 +57,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-07-19',
     notes: [
       'The main screen now shows how far you\'ve unlocked ("Unlocked: Stage N / 100") and adds a "Continue" button that jumps straight into your highest unlocked stage.',
-    ],
-  },
-  {
-    version: '1.18.0',
-    date: '2026-07-19',
-    notes: [
-      'Three new items: Magnet pulls dropped items toward you, Combo Lock keeps your combo alive even if you miss the timing window, and Shockwave instantly splits every ball on screen for a burst of score.',
     ],
   },
 ]
