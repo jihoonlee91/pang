@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.21.5',
+    date: '2026-07-20',
+    notes: [
+      'Drag-to-move now reaches the screen edges reliably — holding your finger near the left/right edge walks the ship all the way there instead of stalling partway.',
+    ],
+  },
+  {
     version: '1.21.4',
     date: '2026-07-20',
     notes: [
@@ -50,13 +57,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     notes: [
       'New Glossary page (from the main menu) shows every item and map hazard with its actual in-game icon and what it does.',
       'The first time you reach a stage with a brand-new hazard, a one-time popup explains it before you have to figure it out the hard way.',
-    ],
-  },
-  {
-    version: '1.19.0',
-    date: '2026-07-19',
-    notes: [
-      'The main screen now shows how far you\'ve unlocked ("Unlocked: Stage N / 100") and adds a "Continue" button that jumps straight into your highest unlocked stage.',
     ],
   },
 ]

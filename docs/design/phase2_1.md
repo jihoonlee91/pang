@@ -16,7 +16,7 @@
 - Fire: Space key, only 1 harpoon can exist at a time by default (the existing harpoon must disappear before firing again; the double-wire power-up raises this to 2)
 - The harpoon moves upward from the player's x position at 700px/s, and despawns on reaching the ceiling or colliding with a ball
 - Touch/mobile controls: on-screen Left/Right/Fire buttons (`TouchControls`) are the primary input; direct drag anywhere on the play screen is a secondary, equivalent way to move
-  - Drag (touch/mouse + move): sets a target x position (current ship position + pointer's horizontal delta since drag start), but the ship still only moves toward that target at the same max speed as keyboard movement (300px/s) — this keeps drag from being an unfair "teleport dodge" compared to keyboard/on-screen controls
+  - Drag (touch/mouse + move): the pointer's clientX maps directly (absolute, not relative to where the drag started — see "Absolute drag mapping" below) to a target x position, but the ship still only moves toward that target at the same max speed as keyboard movement (300px/s) — this keeps drag from being an unfair "teleport dodge" compared to keyboard/on-screen controls
   - Firing is exclusively the dedicated Fire button (and Space on keyboard) — a plain tap/click with no drag does **not** fire. This used to be a canvas-only tap gesture, but a tap-to-fire dead reckoning on _any_ part of the drag region (see below) made accidental fires from a quick reposition too easy, and conflicted with holding Fire in one hand while steering with the other, so tap-to-fire was dropped entirely in favor of button-only firing.
   - Implemented as a single `window`-level pointer listener (not scoped to the canvas), `touch-action: none` on the canvas to prevent page scroll while dragging on it
 
@@ -63,3 +63,32 @@
   lifetime of the `GamePlay` screen (a `useEffect` that restores the
   previous value on unmount), removing the competition entirely rather
   than just reacting to it after the fact.
+
+### Absolute drag mapping (edges hard to reach)
+
+- The original drag was relative: the target moved by the pointer's
+  delta from wherever the drag _started_, joystick-style. That made
+  the screen edges hard to reach — how far the target could travel was
+  capped by how much physical screen room was left between the drag's
+  start point and the edge, so starting a drag already near an edge
+  (a natural thing to do when you specifically want to go there) left
+  little or no room to push further, and reaching the far edge from a
+  central start point could require more physical drag distance than
+  the screen had.
+- Switched to an absolute mapping instead: `dragTargetXRef` is
+  recomputed on every `pointerdown`/`pointermove` as
+  `((clientX - canvasRect.left) / canvasRect.width) * CANVAS_WIDTH`,
+  clamped to the ship's valid range — using the _canvas's_ bounding
+  rect as the horizontal reference even for touches in the dead zone
+  above/below it, so the mapping is consistent regardless of where
+  vertically the touch lands. Holding the pointer at the physical
+  left/right edge of the canvas (or the dead zone directly below/above
+  it) now always corresponds to the ship's leftmost/rightmost position,
+  and the existing per-frame speed cap (unchanged) still stops this
+  from being a "teleport dodge" — it just means holding near an edge
+  now reliably _walks_ the ship there, the same way holding the
+  Left/Right button does.
+- `dragRef` no longer needs to remember where the drag started
+  (`startClientX`/`startPlayerX`) or whether it moved (`moved`, which
+  only existed to gate the now-removed tap-to-fire) — it's just the
+  owning `pointerId`.

@@ -1415,12 +1415,7 @@ function GamePlay({
   const nextIdRef = useRef(1000 * (stageIndex + 1))
   const nextItemIdRef = useRef(1)
   const inputRef = useRef(new InputController())
-  const dragRef = useRef<{
-    pointerId: number
-    startClientX: number
-    startPlayerX: number
-    moved: boolean
-  } | null>(null)
+  const dragRef = useRef<{ pointerId: number } | null>(null)
   const dragTargetXRef = useRef<number | null>(null)
   const fireRequestedRef = useRef(false)
   const stageStartScoreRef = useRef(0)
@@ -1689,6 +1684,18 @@ function GamePlay({
     // can never get tangled up with a simultaneous move-drag from another
     // finger. `pointerId`-scoped so a second touch (e.g. holding Fire)
     // can't hijack an in-progress drag's start position.
+    //
+    // The target is an *absolute* mapping of the pointer's clientX across
+    // the canvas's own horizontal bounds (extended vertically into the
+    // dead zone above/below it) onto canvas-world X, not a delta relative
+    // to where the drag started. A relative delta made the edges hard to
+    // reach — how far you could push the target was capped by how much
+    // physical screen room was left between your start point and the
+    // screen edge, so starting a drag already near the edge left you
+    // nowhere to go. With an absolute mapping, holding the pointer near
+    // the physical left/right edge always corresponds to canvas X 0/max,
+    // and the per-frame speed cap below (same as keyboard) still stops
+    // this from being a "teleport dodge."
     if (demo) return
 
     const isOnHandledElement = (target: EventTarget | null) =>
@@ -1696,35 +1703,37 @@ function GamePlay({
       target.closest('.gameplay-hud, .touch-controls, .hint-panel, button') !==
         null
 
+    const targetXFromClientX = (clientX: number) => {
+      const canvas = canvasRef.current
+      if (!canvas) return null
+      const rect = canvas.getBoundingClientRect()
+      const ratio = (clientX - rect.left) / rect.width
+      return Math.min(
+        Math.max(ratio * CANVAS_WIDTH, PLAYER_WIDTH / 2),
+        CANVAS_WIDTH - PLAYER_WIDTH / 2,
+      )
+    }
+
     const handlePointerDown = (e: PointerEvent) => {
       if (paused || isStarting) return
       if (dragRef.current) return
       if (isOnHandledElement(e.target)) return
-      dragRef.current = {
-        pointerId: e.pointerId,
-        startClientX: e.clientX,
-        startPlayerX: playerXRef.current,
-        moved: false,
-      }
-      dragTargetXRef.current = playerXRef.current
+      const targetX = targetXFromClientX(e.clientX)
+      if (targetX === null) return
+      dragRef.current = { pointerId: e.pointerId }
+      dragTargetXRef.current = targetX
     }
     const handlePointerMove = (e: PointerEvent) => {
       const drag = dragRef.current
-      const canvas = canvasRef.current
-      if (!drag || !canvas || e.pointerId !== drag.pointerId) return
-      const rect = canvas.getBoundingClientRect()
-      const scale = CANVAS_WIDTH / rect.width
-      const deltaX = (e.clientX - drag.startClientX) * scale
-      if (Math.abs(deltaX) > 4) drag.moved = true
-      // Suppress the browser's own scroll/bounce gesture once this is a
-      // real drag — otherwise a swipe in the dead space below a
-      // letterboxed portrait canvas can rubber-band the page instead of
-      // (or in addition to) moving the player.
-      if (drag.moved) e.preventDefault()
-      dragTargetXRef.current = Math.min(
-        Math.max(drag.startPlayerX + deltaX, PLAYER_WIDTH / 2),
-        CANVAS_WIDTH - PLAYER_WIDTH / 2,
-      )
+      if (!drag || e.pointerId !== drag.pointerId) return
+      const targetX = targetXFromClientX(e.clientX)
+      if (targetX === null) return
+      // Suppress the browser's own scroll/bounce gesture — otherwise a
+      // swipe in the dead space below a letterboxed portrait canvas can
+      // rubber-band the page instead of (or in addition to) moving the
+      // player.
+      e.preventDefault()
+      dragTargetXRef.current = targetX
     }
     const handlePointerEnd = (e: PointerEvent) => {
       if (!dragRef.current || e.pointerId !== dragRef.current.pointerId) return
