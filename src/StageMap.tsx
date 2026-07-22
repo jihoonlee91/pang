@@ -6,6 +6,7 @@ import {
   STAGE_NAMES,
 } from './game/backgrounds'
 import { getStagePortals } from './game/portals'
+import { getStageBreeze } from './game/breeze'
 import { getStageCurrent } from './game/currents'
 import { getStageGravityWell } from './game/gravityWells'
 import { getStageNebulaWells } from './game/nebulae'
@@ -17,6 +18,11 @@ import { getStageIceWind } from './game/iceWinds'
 import { getStageSolarFlare } from './game/solarFlares'
 import { getQuantumJitterStrength } from './game/quantumRifts'
 import { getStageOverdriveBaseWells } from './game/overdriveWells'
+import {
+  getChaosRiftCurrent,
+  getChaosRiftFireZones,
+  getChaosRiftWells,
+} from './game/chaosRift'
 
 type ThumbnailProps = {
   stageIndex: number
@@ -147,6 +153,7 @@ function StageMap({
           const isLocked = Boolean(onStartStage) && i > highestUnlockedStage
           const portalCount = getStagePortals(i).length
           const isPortalStage = portalCount > 0
+          const isBreezeStage = getStageBreeze(i) !== null
           const isCurrentStage = getStageCurrent(i) !== null
           const isGravityWellStage = getStageGravityWell(i) !== null
           const isNebulaStage = getStageNebulaWells(i) !== null
@@ -160,6 +167,10 @@ function StageMap({
           const isSolarFlareStage = getStageSolarFlare(i) !== null
           const isQuantumRiftStage = getQuantumJitterStrength(i) !== null
           const isOverdriveStage = getStageOverdriveBaseWells(i) !== null
+          const isChaosCurrentStage = getChaosRiftCurrent(i) !== null
+          const isChaosWellStage = getChaosRiftWells(i) !== null
+          const chaosFireZoneCount = getChaosRiftFireZones(i)?.length ?? 0
+          const isChaosFireZoneStage = chaosFireZoneCount > 0
           const card = (
             <div
               id={`stage-map-card-${i}`}
@@ -188,6 +199,11 @@ function StageMap({
                 {isPortalStage && (
                   <span className="stage-map-badge stage-map-badge-portal">
                     PORTAL ×{portalCount}
+                  </span>
+                )}
+                {isBreezeStage && (
+                  <span className="stage-map-badge stage-map-badge-current-hazard">
+                    BREEZE
                   </span>
                 )}
                 {isCurrentStage && (
@@ -243,6 +259,21 @@ function StageMap({
                 {isOverdriveStage && (
                   <span className="stage-map-badge stage-map-badge-gravity">
                     POLARITY WELLS
+                  </span>
+                )}
+                {isChaosCurrentStage && (
+                  <span className="stage-map-badge stage-map-badge-current-hazard">
+                    CURRENT
+                  </span>
+                )}
+                {isChaosWellStage && (
+                  <span className="stage-map-badge stage-map-badge-gravity">
+                    GRAVITY WELL
+                  </span>
+                )}
+                {isChaosFireZoneStage && (
+                  <span className="stage-map-badge stage-map-badge-portal">
+                    FIRE ZONES
                   </span>
                 )}
               </div>

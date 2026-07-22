@@ -103,7 +103,11 @@ import {
   getStageOverdriveBaseWells,
   getOverdriveWellsAtTime,
 } from './game/overdriveWells'
-import { getChaosRiftCurrent, getChaosRiftFireZones } from './game/chaosRift'
+import {
+  getChaosRiftCurrent,
+  getChaosRiftFireZones,
+  getChaosRiftWells,
+} from './game/chaosRift'
 import {
   createStage,
   stepBall,
@@ -1458,6 +1462,10 @@ function GamePlay({
     () => getChaosRiftFireZones(stageIndex),
     [stageIndex],
   )
+  const stageChaosWells = useMemo(
+    () => getChaosRiftWells(stageIndex),
+    [stageIndex],
+  )
   // Gravity wells, nebula fields, and vortices are all the same underlying
   // hazard (one or more fixed pull points) — nebula fields are just two
   // weaker wells, vortices add spin — and none of the three ranges overlap,
@@ -1994,7 +2002,7 @@ function GamePlay({
               : overdriveWellsNow
             : isStabilizerActive
               ? undefined
-              : (gravityWell ?? undefined)
+              : (gravityWell ?? stageChaosWells ?? undefined)
           const activeGravityScale = isAnchorActive ? 1 : gravityScale
           const activeIceWindPush =
             isGripBootsActive || isOverdriveActive
@@ -2997,6 +3005,9 @@ function GamePlay({
         const wells = Array.isArray(gravityWell) ? gravityWell : [gravityWell]
         for (const well of wells) drawGravityWell(ctx, well, time)
       }
+      if (stageChaosWells) {
+        for (const well of stageChaosWells) drawGravityWell(ctx, well, time)
+      }
       if (overdriveBaseWells) {
         const wellsNow =
           getOverdriveWellsAtTime(overdriveBaseWells, stageIndex, time) ?? []
@@ -3124,6 +3135,7 @@ function GamePlay({
     stageBreeze,
     stageChaosCurrent,
     stageChaosFireZones,
+    stageChaosWells,
     gravityWell,
     fireZones,
     gravityScale,
@@ -3170,7 +3182,7 @@ function GamePlay({
           </span>
         )}
         {fireZones && <span className="hud-hazard">Fire Zones</span>}
-        {(stageChaosCurrent || stageChaosFireZones) && (
+        {(stageChaosCurrent || stageChaosFireZones || stageChaosWells) && (
           <span className="hud-hazard">Chaos Rift</span>
         )}
         {gravityScale < 1 && <span className="hud-hazard">Low Gravity</span>}

@@ -115,10 +115,38 @@ export const HAZARD_CATALOG: readonly HazardEntry[] = [
   },
   {
     id: 'chaosRift',
-    name: 'Chaos Rift',
+    name: 'Fractured Gateway',
     startStage: CHAOS_RIFT_START_STAGE,
     description:
       '해류와 화염 지대가 그동안 나온 것보다 더 강하게 동시에 몰아칩니다. Stabilizer로 해류를, Fireproof나 Overdrive로 화염 피해를 막을 수 있습니다.',
+  },
+  {
+    id: 'chaosRiftStormCitadel',
+    name: 'Storm Citadel',
+    startStage: CHAOS_RIFT_START_STAGE + 10,
+    description:
+      '해류 대신 강력한 중력점이 공을 끌어당기고, 화염 지대도 계속됩니다. Stabilizer로 중력점을, Fireproof나 Overdrive로 화염 피해를 막을 수 있습니다.',
+  },
+  {
+    id: 'chaosRiftMoltenMaelstrom',
+    name: 'Molten Maelstrom',
+    startStage: CHAOS_RIFT_START_STAGE + 20,
+    description:
+      '화염 지대 없이 해류와 중력점이 동시에 공을 밀고 당겨 궤도를 예측하기 어렵습니다. Stabilizer 아이템으로 둘 다 잠시 무력화할 수 있습니다.',
+  },
+  {
+    id: 'chaosRiftPrismCollapse',
+    name: 'Prism Collapse',
+    startStage: CHAOS_RIFT_START_STAGE + 30,
+    description:
+      '중력점이 회전력을 더해 공을 나선형으로 빨아들이고, 화염 지대도 함께 몰아칩니다. Stabilizer로 중력점을, Fireproof나 Overdrive로 화염 피해를 막을 수 있습니다.',
+  },
+  {
+    id: 'chaosRiftFinalSingularity',
+    name: 'Final Singularity',
+    startStage: CHAOS_RIFT_START_STAGE + 40,
+    description:
+      '해류, 중력점, 화염 지대가 동시에 몰아치는 최종 관문입니다. Stabilizer로 해류/중력점을, Fireproof나 Overdrive로 화염 피해를 막을 수 있습니다.',
   },
 ]
 
