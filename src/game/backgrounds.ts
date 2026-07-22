@@ -23,6 +23,15 @@ import solarStormPlateUrl from '../assets/backgrounds/stages121-130-solar-storm.
 import quantumRiftPlateUrl from '../assets/backgrounds/stages131-140-quantum-rift.webp'
 import overdriveNexusPlateUrl from '../assets/backgrounds/stages141-150-overdrive-nexus.webp'
 
+const UNIQUE_STAGE_IMAGE_URLS = import.meta.glob(
+  '../assets/backgrounds/illustrated/stage*.webp',
+  {
+    eager: true,
+    query: '?url',
+    import: 'default',
+  },
+) as Record<string, string>
+
 export const GROUND_Y = CANVAS_HEIGHT - 90
 export const BACKGROUND_READY_EVENT = 'pang-background-ready'
 
@@ -1197,6 +1206,37 @@ function drawChapterArtPlate(
   vignette.addColorStop(1, 'rgba(2,6,23,0.2)')
   ctx.fillStyle = vignette
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+}
+
+function createUniqueIllustratedBackground(
+  src: string,
+  fallback: (ctx: CanvasRenderingContext2D) => void,
+) {
+  let image: HTMLImageElement | null = null
+
+  return (ctx: CanvasRenderingContext2D) => {
+    if (image?.complete && image.naturalWidth > 0) {
+      ctx.save()
+      // The exported stage image already includes the game's readability
+      // grade, so bypass the outer filter instead of applying it twice.
+      ctx.filter = 'none'
+      ctx.drawImage(image, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+      ctx.restore()
+      return
+    }
+
+    fallback(ctx)
+    if (image || typeof Image === 'undefined') return
+
+    image = new Image()
+    image.decoding = 'async'
+    image.addEventListener('load', () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(BACKGROUND_READY_EVENT))
+      }
+    })
+    image.src = src
+  }
 }
 
 function createChapterIllustratedBackgrounds(
@@ -5115,9 +5155,7 @@ const ILLUSTRATED_OVERDRIVE_NEXUS_BACKGROUNDS =
     OVERDRIVE_NEXUS_BACKGROUNDS,
   )
 
-const RAW_BACKGROUNDS = [
-  ...BASE_BACKGROUNDS,
-  ...ILLUSTRATED_BACKGROUNDS,
+const CHAPTER_ILLUSTRATED_BACKGROUNDS = [
   ...ILLUSTRATED_WORLD_TOUR_2_BACKGROUNDS,
   ...ILLUSTRATED_DIMENSION_BACKGROUNDS,
   ...ILLUSTRATED_TRENCH_BACKGROUNDS,
@@ -5131,6 +5169,23 @@ const RAW_BACKGROUNDS = [
   ...ILLUSTRATED_SOLAR_STORM_BACKGROUNDS,
   ...ILLUSTRATED_QUANTUM_RIFT_BACKGROUNDS,
   ...ILLUSTRATED_OVERDRIVE_NEXUS_BACKGROUNDS,
+]
+
+const UNIQUE_LATE_STAGE_BACKGROUNDS = CHAPTER_ILLUSTRATED_BACKGROUNDS.map(
+  (fallback, index) => {
+    const stageNumber = index + 21
+    const key = `../assets/backgrounds/illustrated/stage${String(
+      stageNumber,
+    ).padStart(3, '0')}.webp`
+    const src = UNIQUE_STAGE_IMAGE_URLS[key]
+    return src ? createUniqueIllustratedBackground(src, fallback) : fallback
+  },
+)
+
+const RAW_BACKGROUNDS = [
+  ...BASE_BACKGROUNDS,
+  ...ILLUSTRATED_BACKGROUNDS,
+  ...UNIQUE_LATE_STAGE_BACKGROUNDS,
 ]
 
 export const BACKGROUNDS = RAW_BACKGROUNDS.map(

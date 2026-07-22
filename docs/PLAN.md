@@ -205,6 +205,6 @@ A file laying out the goals for each phase.
 
 ### Phase 6-4. Illustrated Late-stage Backgrounds
 
-- Upgrade stages 21-150 with chapter-specific WebP art plates while preserving each stage's distinct Canvas composition
+- Give every stage from 21-150 its own precomposed WebP illustration while preserving each stage's distinct Canvas composition
 - Share the same async image-loading and fallback behavior used by stages 11-20
-- Keep the 150-card stage map responsive by reusing one optimized plate per 10-stage chapter
+- Keep the stage map responsive with optimized 960×540 assets and lazy browser decoding

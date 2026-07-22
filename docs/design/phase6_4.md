@@ -4,15 +4,16 @@
 
 - Raise the visual quality of stages 21-150 to the illustrated standard established by stages 11-20.
 - Preserve the existing 130 distinct stage compositions and their gameplay readability.
-- Avoid shipping 130 full-screen raster files, which would make the initial bundle and the 150-card stage map unnecessarily heavy.
+- Make every stage immediately distinguishable from every other stage, including adjacent stages in the same chapter.
 
 ## Design
 
-- Add one optimized WebP art plate for each 10-stage chapter from World Tour II through Overdrive Nexus (13 plates total).
-- Keep every existing Canvas background as the authoritative stage composition and no-image fallback. The plate is composited over it with chapter-tuned blend, opacity, crop, and lighting so stage-specific silhouettes remain visible while gaining painted texture, atmospheric depth, and richer color.
-- Give each stage a deterministic variation of the shared chapter plate (subtle pan, zoom, and tonal treatment). Adjacent stages must not render as identical even when they share an art plate.
+- Export one optimized 960×540 WebP illustration for every stage from 21 through 150 (130 final assets). Each export permanently combines that stage's unique Canvas composition with its chapter's painted lighting and texture source.
+- Treat the 13 chapter art plates as source material only, never as runtime backgrounds shared by multiple stages.
+- Keep every existing Canvas background as the no-image fallback. At runtime each stage loads only its own final WebP URL, matching the dedicated-image approach used by stages 11-20.
+- Adjacent stages in the same chapter must differ in focal silhouette, scenery layout, crop, lighting balance, and tonal treatment; color-only swaps do not count as unique backgrounds.
 - Use the same lazy `Image` loading path and `pang-background-ready` event as stages 11-20 so gameplay and stage-map thumbnails repaint as soon as an asset is ready.
-- Retain the final gameplay readability filter after composition. Background detail must remain subordinate to balls, harpoons, platforms, hazards, and HUD elements.
+- Retain the final gameplay readability filter. Background detail must remain subordinate to balls, harpoons, platforms, hazards, and HUD elements.
 
 ## Chapter art direction
 
@@ -33,6 +34,7 @@
 ## Verification
 
 - `STAGE_NAMES` and `BACKGROUNDS` still contain exactly 150 entries.
-- Every stage from 21 through 150 resolves to an illustrated wrapper with a working Canvas fallback.
+- Every stage from 21 through 150 resolves to a distinct image URL and an illustrated wrapper with a working Canvas fallback.
+- The 130 late-stage image files have unique binary content; no duplicated or aliased assets are accepted.
 - Type check, production build, lint, formatting check, and Vitest all pass.
 - Representative early/middle/final chapter stages are visually checked in the stage map or gameplay.
