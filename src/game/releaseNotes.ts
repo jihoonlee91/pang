@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.23.0',
+    date: '2026-07-20',
+    notes: [
+      'Watch AI Play got a pro-gamer upgrade: it now only fires shots it has verified will land, dodges using every ball’s full flight path (not just where it will drop), knows which power-ups are worth a detour — and which dynamite grabs are suicide — and plays under the real stage time limit, pacing itself against the clock.',
+    ],
+  },
+  {
     version: '1.22.0',
     date: '2026-07-20',
     notes: [
@@ -49,14 +56,6 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     date: '2026-07-19',
     notes: [
       'Stage Map now has a "Jump to stage" quick-nav, so finding a specific stage in the now much longer list takes one search instead of a long scroll.',
-    ],
-  },
-  {
-    version: '1.21.0',
-    date: '2026-07-19',
-    notes: [
-      'The game now goes all the way to stage 150! Five new theme blocks: Toxic Marsh (telegraphed acid rain), Frozen Summit (icy gusts that push you sideways), Solar Storm (a screen-wide flare that slows you down), Quantum Rift (balls that randomly phase-jump), and the finale Overdrive Nexus (twin gravity wells that flip between pulling and pushing).',
-      'Five new items pair with the new hazards: Umbrella, Grip Boots, Visor, Lock-On, and the capstone Overdrive (blocks all hazard damage and boosts your score for 8 seconds).',
     ],
   },
 ]

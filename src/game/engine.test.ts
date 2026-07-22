@@ -6,6 +6,7 @@ import {
   MIN_BOUNCE_SPEED,
   LEVEL_BOUNCE_SPEED,
   LEVEL_RADIUS,
+  ITEM_GRAVITY,
   PLAYER_Y,
   STAGE_COUNT,
   STAGE_OBSTACLES,
@@ -22,10 +23,14 @@ import {
   harpoonHitsBall,
   ballHitsPlayer,
   predictLandingSpot,
+  predictBallThreats,
+  predictHarpoonHit,
   chooseSafeX,
   harpoonHitsObstacle,
   getPowerHarpoonStopY,
   stepItem,
+  itemCatchSeconds,
+  countRemainingPops,
 } from './engine'
 import type { Ball, Item } from './types'
 
@@ -463,6 +468,125 @@ describe('chooseSafeX', () => {
     // target's own predicted zone in the array it passes in.
     const x = chooseSafeX(400, 400, [], bounds)
     expect(x).toBe(400)
+  })
+})
+
+describe('predictBallThreats', () => {
+  const bandTopY = PLAYER_Y - 20
+
+  it('agrees with predictLandingSpot on the aiming answer', () => {
+    const ball: Ball = { id: 1, x: 200, y: 100, vx: 100, vy: 0, level: 2 }
+    const spot = predictLandingSpot(ball, 1.5)
+    const combined = predictBallThreats(ball, bandTopY, 1.5)
+    expect(combined.x).toBe(spot.x)
+    expect(combined.time).toBe(spot.time)
+  })
+
+  it('traces a ball sweeping through the player band as a series of zones', () => {
+    // Rolling right along the floor, already inside the band the whole time.
+    const ball: Ball = {
+      id: 1,
+      x: 100,
+      y: CANVAS_HEIGHT - LEVEL_RADIUS[0],
+      vx: 200,
+      vy: 0,
+      level: 0,
+    }
+    const { threats } = predictBallThreats(ball, bandTopY, 1)
+    expect(threats.length).toBeGreaterThan(3)
+    expect(threats[0].time).toBe(0)
+    // The zones follow the ball's rightward sweep.
+    expect(threats[threats.length - 1].x).toBeGreaterThan(threats[0].x + 100)
+  })
+
+  it('reports no threats for a ball that stays high the whole horizon', () => {
+    // Level-2 balls bounce back up to near their spawn height, so one
+    // starting high with upward velocity never dips into the band soon.
+    const ball: Ball = { id: 1, x: 400, y: 90, vx: 0, vy: -300, level: 2 }
+    const { threats } = predictBallThreats(ball, bandTopY, 0.5)
+    expect(threats).toHaveLength(0)
+  })
+})
+
+describe('predictHarpoonHit', () => {
+  it('reports a hit time for a ball hanging directly overhead', () => {
+    const ball: Ball = { id: 1, x: 400, y: 200, vx: 0, vy: 0, level: 2 }
+    const hit = predictHarpoonHit(ball, 400)
+    expect(hit).not.toBeNull()
+    expect(hit!).toBeGreaterThan(0)
+    expect(hit!).toBeLessThan(1)
+  })
+
+  it('rejects a shot the old alignment heuristic would have taken', () => {
+    // Within the old ±18px fire tolerance right now, but fast and high —
+    // by the time the wire climbs to it, the ball has drifted far away.
+    const ball: Ball = { id: 1, x: 480, y: 60, vx: 300, vy: 0, level: 2 }
+    expect(predictHarpoonHit(ball, 480)).toBeNull()
+  })
+
+  it('rejects a shot whose wire would die on an obstacle first', () => {
+    const ball: Ball = { id: 1, x: 480, y: 100, vx: 0, vy: 0, level: 2 }
+    const obstacle = { x: 450, y: 300, width: 60, height: 20 }
+    expect(predictHarpoonHit(ball, 480, { obstacles: [obstacle] })).toBeNull()
+    // The same shot connects once the obstacle is out of the wire's path.
+    expect(
+      predictHarpoonHit(ball, 480, {
+        obstacles: [{ ...obstacle, x: 700 }],
+      }),
+    ).not.toBeNull()
+  })
+
+  it('connects with a frozen ball (Clock active) exactly on its column', () => {
+    const ball: Ball = { id: 1, x: 300, y: 150, vx: 250, vy: 0, level: 1 }
+    // Frozen: the big vx never moves it off the wire's column.
+    expect(predictHarpoonHit(ball, 300, { ballTimeScale: 0 })).not.toBeNull()
+  })
+})
+
+describe('itemCatchSeconds', () => {
+  it('returns 0 for an item already at or below the catch row', () => {
+    const item: Item = { id: 1, x: 100, y: PLAYER_Y + 5, vy: 40, type: 'clock' }
+    expect(itemCatchSeconds(item)).toBe(0)
+  })
+
+  it('solves the fall kinematics exactly', () => {
+    const item: Item = {
+      id: 1,
+      x: 100,
+      y: PLAYER_Y - 200,
+      vy: 30,
+      type: 'clock',
+    }
+    const t = itemCatchSeconds(item)
+    // Plugging t back into y + vy·t + ½g·t² must land on the row.
+    expect(item.y + item.vy * t + 0.5 * ITEM_GRAVITY * t * t).toBeCloseTo(
+      PLAYER_Y,
+      6,
+    )
+  })
+
+  it('falls sooner when already moving downward faster', () => {
+    const slow: Item = { id: 1, x: 0, y: PLAYER_Y - 200, vy: 0, type: 'clock' }
+    const fast: Item = { ...slow, vy: 120 }
+    expect(itemCatchSeconds(fast)).toBeLessThan(itemCatchSeconds(slow))
+  })
+})
+
+describe('countRemainingPops', () => {
+  it('counts a full split tree per ball', () => {
+    const ball = (level: number): Ball => ({
+      id: level,
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      level,
+    })
+    expect(countRemainingPops([])).toBe(0)
+    expect(countRemainingPops([ball(0)])).toBe(1)
+    expect(countRemainingPops([ball(1)])).toBe(3)
+    expect(countRemainingPops([ball(2)])).toBe(7)
+    expect(countRemainingPops([ball(2), ball(1), ball(0)])).toBe(11)
   })
 })
 

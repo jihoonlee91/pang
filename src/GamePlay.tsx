@@ -116,7 +116,10 @@ import {
   stepItem,
   itemHitsPlayer,
   explodeToSmallest,
-  predictLandingSpot,
+  predictBallThreats,
+  predictHarpoonHit,
+  itemCatchSeconds,
+  countRemainingPops,
   chooseSafeX,
   type DangerZone,
 } from './game/engine'
@@ -1326,12 +1329,58 @@ type Props = {
   onQuit: () => void
 }
 
-const AI_DEADZONE = 10
-const AI_FIRE_TOLERANCE = 18
+const AI_DEADZONE = 6
 // Extra margin beyond the exact ball-radius + player-half-width collision
 // distance, so the AI starts dodging with some reaction room rather than
 // shaving hits as close as physically possible.
-const AI_DODGE_BUFFER = 18
+const AI_DODGE_BUFFER = 24
+// How far ahead something counts as "about to land on me" for the reflex
+// escape (chooseSafeX's immediateDangerSec) — a beat earlier than the
+// 0.25s default, buying ~30px more escape distance per dodge.
+const AI_REFLEX_SEC = 0.35
+// On Quantum Rift stages balls phase-jump to new velocities mid-flight, so
+// every prediction is only good until the next jump — widen the per-ball
+// no-go band to absorb the jump distance a prediction can't see coming.
+const AI_RIFT_EXTRA_DODGE_BUFFER = 16
+// A challenger ball must beat the current target's time-to-kill by this
+// much before the AI switches targets — kills frame-to-frame retarget
+// thrash between two similarly-placed balls.
+const AI_RETARGET_MARGIN_SEC = 0.15
+// Below this many remaining seconds per remaining pop, the AI is behind
+// pace and stops detouring for items — except the clutch ones below.
+const AI_TIME_PRESSURE_SEC_PER_POP = 0.9
+// Items still worth a (catchable-only) detour while behind pace: the ones
+// that directly buy time back, stop/slow the clock (Clock freezes the
+// stage timer too), or multiply clear speed. Late stages sit at the 20s
+// floor and are explicitly balanced around these power-ups — skipping
+// them there would be self-defeating.
+const AI_CLUTCH_ITEMS: ReadonlySet<ItemType> = new Set<ItemType>([
+  'timePlus',
+  'clock',
+  'hourglass',
+  'vulcan',
+  'doubleWire',
+  'powerWire',
+  'dynamite',
+  'shockwave',
+])
+// Dynamite/shockwave turn every ball into its full shower of children at
+// once — the fastest clear in the game, but suicide to trigger on a full
+// screen. Only grab an explosive when the post-blast ball count (each
+// ball's 2^level eventual leaves) stays at most this, unless a barrier/
+// invincibility is up to tank the burst.
+const AI_EXPLOSIVE_MAX_LEAVES = 8
+// With this many balls airborne at once (a dynamite/shockwave flood),
+// chasing an aiming position is what gets the AI hit — transit exposure
+// through a saturated screen outweighs any aiming gain. Above this count
+// it parks at the nearest safe gap instead and lets opportunistic fire
+// snipe whatever streams past overhead.
+const AI_FLOOD_BALL_COUNT = 10
+// Horizontal prefilter slack for the intercept sim: how much extra x-drift
+// (beyond the ball's own vx) wind/wells could plausibly add per second
+// while a fired wire climbs. Balls farther out than this can't be hit and
+// skip the full simulation entirely.
+const AI_PREFILTER_DRIFT_SLACK = 160
 const HIT_EFFECT_MS = 350
 
 type BuffDisplay = {
@@ -1503,6 +1552,8 @@ function GamePlay({
   const portalCooldownsRef = useRef(new Map<number, number>())
   const buffsDisplayRef = useRef<BuffDisplay>(NO_BUFFS)
   const aiKeysDisplayRef = useRef({ left: false, right: false, fire: false })
+  // Sticky shooting-target id for the AI (see AI_RETARGET_MARGIN_SEC).
+  const aiTargetIdRef = useRef<number | null>(null)
 
   const [hp, setHp] = useState(MAX_HP)
   const [hpPulseKey, setHpPulseKey] = useState(0)
@@ -1952,10 +2003,13 @@ function GamePlay({
           const activeJitterStrength =
             isLockOnActive || isOverdriveActive ? null : quantumJitterStrength
 
-          if (!demo) {
+          {
             // Clock/Hourglass slow or stop balls, so the stage clock should
             // read the same way — otherwise a 6-second Clock still burns 6
             // real seconds off the timer while nothing on screen is moving.
+            // Ticks in demo mode too: the AI plays under the same time
+            // limit as a real run (time-up is a real game over that
+            // restarts the attract loop), and paces itself against it.
             const timeDtScale = isClockActive
               ? 0
               : isHourglassActive
@@ -1990,15 +2044,18 @@ function GamePlay({
                 ? HOURGLASS_SLOW_FACTOR
                 : 1
 
-            // Forward-simulate every ball with the real physics to find each
-            // one's next low point (closest approach to the player's row) —
-            // used both to pick a shooting target (soonest arrival) and to
-            // build a danger map for dodging (every ball is a hazard, not
-            // just the one being shot at).
+            // Forward-simulate every ball with the real physics — one pass
+            // per ball yields both its next low point (for aiming) and
+            // every moment its path dips into the player band (for
+            // dodging). The full threat sweep matters: a ball crossing the
+            // player's row between bounces never has a "low point" nearby,
+            // yet absolutely can hit on the way through.
+            const playerBandTopY = playerYRef.current - PLAYER_HEIGHT / 2
             const predictions = ballsRef.current.map((b) => ({
               ball: b,
-              ...predictLandingSpot(
+              ...predictBallThreats(
                 b,
+                playerBandTopY,
                 1.5,
                 1 / 60,
                 terrain.platforms,
@@ -2008,19 +2065,81 @@ function GamePlay({
                 activeGravityScale,
               ),
             }))
-            const targetPrediction = predictions.reduce<
+            // Pick the shooting target by real time-to-kill — bounded by
+            // both the ball's arrival at its low point and the AI's own
+            // travel time to get under it, so a ball landing soon but
+            // across the map no longer beats a nearby one. The current
+            // target is kept unless a challenger is clearly better
+            // (AI_RETARGET_MARGIN_SEC), killing frame-to-frame retarget
+            // thrash between two similarly-placed balls.
+            const shotCost = (p: (typeof predictions)[number]) =>
+              Math.max(p.time, Math.abs(p.x - playerXRef.current) / playerSpeed)
+            let targetPrediction = predictions.reduce<
               (typeof predictions)[number] | null
-            >((best, p) => (!best || p.time < best.time ? p : best), null)
-            const target = targetPrediction?.ball ?? null
-
-            // Items fall straight down (x never changes), so no leading is
-            // needed for them — just head toward whichever is lowest/soonest.
-            const itemTarget = itemsRef.current.reduce<Item | null>(
-              (lowest, item) => (!lowest || item.y > lowest.y ? item : lowest),
+            >(
+              (best, p) => (!best || shotCost(p) < shotCost(best) ? p : best),
               null,
             )
-            const desiredX =
-              itemTarget !== null
+            const stickyPrediction =
+              predictions.find((p) => p.ball.id === aiTargetIdRef.current) ??
+              null
+            if (
+              targetPrediction &&
+              stickyPrediction &&
+              shotCost(targetPrediction) >
+                shotCost(stickyPrediction) - AI_RETARGET_MARGIN_SEC
+            ) {
+              targetPrediction = stickyPrediction
+            }
+            aiTargetIdRef.current = targetPrediction?.ball.id ?? null
+            const target = targetPrediction?.ball ?? null
+
+            // Items are only worth a detour when physically catchable —
+            // reachable at the current (flare-slowed/boosted) speed before
+            // they fall past the player row and despawn; chasing anything
+            // else is pure wasted travel. When behind the pace the
+            // remaining clock allows (per-pop time budget too thin), item
+            // detours stop entirely — except Time+, which directly buys
+            // the budget back.
+            const remainingPops = countRemainingPops(ballsRef.current)
+            const underTimePressure =
+              timeRemainingRef.current <
+              remainingPops * AI_TIME_PRESSURE_SEC_PER_POP
+            const leafBallCount = ballsRef.current.reduce(
+              (sum, b) => sum + 2 ** b.level,
+              0,
+            )
+            const explosiveSafe =
+              leafBallCount <= AI_EXPLOSIVE_MAX_LEAVES ||
+              isInvincibleActive ||
+              isOverdriveActive ||
+              barrierCountRef.current > 0
+            let itemTarget: Item | null = null
+            let itemTargetCatchSec = Infinity
+            for (const item of itemsRef.current) {
+              if (underTimePressure && !AI_CLUTCH_ITEMS.has(item.type)) continue
+              if (
+                (item.type === 'dynamite' || item.type === 'shockwave') &&
+                !explosiveSafe
+              ) {
+                continue
+              }
+              const catchSec = itemCatchSeconds(item, playerYRef.current)
+              const travelSec =
+                Math.max(
+                  0,
+                  Math.abs(item.x - playerXRef.current) - PLAYER_WIDTH / 2,
+                ) / playerSpeed
+              if (travelSec > catchSec) continue
+              if (catchSec < itemTargetCatchSec) {
+                itemTarget = item
+                itemTargetCatchSec = catchSec
+              }
+            }
+            const flooded = ballsRef.current.length >= AI_FLOOD_BALL_COUNT
+            const desiredX = flooded
+              ? playerXRef.current
+              : itemTarget !== null
                 ? itemTarget.x
                 : (targetPrediction?.x ?? playerXRef.current)
 
@@ -2055,20 +2174,40 @@ function GamePlay({
                 time: 0,
                 radius: zone.width / 2 + PLAYER_WIDTH / 2 + AI_DODGE_BUFFER,
               }))
+            // Phase-jumping balls (Quantum Rift) invalidate predictions on
+            // every jump — pad their no-go bands so the mid-frame jump a
+            // prediction can't see coming still lands outside the player.
+            const ballDodgeBuffer =
+              AI_DODGE_BUFFER +
+              (activeJitterStrength !== null ? AI_RIFT_EXTRA_DODGE_BUFFER : 0)
             const dangerZones: DangerZone[] = [
-              ...predictions
-                .filter(
-                  (p) =>
-                    !(canEngageTarget && target && p.ball.id === target.id),
-                )
-                .map((p) => ({
-                  x: p.x,
-                  time: p.time,
+              ...predictions.flatMap((p) => {
+                // For the engaged target, standing in its future path IS
+                // the plan (the wire pops it first), so its later threats
+                // are dropped — but its imminent ones stay: a ball already
+                // at row height closing in touches the player's edge
+                // (half-width + radius out) before it ever crosses the
+                // centered wire (radius out), so the reflex escape must
+                // still fire. Retreating while the opportunistic fire
+                // below keeps shooting means the chaser runs into the
+                // wire left behind. Dropping ALL of its threats instead
+                // creates the opposite bug — a permanent standoff against
+                // a low-bouncing last ball whose own sweep blankets its
+                // landing spot, which the AI then never dares approach.
+                const engaged =
+                  canEngageTarget && target !== null && p.ball.id === target.id
+                const threats = engaged
+                  ? p.threats.filter((threat) => threat.time <= AI_REFLEX_SEC)
+                  : p.threats
+                return threats.map((threat) => ({
+                  x: threat.x,
+                  time: threat.time,
                   radius:
                     LEVEL_RADIUS[p.ball.level] +
                     PLAYER_WIDTH / 2 +
-                    AI_DODGE_BUFFER,
-                })),
+                    ballDodgeBuffer,
+                }))
+              }),
               ...fireZoneDangers,
               ...acidRainDangers,
             ]
@@ -2086,20 +2225,76 @@ function GamePlay({
                         min: PLAYER_WIDTH / 2,
                         max: CANVAS_WIDTH - PLAYER_WIDTH / 2,
                       },
-                      { playerSpeed },
+                      // Dodge horizon matched to the 1.5s prediction
+                      // window so freshly-split children arcing back down
+                      // are routed around before they arrive, not once
+                      // they're already overhead.
+                      {
+                        playerSpeed,
+                        dodgeHorizonSec: 1.4,
+                        immediateDangerSec: AI_REFLEX_SEC,
+                        // Candidates capped to what's honestly reachable
+                        // within the dodge horizon — stops the planner
+                        // from committing to a sprint through a wall of
+                        // descending balls toward a "safe" far edge.
+                        maxTravelPx: playerSpeed * 1.4,
+                      },
                     )
                 : playerXRef.current
 
             const left = moveTargetX < playerXRef.current - AI_DEADZONE
             const right = moveTargetX > playerXRef.current + AI_DEADZONE
-            // Only fire once actually settled near the target — a
-            // mid-dodge position that happens to pass through the fire
-            // tolerance shouldn't trigger a shot.
-            const fire =
-              target !== null &&
-              Math.abs(moveTargetX - playerXRef.current) < AI_DEADZONE &&
-              Math.abs(target.x - playerXRef.current) < AI_FIRE_TOLERANCE &&
-              harpoonsRef.current.length < maxHarpoons
+            // Fire the moment a shot would actually land — verified by
+            // simulating a wire fired from the current x this frame
+            // against every ball's real physics (predictHarpoonHit), not
+            // by rough current-x alignment. Checked against every ball,
+            // not just the chosen target, and with no "settled" gate, so
+            // targets of opportunity get sniped mid-stride while
+            // repositioning. A cheap horizontal prefilter skips balls that
+            // couldn't possibly drift into the wire's column during its
+            // climb.
+            let fire = false
+            if (harpoonsRef.current.length < maxHarpoons) {
+              if (isPowerWireActive) {
+                // Power Wire is an instant full-height line that stays up,
+                // so the sim degenerates to: does a ball overlap it now?
+                const stopY = getPowerHarpoonStopY(
+                  playerXRef.current,
+                  terrain.platforms,
+                  playerYRef.current,
+                )
+                fire = ballsRef.current.some((b) =>
+                  harpoonHitsBall(
+                    playerXRef.current,
+                    stopY,
+                    b,
+                    playerYRef.current,
+                  ),
+                )
+              } else {
+                const harpoonSpeed = isVulcanActive
+                  ? VULCAN_SPEED
+                  : HARPOON_SPEED
+                const climbSec = playerYRef.current / harpoonSpeed
+                fire = ballsRef.current.some((b) => {
+                  const reach =
+                    LEVEL_RADIUS[b.level] +
+                    (Math.abs(b.vx) + AI_PREFILTER_DRIFT_SLACK) * climbSec
+                  if (Math.abs(b.x - playerXRef.current) > reach) return false
+                  return (
+                    predictHarpoonHit(b, playerXRef.current, {
+                      baseY: playerYRef.current,
+                      harpoonSpeed,
+                      obstacles: terrain.platforms,
+                      windAx,
+                      well: activeGravityWell,
+                      ballTimeScale,
+                      gravityScale: activeGravityScale,
+                    }) !== null
+                  )
+                })
+              }
+            }
             inputRef.current.set('ai-left', 'left', left)
             inputRef.current.set('ai-right', 'right', right)
             inputRef.current.set('ai-fire', 'fire', fire)

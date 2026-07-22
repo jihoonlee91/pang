@@ -6,6 +6,7 @@ import {
   PLAYER_HEIGHT,
   PLAYER_Y,
   GRAVITY,
+  HARPOON_SPEED,
   RESTITUTION,
   MIN_BOUNCE_SPEED,
   LEVEL_BOUNCE_SPEED,
@@ -386,6 +387,69 @@ export type DangerZone = {
 }
 
 /**
+ * One forward simulation per ball, two answers: the classic landing spot
+ * (predictLandingSpot's next-low-point, for aiming) plus every moment the
+ * ball's path dips low enough to touch the player band (for dodging). The
+ * low point alone is a dangerous blind spot for avoidance — a ball that
+ * sweeps horizontally through the player's row between bounces never has
+ * a "low point" near the player, yet absolutely can hit them on the way
+ * through. Threat entries are sampled at `threatSampleSec` intervals while
+ * the ball stays inside the band (plus the entry moment), so a slow roll
+ * across the floor shows up as a series of zones tracing its sweep.
+ */
+export function predictBallThreats(
+  ball: Ball,
+  bandTopY: number,
+  horizonSec = 1.5,
+  dtSec = 1 / 60,
+  obstacles?: Obstacle | readonly Obstacle[],
+  windAx = 0,
+  well?: GravityWell | readonly GravityWell[],
+  ballTimeScale = 1,
+  gravityScale = 1,
+  threatSampleSec = 0.1,
+): { x: number; time: number; threats: { x: number; time: number }[] } {
+  const r = LEVEL_RADIUS[ball.level]
+  let sim = ball
+  let bestX = ball.x
+  let bestY = ball.y
+  let bestTime = 0
+  let t = 0
+  const threats: { x: number; time: number }[] = []
+  let lastThreatAt = -Infinity
+
+  const inBand = (b: Ball) => b.y + r >= bandTopY
+  if (inBand(sim)) {
+    threats.push({ x: sim.x, time: 0 })
+    lastThreatAt = 0
+  }
+
+  while (t < horizonSec) {
+    const wasInBand = inBand(sim)
+    sim = stepBall(
+      sim,
+      dtSec * ballTimeScale,
+      obstacles,
+      windAx,
+      well,
+      gravityScale,
+    )
+    t += dtSec
+    if (sim.y > bestY) {
+      bestY = sim.y
+      bestX = sim.x
+      bestTime = t
+    }
+    if (inBand(sim) && (!wasInBand || t - lastThreatAt >= threatSampleSec)) {
+      threats.push({ x: sim.x, time: t })
+      lastThreatAt = t
+    }
+  }
+
+  return { x: bestX, time: bestTime, threats }
+}
+
+/**
  * Picks a safe x for the AI/attract mode to stand at, given where it would
  * *like* to stand (to line up a shot or grab an item) and a set of
  * near-term ball arrivals to avoid.
@@ -417,13 +481,25 @@ export function chooseSafeX(
     immediateDangerSec?: number
     playerSpeed?: number
     stepPx?: number
+    /**
+     * Cap candidate positions to this travel distance from the current
+     * position. Without it, a distant spot can look perfect purely
+     * because every threat "resolves before arrival" — which says nothing
+     * about the wall of threats the transit itself runs through. Keeping
+     * candidates inside the honestly-reachable band makes the per-frame
+     * re-plan walk toward distant goals step by safe step instead of
+     * committing to a sprint through traffic.
+     */
+    maxTravelPx?: number
   } = {},
 ): number {
   const dodgeHorizonSec = options.dodgeHorizonSec ?? 1.1
   const immediateDangerSec = options.immediateDangerSec ?? 0.25
   const playerSpeed = options.playerSpeed ?? 300
   const stepPx = options.stepPx ?? 12
+  const maxTravelPx = options.maxTravelPx ?? Infinity
   const clamp = (x: number) => Math.min(Math.max(x, bounds.min), bounds.max)
+  const withinTravel = (x: number) => Math.abs(x - currentX) <= maxTravelPx
 
   const imminent = dangerZones.find(
     (zone) =>
@@ -451,21 +527,27 @@ export function chooseSafeX(
     )
   const isSafe = (x: number) => relevant.length === 0 || margin(x) >= 0
 
-  if (isSafe(desiredX)) return clamp(desiredX)
+  if (isSafe(desiredX) && withinTravel(clamp(desiredX))) return clamp(desiredX)
 
   const span = bounds.max - bounds.min
   for (let offset = stepPx; offset <= span; offset += stepPx) {
     for (const dir of [1, -1]) {
       const candidate = clamp(desiredX + dir * offset)
-      if (isSafe(candidate)) return candidate
+      if (withinTravel(candidate) && isSafe(candidate)) return candidate
     }
   }
 
   // Nothing found fully clear — pick the position with the most breathing
   // room from its nearest reachable threat.
-  let best = clamp(desiredX)
+  let best = clamp(
+    Math.min(
+      Math.max(desiredX, currentX - maxTravelPx),
+      currentX + maxTravelPx,
+    ),
+  )
   let bestMargin = margin(best)
   for (let x = bounds.min; x <= bounds.max; x += stepPx) {
+    if (!withinTravel(x)) continue
     const m = margin(x)
     if (m > bestMargin) {
       bestMargin = m
@@ -473,4 +555,88 @@ export function chooseSafeX(
     }
   }
   return best
+}
+
+/**
+ * Simulates an actual harpoon fired from `fireX` this instant — the wire's
+ * tip climbing at real harpoon speed while the ball advances with the real
+ * stepBall physics — and reports when (in seconds) the wire would connect,
+ * or null if the shot whiffs. This is the AI's fire decision: instead of
+ * firing on rough current-x alignment and hoping, it only pulls the
+ * trigger on shots this sim says will land, which is also what lets it
+ * fire mid-stride at targets of opportunity.
+ *
+ * The sim aborts (returns null) if the tip would die on an obstacle before
+ * connecting, mirroring how live harpoons despawn on obstacle contact.
+ * `ballTimeScale` matches whatever is freezing/slowing balls in real play,
+ * exactly as in predictLandingSpot.
+ */
+export function predictHarpoonHit(
+  ball: Ball,
+  fireX: number,
+  options: {
+    baseY?: number
+    harpoonSpeed?: number
+    dtSec?: number
+    obstacles?: Obstacle | readonly Obstacle[]
+    windAx?: number
+    well?: GravityWell | readonly GravityWell[]
+    ballTimeScale?: number
+    gravityScale?: number
+  } = {},
+): number | null {
+  const baseY = options.baseY ?? PLAYER_Y
+  const harpoonSpeed = options.harpoonSpeed ?? HARPOON_SPEED
+  const dtSec = options.dtSec ?? 1 / 60
+  const ballTimeScale = options.ballTimeScale ?? 1
+
+  let sim = ball
+  let tipY = baseY
+  let t = 0
+
+  while (tipY > 0) {
+    sim = stepBall(
+      sim,
+      dtSec * ballTimeScale,
+      options.obstacles,
+      options.windAx ?? 0,
+      options.well,
+      options.gravityScale ?? 1,
+    )
+    tipY -= harpoonSpeed * dtSec
+    t += dtSec
+    if (
+      options.obstacles !== undefined &&
+      harpoonHitsObstacle(fireX, tipY, options.obstacles)
+    ) {
+      return null
+    }
+    if (harpoonHitsBall(fireX, tipY, sim, baseY)) return t
+  }
+
+  return null
+}
+
+/**
+ * Closed-form seconds until a falling item drops to `rowY` (the player's
+ * catch row). Items accelerate at ITEM_GRAVITY and despawn past the floor,
+ * so anything the player can't reach horizontally within this window is
+ * not worth chasing at all. Returns 0 for an item already at/below the row
+ * (still catchable this instant if the player is on it).
+ */
+export function itemCatchSeconds(item: Item, rowY = PLAYER_Y): number {
+  const drop = rowY - item.y
+  if (drop <= 0) return 0
+  const { vy } = item
+  return (Math.sqrt(vy * vy + 2 * ITEM_GRAVITY * drop) - vy) / ITEM_GRAVITY
+}
+
+/**
+ * Total pops still needed to clear the stage: a ball of level L splits all
+ * the way down into a binary tree of 2^(L+1) - 1 total pops. Used by the
+ * AI to judge time pressure — remaining seconds divided by this is its
+ * per-pop time budget.
+ */
+export function countRemainingPops(balls: readonly Ball[]): number {
+  return balls.reduce((sum, ball) => sum + (2 ** (ball.level + 1) - 1), 0)
 }
