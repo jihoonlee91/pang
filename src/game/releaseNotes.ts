@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.28.2',
+    date: '2026-07-24',
+    notes: [
+      "Fixed the ladder climb buttons landing in the dead center of the screen (and not responding to taps) in landscape mode — they now sit right next to the move buttons, where they're easy to reach and always tappable.",
+    ],
+  },
+  {
     version: '1.28.0',
     date: '2026-07-24',
     notes: [

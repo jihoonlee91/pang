@@ -42,40 +42,47 @@ export default function TouchControls({
       }
       aria-label="Touch controls"
     >
-      <div className="touch-move" aria-label="Move left or right">
-        <button
-          type="button"
-          className="touch-button touch-left"
-          {...bind('left', 'Move left')}
-        >
-          ←
-        </button>
-        <button
-          type="button"
-          className="touch-button touch-right"
-          {...bind('right', 'Move right')}
-        >
-          →
-        </button>
-      </div>
-      {hasLadder && (
-        <div className="touch-vertical" aria-label="Climb ladder">
+      <div
+        className="touch-move"
+        aria-label={
+          hasLadder ? 'Move, and climb the ladder' : 'Move left or right'
+        }
+      >
+        {hasLadder && (
+          <div className="touch-vertical" aria-label="Climb ladder">
+            <button
+              type="button"
+              className="touch-button touch-up"
+              {...bind('up', 'Climb up')}
+            >
+              ↑
+            </button>
+            <button
+              type="button"
+              className="touch-button touch-down"
+              {...bind('down', 'Climb down')}
+            >
+              ↓
+            </button>
+          </div>
+        )}
+        <div className="touch-lr">
           <button
             type="button"
-            className="touch-button touch-up"
-            {...bind('up', 'Climb up')}
+            className="touch-button touch-left"
+            {...bind('left', 'Move left')}
           >
-            ↑
+            ←
           </button>
           <button
             type="button"
-            className="touch-button touch-down"
-            {...bind('down', 'Climb down')}
+            className="touch-button touch-right"
+            {...bind('right', 'Move right')}
           >
-            ↓
+            →
           </button>
         </div>
-      )}
+      </div>
       <button
         type="button"
         className="touch-button touch-fire"

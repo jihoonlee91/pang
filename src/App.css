@@ -465,7 +465,20 @@
   touch-action: none;
 }
 
+/* Movement's flex item in the touch-controls row. Vertical climb buttons
+   (when present) stack above the left/right pair as one D-pad-shaped
+   cluster, so they inherit the same clickability and position as normal
+   movement instead of floating as a separate flex child (which used to
+   land dead-center of the screen and end up behind the landscape
+   overlay's pointer-events:none). */
 .touch-move {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.touch-lr {
   display: flex;
   gap: 0;
 }
@@ -770,6 +783,24 @@
     height: min(var(--touch-size), 76px);
     min-width: 68px;
     min-height: 68px;
+  }
+
+  /* Screen height is scarce in this mode — keep the climb pair small so
+     stacking them above the move buttons doesn't push the cluster off
+     the bottom edge. */
+  .touch-move {
+    gap: 4px;
+  }
+
+  .touch-vertical {
+    gap: 3px;
+  }
+
+  .touch-vertical .touch-button {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+    min-height: 42px;
   }
 
   .touch-button {
