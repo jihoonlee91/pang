@@ -94,6 +94,13 @@ import {
 } from './game/fireZones'
 import { getStageGravityScale } from './game/voidGravity'
 import {
+  getStageCritters,
+  getCritterX,
+  critterHitsPlayer,
+  CRITTER_RADIUS,
+  type Critter,
+} from './game/critters'
+import {
   getStageAcidRainZones,
   getAcidRainState,
   getAcidRainWarningProgress,
@@ -607,6 +614,46 @@ function drawFireZones(
       ctx.closePath()
       ctx.fill()
     }
+    ctx.restore()
+  }
+}
+
+function drawCritters(
+  ctx: CanvasRenderingContext2D,
+  critters: readonly Critter[],
+  time: number,
+) {
+  const floorY = PLAYER_Y
+  for (const critter of critters) {
+    const x = getCritterX(critter, time)
+    const legPhase = time / 90
+    ctx.save()
+    ctx.translate(x, floorY)
+    ctx.shadowColor = '#a3e635'
+    ctx.shadowBlur = 12
+    ctx.strokeStyle = '#4d7c0f'
+    ctx.lineWidth = 3
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 3; i += 1) {
+        const swing = Math.sin(legPhase + i) * 5
+        ctx.beginPath()
+        ctx.moveTo(side * 6, 2)
+        ctx.lineTo(side * (14 + i * 2), 10 + swing)
+        ctx.stroke()
+      }
+    }
+    ctx.fillStyle = '#65a30d'
+    ctx.beginPath()
+    ctx.ellipse(0, 0, CRITTER_RADIUS, CRITTER_RADIUS * 0.7, 0, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.strokeStyle = '#365314'
+    ctx.lineWidth = 2
+    ctx.stroke()
+    ctx.fillStyle = '#fef9c3'
+    ctx.beginPath()
+    ctx.arc(-5, -4, 2.5, 0, Math.PI * 2)
+    ctx.arc(5, -4, 2.5, 0, Math.PI * 2)
+    ctx.fill()
     ctx.restore()
   }
 }
@@ -2057,6 +2104,10 @@ function GamePlay({
     !Array.isArray(gravityWell) && gravityWell?.spin !== undefined
   const isNebulaStage = Array.isArray(gravityWell)
   const fireZones = useMemo(() => getStageFireZones(stageIndex), [stageIndex])
+  const stageCritters = useMemo(
+    () => getStageCritters(stageIndex),
+    [stageIndex],
+  )
   const gravityScale = useMemo(
     () => getStageGravityScale(stageIndex),
     [stageIndex],
@@ -3379,10 +3430,18 @@ function GamePlay({
                 )
               }) ??
                 false)
+            const hitByCritter =
+              stageCritters?.some((critter) =>
+                critterHitsPlayer(
+                  getCritterX(critter, time),
+                  playerXRef.current,
+                  playerYRef.current,
+                ),
+              ) ?? false
             // Spike Armor turns body contact into an attack instead of
             // damage — it only changes what touching a BALL does; fire
-            // zones and acid rain still hurt normally, spikes don't help
-            // against those.
+            // zones, acid rain, and the roaming critter still hurt
+            // normally, spikes don't help against those.
             const touchingBalls = isSpikeArmorActive
               ? ballsRef.current.filter((b) =>
                   ballHitsPlayer(b, playerXRef.current, playerYRef.current),
@@ -3431,7 +3490,8 @@ function GamePlay({
               ]
               playHitSound(1)
             }
-            const hit = hitByFireZone || hitByAcidRain || hitByBall
+            const hit =
+              hitByFireZone || hitByAcidRain || hitByCritter || hitByBall
             if (hit) {
               invulnUntilRef.current = time + INVULN_MS
               if (barrierCountRef.current > 0) {
@@ -3982,6 +4042,7 @@ function GamePlay({
       }
       if (iceWind) drawIceGusts(ctx, getIceWindPush(iceWind, time), time)
       if (fireZones) drawFireZones(ctx, fireZones, time)
+      if (stageCritters) drawCritters(ctx, stageCritters, time)
       if (stageChaosFireZones) drawFireZones(ctx, stageChaosFireZones, time)
       if (stageChaosCurrent) {
         drawCurrentFlow(ctx, getCurrentWindAx(stageChaosCurrent, time), time)
@@ -4116,6 +4177,7 @@ function GamePlay({
     stageChaosWells,
     gravityWell,
     fireZones,
+    stageCritters,
     gravityScale,
     acidRainZones,
     iceWind,
@@ -4164,6 +4226,7 @@ function GamePlay({
           </span>
         )}
         {fireZones && <span className="hud-hazard">Fire Zones</span>}
+        {stageCritters && <span className="hud-hazard">Roaming Critter</span>}
         {(stageChaosCurrent || stageChaosFireZones || stageChaosWells) && (
           <span className="hud-hazard">Chaos Rift</span>
         )}
