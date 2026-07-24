@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.30.1',
+    date: '2026-07-24',
+    notes: [
+      "Balance pass on the newer mechanics: a platform can no longer be both breakable and drifting at once, and the roaming critter appears less often and moves a bit slower during Frozen Summit's icy floor, where it was previously the toughest stretch in the game.",
+    ],
+  },
+  {
     version: '1.30.0',
     date: '2026-07-24',
     notes: [

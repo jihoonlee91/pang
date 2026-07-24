@@ -26,6 +26,31 @@ describe('getStageCritters', () => {
     const stage = CRITTER_START_STAGE + 3
     expect(getStageCritters(stage)).toEqual(getStageCritters(stage))
   })
+
+  it('thins to one stage in four from stage 80 on (hazard-dense back half)', () => {
+    // Below 80: cadence 3, stage % 3 === 2 (e.g. 77, 80 would both hit
+    // under the old flat cadence, but 80 % 3 !== 2 so this pair already
+    // demonstrates nothing by itself — assert the new cadence directly.
+    expect(getStageCritters(80)).toBeNull() // 80 % 4 === 0
+    expect(getStageCritters(81)).toBeNull() // 80 % 4 === 1
+    expect(getStageCritters(82)).not.toBeNull() // 80 % 4 === 2
+    expect(getStageCritters(83)).toBeNull()
+    expect(getStageCritters(86)).not.toBeNull()
+  })
+
+  it('slows its fastest crawl during the icy floor (Frozen Summit)', () => {
+    // Find whichever Frozen Summit stage (110-119) spawns a critter under
+    // the 1-in-4 cadence, and check its period is floored at 2800ms
+    // instead of the normal (post-depth-ramp) 2200ms floor.
+    const icyStage = [...Array(10).keys()]
+      .map((i) => 110 + i)
+      .find((stage) => getStageCritters(stage) != null)
+    expect(icyStage).toBeDefined()
+    const critters = getStageCritters(icyStage!)!
+    for (const critter of critters) {
+      expect(critter.periodMs).toBeGreaterThanOrEqual(2800)
+    }
+  })
 })
 
 describe('getCritterX', () => {

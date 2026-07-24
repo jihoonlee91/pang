@@ -279,6 +279,15 @@ export function isMovingPlatform(
   platformIndex: number,
 ): boolean {
   if (stageIndex < MOVING_PLATFORM_START_STAGE) return false
+  // The (stageIndex + platformIndex) % 3 === 0 / % 4 === 1 gating below
+  // and above was meant to keep destructible and moving platforms on
+  // different platforms ("interleave"), but the two moduli both land on
+  // sums congruent to 9 mod 12 — about 1 in 12 platforms was silently
+  // both breakable *and* drifting, which is a much harder read (the
+  // bounce point shifts AND the platform can vanish mid-flight) than
+  // either mechanic alone. Excluding destructible platforms here
+  // restores the originally intended "different platforms" behavior.
+  if (isDestructiblePlatform(stageIndex, platformIndex)) return false
   return (stageIndex + platformIndex) % 4 === 1
 }
 

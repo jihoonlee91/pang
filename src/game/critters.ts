@@ -1,7 +1,29 @@
 import { PLAYER_HEIGHT, PLAYER_WIDTH, PLAYER_Y } from './constants'
+import { ICE_WIND_START_STAGE, ICE_WIND_STAGE_COUNT } from './iceWinds'
 
 export const CRITTER_START_STAGE = 5
 export const CRITTER_RADIUS = 16
+
+// From Hell onward (stage 81, 0-indexed 80 — matches fireZones.ts's
+// FIRE_ZONE_START_STAGE, hardcoded here to avoid a circular import since
+// fireZones.ts doesn't need to know about critters) every later stage
+// block adds its own environmental hazard (fire zones, low gravity, acid
+// rain, ice wind, solar flares, quantum jitter, Chaos Rift's replays of
+// several at once) on top of the critter, which never stops recurring and
+// never had an end stage. Thinning the critter from 1-in-3 to 1-in-4
+// stages past this point trims one recurring source of "cornered with no
+// safe response" without touching its established early/mid-game pacing.
+const CRITTER_DENSE_HAZARD_STAGE = 80
+
+// During Frozen Summit's icy floor (stage 111-120, 0-indexed 110-119,
+// same range as iceWinds.ts's ICE_WIND_START_STAGE) the player's own
+// movement is momentum-based rather than snap-to-stop (see `stepPlayerOnTerrain`
+// in terrain.ts), so reaction distance is already worse than every other
+// stage. Stacking the critter's fastest crawl speed on top of reduced
+// steering was the single worst mechanic overlap found in balance
+// review — flooring its period higher here keeps the crawl readable
+// while the player is already fighting momentum.
+const CRITTER_ICY_FLOOR_MIN_PERIOD_MS = 2800
 
 export type Critter = {
   minX: number
@@ -31,14 +53,20 @@ const LAYOUTS: readonly (readonly Omit<Critter, 'periodMs' | 'phaseMs'>[])[] = [
 // reflex test, distinct from every other hazard so far in that it's a
 // visible, physically moving obstacle instead of a zone that flips on and
 // off. Deterministic patrol (a fixed-period back-and-forth), not physics-
-// simulated, so a stage's pattern is identical on every attempt.
+// simulated, so a stage's pattern is identical on every attempt. Thins to
+// one-in-four from CRITTER_DENSE_HAZARD_STAGE on (see constant above).
 export function getStageCritters(stageIndex: number): Critter[] | null {
   if (stageIndex < CRITTER_START_STAGE) return null
-  if (stageIndex % 3 !== 2) return null
+  const cadence = stageIndex < CRITTER_DENSE_HAZARD_STAGE ? 3 : 4
+  if (stageIndex % cadence !== 2) return null
 
   const depth = stageIndex - CRITTER_START_STAGE
   const layout = LAYOUTS[depth % LAYOUTS.length]
-  const periodMs = Math.max(2200, 4200 - depth * 60)
+  const isIcyFloorStage =
+    stageIndex >= ICE_WIND_START_STAGE &&
+    stageIndex < ICE_WIND_START_STAGE + ICE_WIND_STAGE_COUNT
+  const minPeriodMs = isIcyFloorStage ? CRITTER_ICY_FLOOR_MIN_PERIOD_MS : 2200
+  const periodMs = Math.max(minPeriodMs, 4200 - depth * 60)
   return layout.map((critter, index) => ({
     ...critter,
     periodMs,

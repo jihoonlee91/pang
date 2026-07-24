@@ -168,6 +168,15 @@ describe('moving platforms', () => {
     expect(moved.x).not.toBe(platform.x)
     expect(moved.y).toBe(platform.y)
   })
+
+  it('never overlaps a destructible platform, even where both moduli would match', () => {
+    // (25 + 8) = 33: 33 % 3 === 0 (destructible) and 33 % 4 === 1 (would
+    // have been "moving" under the old, independent gating) — the two
+    // mechanics stacking on one platform made it both breakable and
+    // drifting at once, a harder read than either alone.
+    expect(isDestructiblePlatform(25, 8)).toBe(true)
+    expect(isMovingPlatform(25, 8)).toBe(false)
+  })
 })
 
 describe('isDestructiblePlatform', () => {
