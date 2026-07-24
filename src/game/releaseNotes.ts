@@ -9,6 +9,52 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.28.0',
+    date: '2026-07-24',
+    notes: [
+      'New Settings toggle: AI Companion. Turn it on and a small drone patrols the right side of the arena, firing its own harpoon at any balloon that drifts into its lane — a helping hand for a lower-pressure run, off by default.',
+    ],
+  },
+  {
+    version: '1.27.0',
+    date: '2026-07-24',
+    notes: [
+      "Some platforms now drift back and forth instead of sitting still, so a balloon's bounce point keeps shifting — watch for the platforms marked with a pair of arrows.",
+    ],
+  },
+  {
+    version: '1.26.0',
+    date: '2026-07-24',
+    notes: [
+      'A small crawling critter now patrols the ground on some stages — dodge it, wait it out, or use a ladder to get above it.',
+    ],
+  },
+  {
+    version: '1.25.0',
+    date: '2026-07-24',
+    notes: [
+      'Some stages now have a climbable ladder — hold Up/Down (or the new on-screen buttons) while standing near one to reach a higher vantage point and fire from up top.',
+    ],
+  },
+  {
+    version: '1.24.1',
+    date: '2026-07-24',
+    notes: [
+      "Every stage's not-yet-cleared preview art is now visually unique, instead of a handful of stages in the same chapter sharing one identical scene.",
+    ],
+  },
+  {
+    version: '1.24.0',
+    date: '2026-07-24',
+    notes: [
+      'New item: Spike Armor. Wear it and touching a balloon pops it for score instead of costing you HP.',
+      'New item: Diagonal Wire. Fires a pair of harpoons out at an angle instead of straight up.',
+      'New item: Star Balloon. Instantly pops every balloon on screen for score.',
+      'Some platforms from stage 21 on can now be broken open with a harpoon hit.',
+      "Frozen Summit's floor is slick — you'll ease into full speed and keep sliding a little after you let go of the stick.",
+    ],
+  },
+  {
     version: '1.23.0',
     date: '2026-07-20',
     notes: [
