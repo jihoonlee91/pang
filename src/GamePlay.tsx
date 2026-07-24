@@ -785,21 +785,64 @@ function drawBrickFrame(ctx: CanvasRenderingContext2D) {
   ctx.restore()
 }
 
-function drawHarpoon(ctx: CanvasRenderingContext2D, harpoon: Harpoon) {
+function drawHarpoon(
+  ctx: CanvasRenderingContext2D,
+  harpoon: Harpoon,
+  time: number,
+) {
   if (harpoon.kind === 'vulcan') {
+    const pulse = 0.75 + Math.sin(time / 35) * 0.25
     ctx.save()
     ctx.shadowColor = '#fb923c'
-    ctx.shadowBlur = 8
+    ctx.shadowBlur = 14
+    ctx.lineCap = 'round'
     ctx.strokeStyle = '#7c2d12'
-    ctx.lineWidth = 3
+    ctx.lineWidth = 7
     ctx.beginPath()
-    ctx.moveTo(harpoon.x, harpoon.y + 12)
+    ctx.moveTo(harpoon.x, harpoon.y + 24)
     ctx.lineTo(harpoon.x, harpoon.y)
     ctx.stroke()
+    const boltGradient = ctx.createLinearGradient(
+      harpoon.x,
+      harpoon.y + 24,
+      harpoon.x,
+      harpoon.y,
+    )
+    boltGradient.addColorStop(0, '#c2410c00')
+    boltGradient.addColorStop(0.45, '#fb923c')
+    boltGradient.addColorStop(1, '#fff7ed')
+    ctx.strokeStyle = boltGradient
+    ctx.lineWidth = 3
+    ctx.stroke()
+
     ctx.fillStyle = '#f8fafc'
     ctx.beginPath()
-    ctx.arc(harpoon.x, harpoon.y, 3.5, 0, Math.PI * 2)
+    ctx.moveTo(harpoon.x, harpoon.y - 7)
+    ctx.lineTo(harpoon.x - 5, harpoon.y + 3)
+    ctx.lineTo(harpoon.x, harpoon.y + 1)
+    ctx.lineTo(harpoon.x + 5, harpoon.y + 3)
+    ctx.closePath()
     ctx.fill()
+    ctx.strokeStyle = '#9a3412'
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+
+    ctx.globalAlpha = pulse
+    ctx.strokeStyle = '#fdba74'
+    ctx.lineWidth = 1.5
+    for (let ring = 0; ring < 2; ring += 1) {
+      ctx.beginPath()
+      ctx.ellipse(
+        harpoon.x,
+        harpoon.y + 9 + ring * 8,
+        6 + ring * 2,
+        2.5,
+        0,
+        0,
+        Math.PI * 2,
+      )
+      ctx.stroke()
+    }
     ctx.restore()
     return
   }
@@ -808,39 +851,63 @@ function drawHarpoon(ctx: CanvasRenderingContext2D, harpoon: Harpoon) {
   const ropeTop = Math.min(baseY, harpoon.y + 16)
   const isPowerWire = harpoon.kind === 'powerWire'
   const isPierce = harpoon.kind === 'pierce'
+  const glow = isPowerWire ? '#4ade80' : isPierce ? '#facc15' : '#67e8f9'
 
   ctx.save()
   ctx.lineCap = 'round'
-  ctx.shadowColor = '#00000055'
-  ctx.shadowBlur = 3
+  ctx.shadowColor = '#020617'
+  ctx.shadowBlur = 5
 
-  // Dark outline keeps the rope readable against every stage background.
+  // A broad dark silhouette keeps the cable readable over the 201 illustrated
+  // backgrounds; the animated core sells speed and power.
   ctx.strokeStyle = isPowerWire ? '#14532d' : isPierce ? '#713f12' : '#3f2d20'
-  ctx.lineWidth = 5
+  ctx.lineWidth = isPowerWire ? 8 : 6
   ctx.beginPath()
   ctx.moveTo(harpoon.x, baseY)
   ctx.lineTo(harpoon.x, ropeTop)
   ctx.stroke()
 
-  // Two offset dashed strands give the vertical line a twisted-rope texture.
-  ctx.shadowBlur = 0
-  ctx.lineWidth = 2
-  ctx.setLineDash([5, 4])
-  ctx.strokeStyle = isPowerWire ? '#bbf7d0' : isPierce ? '#fde68a' : '#e7c58d'
+  ctx.shadowColor = glow
+  ctx.shadowBlur = isPowerWire ? 13 : 7
+  if (isPowerWire) {
+    for (const offset of [-2, 2]) {
+      ctx.strokeStyle = offset < 0 ? '#bbf7d0' : '#22c55e'
+      ctx.lineWidth = 2.5
+      ctx.beginPath()
+      ctx.moveTo(harpoon.x + offset, baseY)
+      ctx.lineTo(harpoon.x + offset, ropeTop)
+      ctx.stroke()
+    }
+  } else {
+    ctx.strokeStyle = isPierce ? '#fde68a' : '#cbd5e1'
+    ctx.lineWidth = 2.5
+    ctx.beginPath()
+    ctx.moveTo(harpoon.x, baseY)
+    ctx.lineTo(harpoon.x, ropeTop)
+    ctx.stroke()
+  }
+
+  // Moving tracer segments make even a nearly full-height cable feel active.
+  ctx.shadowBlur = 5
+  ctx.setLineDash(isPowerWire ? [10, 7] : [6, 8])
+  ctx.lineDashOffset = -(time / (isPowerWire ? 20 : 28))
+  ctx.strokeStyle = glow
+  ctx.lineWidth = isPowerWire ? 3 : 1.8
   ctx.beginPath()
-  ctx.moveTo(harpoon.x - 1, baseY)
-  ctx.lineTo(harpoon.x - 1, ropeTop)
-  ctx.stroke()
-  ctx.lineDashOffset = 4.5
-  ctx.strokeStyle = isPowerWire ? '#22c55e' : isPierce ? '#eab308' : '#9a6a3a'
-  ctx.beginPath()
-  ctx.moveTo(harpoon.x + 1, baseY)
-  ctx.lineTo(harpoon.x + 1, ropeTop)
+  ctx.moveTo(harpoon.x, baseY)
+  ctx.lineTo(harpoon.x, ropeTop)
   ctx.stroke()
   ctx.setLineDash([])
 
-  // A broad metal point with side barbs reads as a harpoon, not a plain wire.
-  const metal = ctx.createLinearGradient(harpoon.x - 8, 0, harpoon.x + 8, 0)
+  // A broad beveled head and secondary fins read clearly at gameplay scale.
+  const headWidth = isPowerWire ? 10 : isPierce ? 9 : 8
+  const headLength = isPowerWire ? 21 : isPierce ? 24 : 18
+  const metal = ctx.createLinearGradient(
+    harpoon.x - headWidth,
+    0,
+    harpoon.x + headWidth,
+    0,
+  )
   metal.addColorStop(
     0,
     isPowerWire ? '#15803d' : isPierce ? '#a16207' : '#64748b',
@@ -852,18 +919,55 @@ function drawHarpoon(ctx: CanvasRenderingContext2D, harpoon: Harpoon) {
   )
   ctx.fillStyle = metal
   ctx.strokeStyle = '#1e293b'
-  ctx.lineWidth = 1.5
+  ctx.lineWidth = 2
+  ctx.shadowColor = glow
+  ctx.shadowBlur = 12
   ctx.beginPath()
-  ctx.moveTo(harpoon.x, harpoon.y)
-  ctx.lineTo(harpoon.x - 8, harpoon.y + 11)
-  ctx.lineTo(harpoon.x - 3, harpoon.y + 9)
-  ctx.lineTo(harpoon.x - 3, harpoon.y + 16)
-  ctx.lineTo(harpoon.x + 3, harpoon.y + 16)
-  ctx.lineTo(harpoon.x + 3, harpoon.y + 9)
-  ctx.lineTo(harpoon.x + 8, harpoon.y + 11)
+  ctx.moveTo(harpoon.x, harpoon.y - (isPierce ? 5 : 2))
+  ctx.lineTo(harpoon.x - headWidth, harpoon.y + headLength * 0.6)
+  ctx.lineTo(harpoon.x - 3.5, harpoon.y + headLength * 0.46)
+  ctx.lineTo(harpoon.x - 4, harpoon.y + headLength)
+  ctx.lineTo(harpoon.x + 4, harpoon.y + headLength)
+  ctx.lineTo(harpoon.x + 3.5, harpoon.y + headLength * 0.46)
+  ctx.lineTo(harpoon.x + headWidth, harpoon.y + headLength * 0.6)
   ctx.closePath()
   ctx.fill()
   ctx.stroke()
+
+  ctx.shadowBlur = 0
+  ctx.strokeStyle = '#ffffff'
+  ctx.globalAlpha = 0.75
+  ctx.lineWidth = 1.4
+  ctx.beginPath()
+  ctx.moveTo(harpoon.x, harpoon.y + 1)
+  ctx.lineTo(harpoon.x, harpoon.y + headLength - 3)
+  ctx.stroke()
+
+  if (isPierce) {
+    ctx.globalAlpha = 0.9
+    ctx.strokeStyle = '#fef08a'
+    ctx.shadowColor = '#facc15'
+    ctx.shadowBlur = 10
+    ctx.lineWidth = 2
+    for (const side of [-1, 1]) {
+      ctx.beginPath()
+      ctx.moveTo(harpoon.x + side * 4, harpoon.y + 8)
+      ctx.lineTo(harpoon.x + side * 12, harpoon.y + 17)
+      ctx.stroke()
+    }
+  } else if (isPowerWire) {
+    ctx.globalAlpha = 0.75 + Math.sin(time / 55) * 0.2
+    ctx.strokeStyle = '#dcfce7'
+    ctx.shadowColor = glow
+    ctx.shadowBlur = 10
+    ctx.lineWidth = 2
+    for (const nodeY of [ropeTop + 30, (ropeTop + baseY) / 2, baseY - 24]) {
+      if (nodeY <= ropeTop || nodeY >= baseY) continue
+      ctx.beginPath()
+      ctx.arc(harpoon.x, nodeY, 5, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+  }
 
   ctx.restore()
 }
@@ -1183,10 +1287,60 @@ function drawWeaponAura(
 
 type PlayerTheme = 'explorer' | 'ranger' | 'voyager' | 'diver' | 'pilot'
 
-// The player's look reskins every 10 stages to match that block's theme:
-// the base explorer turret, a night-ops ranger variant, a neon "voyager"
-// suit for the dimension portals, a diving suit for the trench current,
-// and a small rocket ship for the stellar-forge finale.
+type PlayerPalette = {
+  armor: string
+  armorDark: string
+  armorLight: string
+  accent: string
+  glow: string
+  visor: string
+}
+
+const PLAYER_PALETTES: Record<PlayerTheme, PlayerPalette> = {
+  explorer: {
+    armor: '#ef4444',
+    armorDark: '#7f1d1d',
+    armorLight: '#fb923c',
+    accent: '#facc15',
+    glow: '#67e8f9',
+    visor: '#cffafe',
+  },
+  ranger: {
+    armor: '#1e3a8a',
+    armorDark: '#0f172a',
+    armorLight: '#3b82f6',
+    accent: '#22d3ee',
+    glow: '#67e8f9',
+    visor: '#ecfeff',
+  },
+  voyager: {
+    armor: '#7e22ce',
+    armorDark: '#3b0764',
+    armorLight: '#c026d3',
+    accent: '#f472b6',
+    glow: '#22d3ee',
+    visor: '#fae8ff',
+  },
+  diver: {
+    armor: '#0369a1',
+    armorDark: '#082f49',
+    armorLight: '#0ea5e9',
+    accent: '#facc15',
+    glow: '#7dd3fc',
+    visor: '#e0f2fe',
+  },
+  pilot: {
+    armor: '#e2e8f0',
+    armorDark: '#334155',
+    armorLight: '#f8fafc',
+    accent: '#fb923c',
+    glow: '#38bdf8',
+    visor: '#bae6fd',
+  },
+}
+
+// The same Orbit Ranger silhouette is preserved across the campaign while
+// materials and equipment evolve to match each ten-stage visual chapter.
 function getPlayerTheme(stageIndex: number): PlayerTheme {
   if (stageIndex < 10) return 'explorer'
   if (stageIndex < 20) return 'ranger'
@@ -1202,132 +1356,325 @@ function drawPlayerShip(
   theme: PlayerTheme,
   isInvuln: boolean,
   time: number,
+  facing: -1 | 1,
+  isMoving: boolean,
+  lastFireAt: number,
 ) {
-  const px = x - PLAYER_WIDTH / 2
-  const py = y - PLAYER_HEIGHT / 2
-  const radius = 4
+  const palette = PLAYER_PALETTES[theme]
+  const groundY = y + PLAYER_HEIGHT / 2
+  const walkPhase = time / 78
+  const stride = isMoving ? Math.sin(walkPhase) : 0
+  const bob = isMoving
+    ? Math.abs(Math.sin(walkPhase)) * -1.8
+    : Math.sin(time / 360) * 0.65
+  const recoilProgress = Math.max(0, 1 - (time - lastFireAt) / 150)
+  const recoil = Math.sin(recoilProgress * Math.PI) * 3.2
+  const bodyY = groundY - 24 + bob + recoil * 0.35
+  const helmetY = bodyY - 12
+  const launcherTop = helmetY - 20 + recoil
 
   ctx.save()
+  ctx.lineJoin = 'round'
+  ctx.lineCap = 'round'
   if (isInvuln) {
     ctx.shadowColor = '#fbbf24'
-    ctx.shadowBlur = 12
+    ctx.shadowBlur = 16
+    ctx.globalAlpha = Math.sin(time / 55) > -0.15 ? 1 : 0.52
   }
 
+  // Contact shadow anchors the decorative upper body to the real collision
+  // footprint without changing any gameplay geometry.
+  ctx.save()
+  ctx.globalAlpha = 0.35
+  ctx.fillStyle = '#020617'
+  ctx.beginPath()
+  ctx.ellipse(x, groundY + 2, 20 - Math.abs(stride) * 2, 4, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+
+  // Theme-specific equipment remains behind the shared silhouette.
   if (theme === 'explorer') {
-    ctx.fillStyle = '#374151'
-    ctx.fillRect(x - 4, py - 16, 8, 16)
+    ctx.fillStyle = palette.accent
+    ctx.strokeStyle = '#431407'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(x - facing * 7, helmetY + 7)
+    ctx.quadraticCurveTo(
+      x - facing * (19 + stride * 2),
+      helmetY + 9,
+      x - facing * (24 + stride * 3),
+      helmetY + 15,
+    )
+    ctx.lineTo(x - facing * 10, helmetY + 13)
+    ctx.closePath()
+    ctx.fill()
+    ctx.stroke()
   } else if (theme === 'ranger') {
-    ctx.fillStyle = '#374151'
-    ctx.fillRect(x - 4, py - 16, 8, 16)
     ctx.save()
-    ctx.strokeStyle = '#67e8f9'
-    ctx.shadowColor = '#67e8f9'
-    ctx.shadowBlur = 6
-    ctx.lineWidth = 3
-    ctx.lineCap = 'round'
+    ctx.strokeStyle = palette.glow
+    ctx.shadowColor = palette.glow
+    ctx.shadowBlur = 9
+    ctx.lineWidth = 2
     for (const side of [-1, 1]) {
       ctx.beginPath()
-      ctx.moveTo(x + side * (PLAYER_WIDTH / 2 - 2), py + 4)
-      ctx.lineTo(x + side * (PLAYER_WIDTH / 2 + 11), py - 9)
+      ctx.moveTo(x + side * 11, bodyY - 4)
+      ctx.lineTo(x + side * 19, bodyY - 15)
       ctx.stroke()
-      ctx.fillStyle = '#67e8f9'
+      ctx.fillStyle = palette.glow
       ctx.beginPath()
-      ctx.arc(x + side * (PLAYER_WIDTH / 2 + 11), py - 9, 2.5, 0, Math.PI * 2)
+      ctx.arc(x + side * 19, bodyY - 15, 2.2, 0, Math.PI * 2)
       ctx.fill()
     }
     ctx.restore()
   } else if (theme === 'voyager') {
-    ctx.fillStyle = '#374151'
-    ctx.fillRect(x - 4, py - 18, 8, 12)
     ctx.save()
-    ctx.fillStyle = '#f472b6'
-    ctx.shadowColor = '#f472b6'
+    ctx.strokeStyle = palette.glow
+    ctx.shadowColor = palette.glow
     ctx.shadowBlur = 10
+    ctx.globalAlpha = 0.65
+    ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.arc(x, py - 20, 4, 0, Math.PI * 2)
-    ctx.fill()
+    ctx.ellipse(
+      x,
+      bodyY - 2,
+      22 + Math.sin(time / 120) * 2,
+      7,
+      0,
+      0,
+      Math.PI * 2,
+    )
+    ctx.stroke()
     ctx.restore()
+  } else if (theme === 'diver') {
     ctx.save()
-    ctx.strokeStyle = '#22d3ee'
-    ctx.shadowColor = '#22d3ee'
-    ctx.shadowBlur = 6
-    ctx.lineWidth = 3
-    ctx.lineCap = 'round'
+    ctx.fillStyle = '#075985'
+    ctx.strokeStyle = '#7dd3fc'
+    ctx.lineWidth = 2
     for (const side of [-1, 1]) {
       ctx.beginPath()
-      ctx.moveTo(x + side * (PLAYER_WIDTH / 2 - 2), py + PLAYER_HEIGHT - 2)
-      ctx.lineTo(x + side * (PLAYER_WIDTH / 2 + 10), py + PLAYER_HEIGHT + 8)
+      ctx.roundRect(x + side * 10 - 4, bodyY - 9, 8, 18, 4)
+      ctx.fill()
       ctx.stroke()
     }
     ctx.restore()
-  } else if (theme === 'diver') {
-    ctx.fillStyle = 'rgba(125, 211, 252, 0.35)'
-    ctx.strokeStyle = '#7dd3fc'
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.arc(x, py + 2, 11, Math.PI, 0)
-    ctx.fill()
-    ctx.stroke()
-    ctx.fillStyle = '#0369a1'
-    for (const side of [-1, 1]) {
-      ctx.beginPath()
-      ctx.ellipse(x + side * (PLAYER_WIDTH / 2 + 3), y, 4, 9, 0, 0, Math.PI * 2)
-      ctx.fill()
-    }
   } else {
-    const flicker = 6 + Math.sin(time / 60) * 2
-    ctx.save()
-    ctx.globalAlpha = 0.85
-    ctx.fillStyle = '#fb923c'
+    const jet = 7 + Math.sin(time / 45) * 2
+    ctx.fillStyle = palette.accent
+    ctx.shadowColor = palette.accent
+    ctx.shadowBlur = 8
     ctx.beginPath()
-    ctx.moveTo(x - 5, py + PLAYER_HEIGHT)
-    ctx.lineTo(x, py + PLAYER_HEIGHT + flicker)
-    ctx.lineTo(x + 5, py + PLAYER_HEIGHT)
+    ctx.moveTo(x - facing * 9, bodyY + 5)
+    ctx.lineTo(x - facing * 19, bodyY + 1)
+    ctx.lineTo(x - facing * 15, bodyY + 9)
     ctx.closePath()
     ctx.fill()
-    ctx.restore()
-    ctx.fillStyle = '#cbd5e1'
     ctx.beginPath()
-    ctx.moveTo(x - 8, py)
-    ctx.lineTo(x, py - 16)
-    ctx.lineTo(x + 8, py)
+    ctx.moveTo(x - facing * 17, bodyY + 3)
+    ctx.lineTo(x - facing * (17 + jet), bodyY + 6)
+    ctx.lineTo(x - facing * 17, bodyY + 9)
     ctx.closePath()
     ctx.fill()
-    ctx.fillStyle = '#1e293b'
-    for (const side of [-1, 1]) {
-      ctx.beginPath()
-      ctx.moveTo(x + side * (PLAYER_WIDTH / 2 - 2), py + 4)
-      ctx.lineTo(x + side * (PLAYER_WIDTH / 2 + 9), py + PLAYER_HEIGHT)
-      ctx.lineTo(x + side * (PLAYER_WIDTH / 2 - 2), py + PLAYER_HEIGHT)
-      ctx.closePath()
-      ctx.fill()
-    }
   }
 
-  const bodyGradient = ctx.createLinearGradient(0, py, 0, py + PLAYER_HEIGHT)
-  bodyGradient.addColorStop(0, isInvuln ? '#fef08a' : '#f87171')
-  bodyGradient.addColorStop(1, isInvuln ? '#fbbf24' : '#b91c1c')
-  ctx.fillStyle = bodyGradient
+  // Backpack and cable reel.
+  ctx.fillStyle = palette.armorDark
+  ctx.strokeStyle = '#020617'
+  ctx.lineWidth = 2.5
   ctx.beginPath()
-  ctx.moveTo(px + radius, py)
-  ctx.arcTo(
-    px + PLAYER_WIDTH,
-    py,
-    px + PLAYER_WIDTH,
-    py + PLAYER_HEIGHT,
-    radius,
-  )
-  ctx.arcTo(
-    px + PLAYER_WIDTH,
-    py + PLAYER_HEIGHT,
-    px,
-    py + PLAYER_HEIGHT,
-    radius,
-  )
-  ctx.arcTo(px, py + PLAYER_HEIGHT, px, py, radius)
-  ctx.arcTo(px, py, px + PLAYER_WIDTH, py, radius)
+  ctx.roundRect(x - facing * 15 - 5, bodyY - 9, 10, 18, 4)
+  ctx.fill()
+  ctx.stroke()
+  ctx.strokeStyle = palette.glow
+  ctx.lineWidth = 1.8
+  ctx.beginPath()
+  ctx.arc(x - facing * 15, bodyY, 3.2, 0, Math.PI * 2)
+  ctx.stroke()
+
+  // Animated legs and oversized boots keep the silhouette readable at 960px.
+  for (const side of [-1, 1] as const) {
+    const legSwing = stride * side * 2.5
+    const legX = x + side * 7 + legSwing
+    ctx.strokeStyle = '#020617'
+    ctx.lineWidth = 7
+    ctx.beginPath()
+    ctx.moveTo(x + side * 6, bodyY + 7)
+    ctx.lineTo(legX, groundY - 4)
+    ctx.stroke()
+    ctx.strokeStyle = palette.armorDark
+    ctx.lineWidth = 4
+    ctx.stroke()
+
+    ctx.fillStyle = side * stride > 0 ? palette.armorLight : palette.armorDark
+    ctx.strokeStyle = '#020617'
+    ctx.lineWidth = 2.5
+    ctx.beginPath()
+    ctx.roundRect(legX - 6 + facing * 1.5, groundY - 6, 12, 7, 3)
+    ctx.fill()
+    ctx.stroke()
+    ctx.fillStyle = palette.accent
+    ctx.fillRect(legX - 4, groundY - 4.5, 8, 1.8)
+  }
+
+  // Torso armor with beveled center plate.
+  ctx.fillStyle = palette.armorDark
+  ctx.strokeStyle = '#020617'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(x - 14, bodyY - 8)
+  ctx.lineTo(x - 17, bodyY + 2)
+  ctx.lineTo(x - 11, bodyY + 11)
+  ctx.lineTo(x + 11, bodyY + 11)
+  ctx.lineTo(x + 17, bodyY + 2)
+  ctx.lineTo(x + 14, bodyY - 8)
   ctx.closePath()
   ctx.fill()
+  ctx.stroke()
+
+  const chestGradient = ctx.createLinearGradient(
+    x - 9,
+    bodyY - 8,
+    x + 9,
+    bodyY + 9,
+  )
+  chestGradient.addColorStop(0, palette.armorLight)
+  chestGradient.addColorStop(0.48, palette.armor)
+  chestGradient.addColorStop(1, palette.armorDark)
+  ctx.fillStyle = chestGradient
+  ctx.beginPath()
+  ctx.moveTo(x - 9, bodyY - 7)
+  ctx.lineTo(x + 9, bodyY - 7)
+  ctx.lineTo(x + 11, bodyY + 6)
+  ctx.lineTo(x, bodyY + 10)
+  ctx.lineTo(x - 11, bodyY + 6)
+  ctx.closePath()
+  ctx.fill()
+  ctx.strokeStyle = palette.accent
+  ctx.lineWidth = 1.5
+  ctx.stroke()
+
+  ctx.fillStyle = palette.glow
+  ctx.shadowColor = palette.glow
+  ctx.shadowBlur = 7
+  ctx.beginPath()
+  ctx.arc(x, bodyY + 1, 3.2, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.shadowBlur = 0
+
+  // Arms counter-swing while walking; the forward glove braces the launcher.
+  for (const side of [-1, 1] as const) {
+    const armSwing = stride * -side * 2
+    const shoulderX = x + side * 13
+    const handX =
+      side === facing ? x + side * 7 : shoulderX + side * 3 + armSwing
+    const handY = side === facing ? helmetY - 1 + recoil : bodyY + 7 - armSwing
+    ctx.strokeStyle = '#020617'
+    ctx.lineWidth = 8
+    ctx.beginPath()
+    ctx.moveTo(shoulderX, bodyY - 5)
+    ctx.lineTo(handX, handY)
+    ctx.stroke()
+    ctx.strokeStyle = palette.armor
+    ctx.lineWidth = 5
+    ctx.stroke()
+    ctx.fillStyle = palette.armorLight
+    ctx.strokeStyle = '#020617'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.arc(handX, handY, 4, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
+  }
+
+  // Helmet and directional visor.
+  ctx.fillStyle = palette.armorDark
+  ctx.strokeStyle = '#020617'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.roundRect(x - 13, helmetY - 9, 26, 19, 8)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = palette.armorLight
+  ctx.beginPath()
+  ctx.roundRect(x - 10 + facing * 1.5, helmetY - 6.5, 20, 5, 2.5)
+  ctx.fill()
+
+  const visorX = x + facing * 3
+  const visorGradient = ctx.createLinearGradient(
+    visorX - 8,
+    helmetY,
+    visorX + 8,
+    helmetY + 6,
+  )
+  visorGradient.addColorStop(0, palette.visor)
+  visorGradient.addColorStop(0.35, palette.glow)
+  visorGradient.addColorStop(1, '#075985')
+  ctx.fillStyle = visorGradient
+  ctx.strokeStyle = '#020617'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.roundRect(visorX - 9, helmetY - 1, 18, 7, 3)
+  ctx.fill()
+  ctx.stroke()
+  ctx.fillStyle = '#ffffff'
+  ctx.globalAlpha *= 0.75
+  ctx.fillRect(visorX - 5, helmetY + 0.5, 6, 1.5)
+  ctx.globalAlpha = isInvuln ? (Math.sin(time / 55) > -0.15 ? 1 : 0.52) : 1
+
+  // Centered cable launcher aligns exactly with the physics projectile.
+  ctx.fillStyle = '#0f172a'
+  ctx.strokeStyle = '#020617'
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.roundRect(x - 6, launcherTop, 12, 22, 3)
+  ctx.fill()
+  ctx.stroke()
+  const barrelGradient = ctx.createLinearGradient(x - 4, 0, x + 4, 0)
+  barrelGradient.addColorStop(0, '#475569')
+  barrelGradient.addColorStop(0.45, '#f8fafc')
+  barrelGradient.addColorStop(1, '#334155')
+  ctx.fillStyle = barrelGradient
+  ctx.fillRect(x - 3.5, launcherTop - 5, 7, 18)
+  ctx.strokeRect(x - 3.5, launcherTop - 5, 7, 18)
+  ctx.fillStyle = palette.glow
+  ctx.shadowColor = palette.glow
+  ctx.shadowBlur = 10
+  ctx.beginPath()
+  ctx.arc(x, launcherTop + 11, 3, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.shadowBlur = 0
+  ctx.strokeStyle = palette.accent
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.arc(x, launcherTop - 5, 5, 0, Math.PI * 2)
+  ctx.stroke()
+
+  if (recoilProgress > 0) {
+    const flashRadius = 5 + (1 - recoilProgress) * 10
+    ctx.save()
+    ctx.globalAlpha = recoilProgress
+    ctx.fillStyle = '#ffffff'
+    ctx.shadowColor = palette.accent
+    ctx.shadowBlur = 18
+    ctx.beginPath()
+    for (let ray = 0; ray < 8; ray += 1) {
+      const angle = (ray * Math.PI) / 4
+      const inner = ray % 2 === 0 ? 2 : 4
+      const outer = ray % 2 === 0 ? flashRadius : flashRadius * 0.55
+      ctx.lineTo(
+        x + Math.cos(angle) * (ray % 2 === 0 ? outer : inner),
+        launcherTop - 7 + Math.sin(angle) * outer,
+      )
+    }
+    ctx.closePath()
+    ctx.fill()
+    ctx.strokeStyle = palette.accent
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.arc(x, launcherTop - 7, flashRadius, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.restore()
+  }
+
   ctx.restore()
 }
 
@@ -1519,6 +1866,8 @@ function GamePlay({
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const playerXRef = useRef(CANVAS_WIDTH / 2)
   const playerYRef = useRef(PLAYER_Y)
+  const playerFacingRef = useRef<-1 | 1>(1)
+  const playerMovingUntilRef = useRef(0)
   const ballsRef = useRef<Ball[]>(createStage(stageIndex))
   const harpoonsRef = useRef<Harpoon[]>([])
   const itemsRef = useRef<Item[]>([])
@@ -1638,6 +1987,8 @@ function GamePlay({
       hiddenFinalePhaseSignatureRef.current = ''
       playerXRef.current = CANVAS_WIDTH / 2
       playerYRef.current = PLAYER_Y
+      playerFacingRef.current = 1
+      playerMovingUntilRef.current = 0
       inputRef.current.releaseAll()
       dragRef.current = null
       dragTargetXRef.current = null
@@ -2393,6 +2744,7 @@ function GamePlay({
           }
 
           const keys = inputRef.current.snapshot()
+          const previousPlayerX = playerXRef.current
           const nextPlayerPosition = stepPlayerOnTerrain(
             playerXRef.current,
             playerYRef.current,
@@ -2433,6 +2785,12 @@ function GamePlay({
               terrain,
             )
             playerXRef.current = draggedPosition.x
+          }
+
+          const playerDeltaX = playerXRef.current - previousPlayerX
+          if (Math.abs(playerDeltaX) > 0.05) {
+            playerFacingRef.current = playerDeltaX < 0 ? -1 : 1
+            playerMovingUntilRef.current = time + 90
           }
 
           const wantsToFire =
@@ -3127,7 +3485,7 @@ function GamePlay({
       }
 
       for (const h of harpoonsRef.current) {
-        drawHarpoon(ctx, h)
+        drawHarpoon(ctx, h, time)
       }
 
       for (const b of ballsRef.current) {
@@ -3186,6 +3544,9 @@ function GamePlay({
         getPlayerTheme(stageIndex),
         isInvuln,
         time,
+        playerFacingRef.current,
+        time < playerMovingUntilRef.current,
+        lastFireAtRef.current,
       )
 
       if (hasInvincibleShield) {
