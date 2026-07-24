@@ -196,6 +196,24 @@ export function getStageTerrain(stageIndex: number): StageTerrain {
   return STAGE_TERRAINS[normalizedIndex]
 }
 
+// A classic Pang callback: some platforms can be broken by a harpoon hit
+// instead of just blocking it, opening up the layout mid-stage — a small
+// puzzle element (when to clear a block vs. route around it) rather than
+// pure reflex. Held off until stage 21 (0-indexed 20), once the ladder-
+// free "layout families" terrain is established and there's more than one
+// platform per stage to make destroying one a real tradeoff. Deterministic
+// per stage+platform rather than random, so a stage's layout is the same
+// on every attempt — roughly one in three platforms.
+const DESTRUCTIBLE_START_STAGE = 20
+
+export function isDestructiblePlatform(
+  stageIndex: number,
+  platformIndex: number,
+): boolean {
+  if (stageIndex < DESTRUCTIBLE_START_STAGE) return false
+  return (stageIndex + platformIndex) % 3 === 0
+}
+
 type PlayerTerrainInput = {
   left: boolean
   right: boolean

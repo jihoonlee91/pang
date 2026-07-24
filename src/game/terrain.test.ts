@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { PLAYER_Y, PUBLIC_STAGE_COUNT, STAGE_COUNT } from './constants'
-import { getStageTerrain, STAGE_TERRAINS, stepPlayerOnTerrain } from './terrain'
+import {
+  getStageTerrain,
+  isDestructiblePlatform,
+  STAGE_TERRAINS,
+  stepPlayerOnTerrain,
+} from './terrain'
 
 describe('stage terrain', () => {
   it('starts with open arenas and introduces terrain gradually', () => {
@@ -78,5 +83,24 @@ describe('stage terrain', () => {
     const first = getStageTerrain(20).platforms
     const second = getStageTerrain(28).platforms
     expect(first).not.toEqual(second)
+  })
+})
+
+describe('isDestructiblePlatform', () => {
+  it('has no destructible platforms before stage 21 (0-indexed 20)', () => {
+    expect(isDestructiblePlatform(19, 0)).toBe(false)
+    expect(isDestructiblePlatform(0, 0)).toBe(false)
+  })
+
+  it('marks roughly one in three platforms from stage 21 onward', () => {
+    // (stageIndex + platformIndex) % 3 === 0
+    expect(isDestructiblePlatform(20, 1)).toBe(true)
+    expect(isDestructiblePlatform(20, 0)).toBe(false)
+    expect(isDestructiblePlatform(20, 2)).toBe(false)
+    expect(isDestructiblePlatform(20, 4)).toBe(true)
+  })
+
+  it('is deterministic for the same stage and platform index', () => {
+    expect(isDestructiblePlatform(45, 2)).toBe(isDestructiblePlatform(45, 2))
   })
 })

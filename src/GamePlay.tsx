@@ -64,7 +64,11 @@ import {
   getItemWeights,
 } from './game/constants'
 import type { Obstacle } from './game/constants'
-import { getStageTerrain, stepPlayerOnTerrain } from './game/terrain'
+import {
+  getStageTerrain,
+  stepPlayerOnTerrain,
+  isDestructiblePlatform,
+} from './game/terrain'
 import {
   PORTAL_COOLDOWN_MS,
   findPortalTransition,
@@ -335,13 +339,23 @@ type PickupEffect = {
   maxLife: number
 }
 
-function drawObstacle(ctx: CanvasRenderingContext2D, obstacle: Obstacle) {
+function drawObstacle(
+  ctx: CanvasRenderingContext2D,
+  obstacle: Obstacle,
+  destructible = false,
+) {
   const { x, y, width, height } = obstacle
+  // Destructible platforms read as a distinct "crackable" glass-block
+  // look (magenta halo/stripes) instead of the normal cyan steel — a
+  // player should be able to tell at a glance which ones a harpoon can
+  // break open.
+  const haloColor = destructible ? '#e879f9' : '#00e5ff'
+  const stripeColor = destructible ? '#f472b6' : '#ffea00'
 
-  // A dark silhouette plus a cyan halo keeps terrain readable against every
+  // A dark silhouette plus a halo keeps terrain readable against every
   // bright, dark, illustrated, or code-drawn stage background.
   ctx.save()
-  ctx.shadowColor = '#00e5ff'
+  ctx.shadowColor = haloColor
   ctx.shadowBlur = 20
   ctx.fillStyle = '#020617'
   ctx.fillRect(x - 5, y - 5, width + 10, height + 10)
@@ -358,7 +372,7 @@ function drawObstacle(ctx: CanvasRenderingContext2D, obstacle: Obstacle) {
   ctx.beginPath()
   ctx.rect(x, y, width, height)
   ctx.clip()
-  ctx.fillStyle = '#ffea00'
+  ctx.fillStyle = stripeColor
   const stripeWidth = 16
   for (let sx = x - height; sx < x + width; sx += stripeWidth * 2) {
     ctx.beginPath()
@@ -375,14 +389,14 @@ function drawObstacle(ctx: CanvasRenderingContext2D, obstacle: Obstacle) {
   ctx.lineWidth = 2
   ctx.strokeRect(x, y, width, height)
 
-  ctx.strokeStyle = '#00e5ff'
+  ctx.strokeStyle = haloColor
   ctx.lineWidth = 3
   ctx.strokeRect(x - 3, y - 3, width + 6, height + 6)
 
   for (const boltX of [x + 9, x + width - 9]) {
     ctx.beginPath()
     ctx.arc(boltX, y + height / 2, 3.5, 0, Math.PI * 2)
-    ctx.fillStyle = '#00e5ff'
+    ctx.fillStyle = haloColor
     ctx.fill()
     ctx.strokeStyle = '#ffffff'
     ctx.lineWidth = 1.5
@@ -2029,6 +2043,8 @@ function GamePlay({
   // true), which just calls onClear right away as before.
   const clearedAtRef = useRef<number | null>(null)
   const pendingClearScoreRef = useRef<number | null>(null)
+  // Indices into terrain.platforms that a harpoon has broken this stage.
+  const destroyedPlatformsRef = useRef<Set<number>>(new Set())
   const particlesRef = useRef<Particle[]>([])
   const popupsRef = useRef<Popup[]>([])
   const pickupEffectsRef = useRef<PickupEffect[]>([])
@@ -2097,6 +2113,7 @@ function GamePlay({
       endedRef.current = false
       clearedAtRef.current = null
       pendingClearScoreRef.current = null
+      destroyedPlatformsRef.current = new Set()
       particlesRef.current = []
       popupsRef.current = []
       pickupEffectsRef.current = []
@@ -2482,6 +2499,13 @@ function GamePlay({
 
       for (let updateIndex = 0; updateIndex < updateCount; updateIndex += 1) {
         if (!paused && !endedRef.current) {
+          // Recomputed every fixed step (not just once per frame) so a
+          // platform broken mid-frame is immediately gone for every check
+          // — ball bounce, player standing, and the next harpoon's path —
+          // within the same frame it broke.
+          let activePlatforms = terrain.platforms.filter(
+            (_, i) => !destroyedPlatformsRef.current.has(i),
+          )
           const isClockActive = time < clockUntilRef.current
           const isHourglassActive =
             !isClockActive && time < hourglassUntilRef.current
@@ -2604,7 +2628,7 @@ function GamePlay({
                 playerBandTopY,
                 1.5,
                 1 / 60,
-                terrain.platforms,
+                activePlatforms,
                 windAx,
                 activeGravityWell,
                 ballTimeScale,
@@ -2621,7 +2645,7 @@ function GamePlay({
                   playerSpeed,
                   baseY: playerYRef.current,
                   harpoonSpeed: aiHarpoonSpeed,
-                  obstacles: terrain.platforms,
+                  obstacles: activePlatforms,
                   windAx,
                   well: activeGravityWell,
                   ballTimeScale,
@@ -2866,7 +2890,7 @@ function GamePlay({
                 // so the sim degenerates to: does a ball overlap it now?
                 const stopY = getPowerHarpoonStopY(
                   playerXRef.current,
-                  terrain.platforms,
+                  activePlatforms,
                   playerYRef.current,
                 )
                 fire = ballsRef.current.some((b) =>
@@ -2888,7 +2912,7 @@ function GamePlay({
                     predictHarpoonHit(b, playerXRef.current, {
                       baseY: playerYRef.current,
                       harpoonSpeed: aiHarpoonSpeed,
-                      obstacles: terrain.platforms,
+                      obstacles: activePlatforms,
                       windAx,
                       well: activeGravityWell,
                       ballTimeScale,
@@ -2980,7 +3004,7 @@ function GamePlay({
                   x: playerXRef.current,
                   y: getPowerHarpoonStopY(
                     playerXRef.current,
-                    terrain.platforms,
+                    activePlatforms,
                     playerYRef.current,
                   ),
                   baseY: playerYRef.current,
@@ -3002,23 +3026,58 @@ function GamePlay({
           }
           fireRequestedRef.current = false
 
-          harpoonsRef.current = harpoonsRef.current
-            .map((harpoon) => {
-              if (harpoon.kind === 'powerWire') return harpoon
-              const speed =
-                harpoon.kind === 'vulcan' ? VULCAN_SPEED : HARPOON_SPEED
-              return { ...harpoon, y: harpoon.y - speed * dtSec }
-            })
-            .filter((harpoon) => {
-              if (harpoon.kind === 'powerWire') {
-                return (harpoon.expiresAt ?? 0) > time
-              }
-              if (harpoon.kind === 'pierce') return harpoon.y > 0
-              return (
-                harpoon.y > 0 &&
-                !harpoonHitsObstacle(harpoon.x, harpoon.y, terrain.platforms)
+          harpoonsRef.current = harpoonsRef.current.map((harpoon) => {
+            if (harpoon.kind === 'powerWire') return harpoon
+            const speed =
+              harpoon.kind === 'vulcan' ? VULCAN_SPEED : HARPOON_SPEED
+            return { ...harpoon, y: harpoon.y - speed * dtSec }
+          })
+
+          // A harpoon (any kind except Power Wire, which never travels)
+          // breaks the first destructible platform it touches instead of
+          // just stopping dead — the block is gone for the rest of the
+          // stage, opening the layout up, and the shot is still consumed.
+          // Classic Pang's glass-block trade: clear it now, or route
+          // around it and save the shot.
+          for (const harpoon of harpoonsRef.current) {
+            if (harpoon.kind === 'powerWire') continue
+            const hitIndex = terrain.platforms.findIndex(
+              (platform, i) =>
+                !destroyedPlatformsRef.current.has(i) &&
+                isDestructiblePlatform(stageIndex, i) &&
+                harpoon.x > platform.x &&
+                harpoon.x < platform.x + platform.width &&
+                harpoon.y > platform.y &&
+                harpoon.y < platform.y + platform.height,
+            )
+            if (hitIndex !== -1) {
+              destroyedPlatformsRef.current.add(hitIndex)
+              const platform = terrain.platforms[hitIndex]
+              spawnBurst(
+                particlesRef.current,
+                platform.x + platform.width / 2,
+                platform.y + platform.height / 2,
+                '#facc15',
               )
-            })
+              playHitSound(1)
+            }
+          }
+          if (destroyedPlatformsRef.current.size > 0) {
+            activePlatforms = terrain.platforms.filter(
+              (_, i) => !destroyedPlatformsRef.current.has(i),
+            )
+          }
+
+          harpoonsRef.current = harpoonsRef.current.filter((harpoon) => {
+            if (harpoon.kind === 'powerWire') {
+              return (harpoon.expiresAt ?? 0) > time
+            }
+            if (harpoon.kind === 'pierce') return harpoon.y > 0
+            return (
+              harpoon.y > 0 &&
+              !harpoonHitsObstacle(harpoon.x, harpoon.y, activePlatforms)
+            )
+          })
 
           if (!isClockActive) {
             const ballDt = isHourglassActive
@@ -3036,7 +3095,7 @@ function GamePlay({
               const steppedBall = stepBall(
                 jitteredBall,
                 ballDt,
-                terrain.platforms,
+                activePlatforms,
                 windAx,
                 activeGravityWell,
                 activeGravityScale,
@@ -3689,7 +3748,10 @@ function GamePlay({
         drawCurrentFlow(ctx, getCurrentWindAx(stageChaosCurrent, time), time)
       }
       if (acidRainZones) drawAcidRain(ctx, acidRainZones, time)
-      for (const platform of terrain.platforms) drawObstacle(ctx, platform)
+      terrain.platforms.forEach((platform, i) => {
+        if (destroyedPlatformsRef.current.has(i)) return
+        drawObstacle(ctx, platform, isDestructiblePlatform(stageIndex, i))
+      })
       for (const pair of portalPairs) {
         drawPortal(ctx, pair.entry, time)
         drawPortal(ctx, pair.exit, time)
