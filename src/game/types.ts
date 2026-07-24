@@ -42,6 +42,7 @@ export type ItemType =
   | 'lockOn'
   | 'overdrive'
   | 'pierce'
+  | 'starBalloon'
 
 export type Item = {
   id: number

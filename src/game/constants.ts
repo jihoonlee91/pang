@@ -316,6 +316,8 @@ export function getStageItemDropChance(stageIndex: number): number {
 }
 // Relative weights within a drop: double wire/clock/hourglass/barrier are common,
 // 1UP and dynamite are intentionally rare (dynamite is a risk item, 1UP is a reward item).
+// Star Balloon is rarer still — it clears the whole screen outright, so it's
+// the single most powerful pickup in the pool.
 // Vulcan is handled separately below — it only drops through stage 30.
 export const ITEM_WEIGHTS: [ItemType, number][] = [
   ['doubleWire', 14],
@@ -333,6 +335,7 @@ export const ITEM_WEIGHTS: [ItemType, number][] = [
   ['comboLock', 8],
   ['shockwave', 6],
   ['pierce', 10],
+  ['starBalloon', 3],
 ]
 
 // Vulcan (rapid-fire) was originally always in the pool, but it trivializes

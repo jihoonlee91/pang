@@ -213,6 +213,7 @@ const ITEM_LABELS: Record<ItemType, string> = {
   lockOn: 'K',
   overdrive: 'O',
   pierce: 'R',
+  starBalloon: '*',
 }
 
 const BUFF_LABELS: Record<
@@ -310,6 +311,7 @@ const ITEM_ANNOUNCEMENTS: Record<ItemType, string> = {
   lockOn: 'Lock-On!',
   overdrive: 'Overdrive!',
   pierce: 'Piercer!',
+  starBalloon: 'Star Balloon!',
 }
 
 type Particle = {
@@ -3472,6 +3474,43 @@ function GamePlay({
                 )
                 setScore(scoreRef.current)
                 ballsRef.current = shockwaveChildren
+                playHitSound(2)
+                break
+              }
+              case 'starBalloon': {
+                // Classic Pang's Star Balloon: removes every ball outright
+                // (no split-down, unlike Shockwave) — the most powerful
+                // pickup in the pool, effectively an instant clear. Reuses
+                // the normal "0 balls left" clear detection just below
+                // this switch rather than calling onClear directly.
+                let starGained = 0
+                for (const b of ballsRef.current) {
+                  spawnBurst(
+                    particlesRef.current,
+                    b.x,
+                    b.y,
+                    b.golden ? '#facc15' : '#fde047',
+                  )
+                  const gained = Math.round(
+                    SCORE_BY_LEVEL[b.level] *
+                      (1 + comboRef.current * 0.1) *
+                      (isNovaSurgeActive ? NOVA_SURGE_MULTIPLIER : 1) *
+                      (isOverdriveActive ? OVERDRIVE_SCORE_MULTIPLIER : 1) *
+                      (b.golden ? GOLDEN_BALL_SCORE_MULTIPLIER : 1),
+                  )
+                  starGained += gained
+                  popupsRef.current.push({
+                    x: b.x,
+                    y: b.y,
+                    text: b.golden ? `GOLDEN +${gained}` : `+${gained}`,
+                    life: 700,
+                    maxLife: 700,
+                    color: '#fde047',
+                  })
+                }
+                scoreRef.current = addToTotalScore(scoreRef.current, starGained)
+                setScore(scoreRef.current)
+                ballsRef.current = []
                 playHitSound(2)
                 break
               }

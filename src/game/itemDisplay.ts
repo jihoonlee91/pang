@@ -26,6 +26,7 @@ export const ITEM_COLORS: Record<ItemType, string> = {
   lockOn: '#a855f7',
   overdrive: '#ef4444',
   pierce: '#eab308',
+  starBalloon: '#fde047',
 }
 
 export const ITEM_TITLES: Record<ItemType, string> = {
@@ -54,6 +55,7 @@ export const ITEM_TITLES: Record<ItemType, string> = {
   lockOn: 'Lock-On',
   overdrive: 'Overdrive',
   pierce: 'Piercer',
+  starBalloon: 'Star Balloon',
 }
 
 export const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
@@ -83,6 +85,7 @@ export const ITEM_DESCRIPTIONS: Record<ItemType, string> = {
   lockOn: '8초 동안 공의 양자 요동(순간이동)이 발생하지 않습니다.',
   overdrive: '8초 동안 모든 hazard 피해를 막고 점수를 1.5배로 획득합니다.',
   pierce: '8초 동안 작살이 장애물을 뚫고 계속 날아갑니다.',
+  starBalloon: '화면의 모든 공을 즉시 제거하고 점수를 얻습니다.',
 }
 
 function traceShield(ctx: CanvasRenderingContext2D, scale = 1) {
@@ -522,5 +525,27 @@ export function drawFallingItemIcon(
       ctx.closePath()
       ctx.fill()
       break
+    case 'starBalloon': {
+      ctx.beginPath()
+      ctx.arc(0, 0, 11, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+      ctx.fillStyle = '#fff9e0'
+      ctx.beginPath()
+      const spikes = 5
+      const outerR = 8
+      const innerR = 3.2
+      for (let i = 0; i < spikes * 2; i += 1) {
+        const r = i % 2 === 0 ? outerR : innerR
+        const angle = (Math.PI / spikes) * i - Math.PI / 2
+        const px = Math.cos(angle) * r
+        const py = Math.sin(angle) * r
+        if (i === 0) ctx.moveTo(px, py)
+        else ctx.lineTo(px, py)
+      }
+      ctx.closePath()
+      ctx.fill()
+      break
+    }
   }
 }
