@@ -71,6 +71,8 @@ import {
   getStageTerrain,
   stepPlayerOnTerrain,
   isDestructiblePlatform,
+  isMovingPlatform,
+  translatePlatform,
 } from './game/terrain'
 import type { Ladder } from './game/terrain'
 import {
@@ -366,6 +368,7 @@ function drawObstacle(
   ctx: CanvasRenderingContext2D,
   obstacle: Obstacle,
   destructible = false,
+  moving = false,
 ) {
   const { x, y, width, height } = obstacle
   // Destructible platforms read as a distinct "crackable" glass-block
@@ -424,6 +427,25 @@ function drawObstacle(
     ctx.strokeStyle = '#ffffff'
     ctx.lineWidth = 1.5
     ctx.stroke()
+  }
+
+  // A pair of outward-pointing arrows marks a platform as moving — the
+  // player needs to know at a glance that its bounce point isn't fixed.
+  if (moving) {
+    ctx.fillStyle = '#facc15'
+    const cy = y + height / 2
+    ctx.beginPath()
+    ctx.moveTo(x - 12, cy)
+    ctx.lineTo(x - 4, cy - 5)
+    ctx.lineTo(x - 4, cy + 5)
+    ctx.closePath()
+    ctx.fill()
+    ctx.beginPath()
+    ctx.moveTo(x + width + 12, cy)
+    ctx.lineTo(x + width + 4, cy - 5)
+    ctx.lineTo(x + width + 4, cy + 5)
+    ctx.closePath()
+    ctx.fill()
   }
 }
 
@@ -2650,9 +2672,13 @@ function GamePlay({
           // platform broken mid-frame is immediately gone for every check
           // — ball bounce, player standing, and the next harpoon's path —
           // within the same frame it broke.
-          let activePlatforms = terrain.platforms.filter(
-            (_, i) => !destroyedPlatformsRef.current.has(i),
-          )
+          let activePlatforms = terrain.platforms
+            .map((p, i) =>
+              destroyedPlatformsRef.current.has(i)
+                ? null
+                : translatePlatform(p, stageIndex, i, time),
+            )
+            .filter((p): p is Obstacle => p !== null)
           const isClockActive = time < clockUntilRef.current
           const isHourglassActive =
             !isClockActive && time < hourglassUntilRef.current
@@ -3230,9 +3256,13 @@ function GamePlay({
             }
           }
           if (destroyedPlatformsRef.current.size > 0) {
-            activePlatforms = terrain.platforms.filter(
-              (_, i) => !destroyedPlatformsRef.current.has(i),
-            )
+            activePlatforms = terrain.platforms
+              .map((p, i) =>
+                destroyedPlatformsRef.current.has(i)
+                  ? null
+                  : translatePlatform(p, stageIndex, i, time),
+              )
+              .filter((p): p is Obstacle => p !== null)
           }
 
           harpoonsRef.current = harpoonsRef.current.filter((harpoon) => {
@@ -4050,7 +4080,12 @@ function GamePlay({
       if (acidRainZones) drawAcidRain(ctx, acidRainZones, time)
       terrain.platforms.forEach((platform, i) => {
         if (destroyedPlatformsRef.current.has(i)) return
-        drawObstacle(ctx, platform, isDestructiblePlatform(stageIndex, i))
+        drawObstacle(
+          ctx,
+          translatePlatform(platform, stageIndex, i, time),
+          isDestructiblePlatform(stageIndex, i),
+          isMovingPlatform(stageIndex, i),
+        )
       })
       if (terrain.ladder) drawLadder(ctx, terrain.ladder)
       for (const pair of portalPairs) {

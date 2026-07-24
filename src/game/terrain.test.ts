@@ -4,6 +4,9 @@ import { ICE_WIND_START_STAGE } from './iceWinds'
 import {
   getStageTerrain,
   isDestructiblePlatform,
+  getMovingPlatformOffsetX,
+  isMovingPlatform,
+  translatePlatform,
   STAGE_TERRAINS,
   stepPlayerOnTerrain,
 } from './terrain'
@@ -129,6 +132,41 @@ describe('ladders', () => {
       terrain,
     )
     expect(next.y).toBeGreaterThan(ladder.topY)
+  })
+})
+
+describe('moving platforms', () => {
+  it('has no moving platforms before stage 25', () => {
+    expect(isMovingPlatform(24, 0)).toBe(false)
+    expect(getMovingPlatformOffsetX(24, 0, 1000)).toBe(0)
+  })
+
+  it('marks a platform moving from stage 25 on', () => {
+    expect(isMovingPlatform(25, 0)).toBe(true)
+    expect(isMovingPlatform(25, 1)).toBe(false)
+  })
+
+  it('oscillates back and forth around 0 over one period', () => {
+    const stageIndex = 25
+    const platformIndex = 0
+    const periodMs = 3200 + (((stageIndex + platformIndex) * 137) % 800)
+    const atStart = getMovingPlatformOffsetX(stageIndex, platformIndex, 0)
+    const atQuarter = getMovingPlatformOffsetX(
+      stageIndex,
+      platformIndex,
+      periodMs / 4,
+    )
+    const atFull = getMovingPlatformOffsetX(stageIndex, platformIndex, periodMs)
+    expect(atQuarter).toBeGreaterThan(atStart)
+    expect(atFull).toBeCloseTo(atStart, 5)
+  })
+
+  it('translates only moving platforms, leaving others untouched', () => {
+    const platform = { x: 100, y: 200, width: 150, height: 18 }
+    expect(translatePlatform(platform, 25, 1, 1000)).toEqual(platform)
+    const moved = translatePlatform(platform, 25, 0, 1000)
+    expect(moved.x).not.toBe(platform.x)
+    expect(moved.y).toBe(platform.y)
   })
 })
 

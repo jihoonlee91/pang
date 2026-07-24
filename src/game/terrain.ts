@@ -266,6 +266,47 @@ export function isDestructiblePlatform(
   return (stageIndex + platformIndex) % 3 === 0
 }
 
+// Held off until the same "layout families" terrain as destructible
+// platforms, gated on a different modulus so the two mechanics interleave
+// rather than always landing on the same platforms. A moving platform
+// changes where a ball will bounce moment to moment, adding timing to
+// what would otherwise be a fixed layout to memorize.
+const MOVING_PLATFORM_START_STAGE = 25
+const MOVING_PLATFORM_RANGE = 40
+
+export function isMovingPlatform(
+  stageIndex: number,
+  platformIndex: number,
+): boolean {
+  if (stageIndex < MOVING_PLATFORM_START_STAGE) return false
+  return (stageIndex + platformIndex) % 4 === 1
+}
+
+// Deterministic back-and-forth horizontal offset (-RANGE..+RANGE), purely
+// a function of elapsed time — no mutable state to reset between attempts.
+export function getMovingPlatformOffsetX(
+  stageIndex: number,
+  platformIndex: number,
+  timeMs: number,
+): number {
+  if (!isMovingPlatform(stageIndex, platformIndex)) return 0
+  const periodMs = 3200 + (((stageIndex + platformIndex) * 137) % 800)
+  const half = periodMs / 2
+  const phase = ((timeMs % periodMs) + periodMs) % periodMs
+  const t = phase < half ? phase / half : 2 - phase / half
+  return (t - 0.5) * 2 * MOVING_PLATFORM_RANGE
+}
+
+export function translatePlatform(
+  platform: Obstacle,
+  stageIndex: number,
+  platformIndex: number,
+  timeMs: number,
+): Obstacle {
+  const dx = getMovingPlatformOffsetX(stageIndex, platformIndex, timeMs)
+  return dx === 0 ? platform : { ...platform, x: platform.x + dx }
+}
+
 type PlayerTerrainInput = {
   left: boolean
   right: boolean
