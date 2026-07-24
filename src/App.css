@@ -884,11 +884,47 @@
   border-color: #0284c7;
 }
 
-.stage-map-grid {
+.stage-map-grid,
+.stage-map-chapter-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
   width: min(1000px, 90vw);
+}
+
+.stage-map-chapter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  padding: 6px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.stage-map-chapter-card p {
+  margin: 0;
+  font-size: var(--fs-xs);
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.stage-map-chapter-card:hover:not(:disabled) {
+  border-color: #67e8f9;
+  background: rgba(8, 145, 178, 0.22);
+  transform: translateY(-4px);
+}
+
+.stage-map-chapter-card:disabled {
+  cursor: not-allowed;
 }
 
 .stage-map-card {

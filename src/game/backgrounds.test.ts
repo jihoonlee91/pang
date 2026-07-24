@@ -4,6 +4,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { STAGE_COUNT } from './constants'
+import { getStageChapters, STAGE_NAMES } from './backgrounds'
 
 const BACKGROUND_DIR = resolve('src/assets/backgrounds/stages')
 
@@ -73,5 +74,46 @@ describe('stage background assets', () => {
         80_000,
       )
     }
+  })
+})
+
+describe('getStageChapters', () => {
+  const chapters = getStageChapters()
+
+  it('starts with a 20-stage World Tour chapter', () => {
+    expect(chapters[0]).toEqual({ name: 'World Tour', start: 0, end: 19 })
+  })
+
+  it('groups stages 21-30 as one World Tour II chapter, not one per country', () => {
+    // Each of these stages has its own per-stage country in parens (e.g.
+    // "Great Wall of China (China)"), same as stages 1-20 — naively
+    // suffix-grouping them would split this into 10 one-stage chapters.
+    expect(chapters[1]).toEqual({
+      name: 'World Tour II',
+      start: 20,
+      end: 29,
+    })
+  })
+
+  it('covers every stage with no gaps or overlaps', () => {
+    let expectedStart = 0
+    for (const chapter of chapters) {
+      expect(chapter.start).toBe(expectedStart)
+      expect(chapter.end).toBeGreaterThanOrEqual(chapter.start)
+      expectedStart = chapter.end + 1
+    }
+    expect(expectedStart).toBe(STAGE_NAMES.length)
+  })
+
+  it('groups stages 31+ by their shared "(Chapter Name)" suffix', () => {
+    const dimensionX = chapters.find((c) => c.name === 'Dimension X')
+    expect(dimensionX).toEqual({ name: 'Dimension X', start: 30, end: 39 })
+  })
+
+  it('ends with the single-stage Hidden Finale chapter', () => {
+    const last = chapters[chapters.length - 1]
+    expect(last.name).toBe('Hidden Finale')
+    expect(last.start).toBe(last.end)
+    expect(last.start).toBe(STAGE_NAMES.length - 1)
   })
 })

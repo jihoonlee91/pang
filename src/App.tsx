@@ -4,6 +4,7 @@ import GamePlay from './GamePlay'
 import StageMap from './StageMap'
 import Glossary from './Glossary'
 import Intro from './Intro'
+import StageReveal from './StageReveal'
 import { PUBLIC_STAGE_COUNT, STAGE_COUNT } from './game/constants'
 import type { StageResult } from './game/types'
 import {
@@ -38,6 +39,7 @@ type Screen =
   | 'tutorial'
   | 'countdown'
   | 'play'
+  | 'stageReveal'
   | 'stageClear'
   | 'milestone'
   | 'hiddenReveal'
@@ -92,6 +94,13 @@ function App() {
   const [whatsNewReturnTo, setWhatsNewReturnTo] = useState<Screen>('settings')
   const [countdown, setCountdown] = useState(COUNTDOWN_START)
   const [stageIndex, setStageIndex] = useState(0)
+  // Set by handleClear while the 'stageReveal' screen plays (before
+  // stageIndex/highestUnlockedStage advance), so finishClearFlow knows
+  // what to unlock and where to route once the reveal completes.
+  const [pendingClear, setPendingClear] = useState<{
+    clearedStage: number
+    score: number
+  } | null>(null)
   // Bumped on every demo game over, to force GamePlay to remount and
   // retry the same stage it just died on (stageIndex itself is left
   // unchanged) — a plain state update wouldn't reset anything since the
@@ -376,27 +385,47 @@ function App() {
     setScreen('end')
   }
 
+  const applyClear = (clearedStage: number, score: number) => {
+    const nextStage = clearedStage
+    setHighestUnlockedStage(unlockStage(nextStage))
+    setFinalScore(score)
+    setStageIndex(nextStage)
+    if (clearedStage === PUBLIC_STAGE_COUNT) {
+      playVictoryFanfare()
+      setScreen('hiddenReveal')
+    } else if (clearedStage % MILESTONE_INTERVAL === 0) {
+      setMilestoneStage(clearedStage)
+      playVictoryFanfare()
+      setScreen('milestone')
+    } else {
+      setStageAdvanceCountdown(STAGE_ADVANCE_COUNTDOWN)
+      setScreen('stageClear')
+    }
+  }
+
   const handleClear = (score: number) => {
     const clearedStage = stageIndex + 1
-    if (clearedStage < STAGE_COUNT) {
-      const nextStage = clearedStage
-      setHighestUnlockedStage(unlockStage(nextStage))
-      setFinalScore(score)
-      setStageIndex(nextStage)
-      if (clearedStage === PUBLIC_STAGE_COUNT) {
-        playVictoryFanfare()
-        setScreen('hiddenReveal')
-      } else if (clearedStage % MILESTONE_INTERVAL === 0) {
-        setMilestoneStage(clearedStage)
-        playVictoryFanfare()
-        setScreen('milestone')
-      } else {
-        setStageAdvanceCountdown(STAGE_ADVANCE_COUNTDOWN)
-        setScreen('stageClear')
-      }
-    } else {
+    if (clearedStage >= STAGE_COUNT) {
       finish('clear', score)
+      return
     }
+    // Only the first clear of a stage gets the reveal beat — replaying an
+    // already-cleared stage (via the stage map) already shows its real
+    // illustrated art throughout, so there's nothing to reveal.
+    const isFirstClear = stageIndex >= highestUnlockedStage
+    if (isFirstClear) {
+      setPendingClear({ clearedStage, score })
+      setScreen('stageReveal')
+    } else {
+      applyClear(clearedStage, score)
+    }
+  }
+
+  const finishClearFlow = () => {
+    if (!pendingClear) return
+    const { clearedStage, score } = pendingClear
+    setPendingClear(null)
+    applyClear(clearedStage, score)
   }
 
   const continueFromMilestone = () => {
@@ -716,8 +745,13 @@ function App() {
         onGameOver={handleGameOver}
         onQuit={() => setScreen('main')}
         settings={settings}
+        cleared={stageIndex < highestUnlockedStage}
       />
     )
+  }
+
+  if (screen === 'stageReveal') {
+    return <StageReveal stageIndex={stageIndex} onComplete={finishClearFlow} />
   }
 
   if (screen === 'stageClear') {
@@ -730,6 +764,7 @@ function App() {
         onGameOver={handleGameOver}
         onQuit={() => setScreen('main')}
         settings={settings}
+        cleared={stageIndex < highestUnlockedStage}
       />
     )
   }
@@ -799,6 +834,7 @@ function App() {
           onGameOver={handleDemoGameOver}
           onQuit={() => setScreen('main')}
           settings={settings}
+          cleared={stageIndex < highestUnlockedStage}
         />
         <button
           type="button"

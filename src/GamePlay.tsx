@@ -146,7 +146,11 @@ import {
   startBgm,
   stopBgm,
 } from './game/audio'
-import { drawBackground, STAGE_NAMES } from './game/backgrounds'
+import {
+  drawBackground,
+  drawUnrevealedBackground,
+  STAGE_NAMES,
+} from './game/backgrounds'
 import { InputController, type InputAction } from './game/input/InputController'
 import type { GameSettings } from './game/settings'
 import { addToTotalScore } from './game/scoring'
@@ -1687,6 +1691,11 @@ type Props = {
   demo?: boolean
   settings: GameSettings
   onQuit: () => void
+  // Whether the player has already cleared this stage at least once —
+  // gates Canvas placeholder art (not yet cleared) vs. the real
+  // illustrated background (cleared). Defaults true so any caller that
+  // doesn't care about the distinction still gets the real art.
+  cleared?: boolean
 }
 
 const AI_DEADZONE = 6
@@ -1798,6 +1807,7 @@ function GamePlay({
   demo = false,
   settings,
   onQuit,
+  cleared = true,
 }: Props) {
   const isStarting = startCountdown !== undefined
   const terrain = getStageTerrain(stageIndex)
@@ -3430,7 +3440,8 @@ function GamePlay({
         )
       }
 
-      drawBackground(ctx, stageIndex)
+      if (cleared) drawBackground(ctx, stageIndex)
+      else drawUnrevealedBackground(ctx, stageIndex)
       if (activeHiddenFinalePhase?.current) {
         drawCurrentFlow(
           ctx,
@@ -3588,6 +3599,7 @@ function GamePlay({
     return () => cancelAnimationFrame(rafId)
   }, [
     stageIndex,
+    cleared,
     stageItemDropChance,
     stageItemWeights,
     terrain,

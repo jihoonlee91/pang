@@ -662,6 +662,17 @@ const BASE_BACKGROUNDS = [
   drawRedSquareBackground,
 ]
 
+// Raw URL for a stage's illustrated image, if it has one — used outside
+// the Canvas renderer (e.g. an <img> for the clear-reveal transition).
+export function getStageImageUrl(stageIndex: number): string | undefined {
+  const stageNumber = stageIndex + 1
+  const key = `../assets/backgrounds/stages/stage${String(stageNumber).padStart(
+    3,
+    '0',
+  )}.webp`
+  return STAGE_IMAGE_URLS[key]
+}
+
 function drawIllustrationLoadingBackground(ctx: CanvasRenderingContext2D) {
   const loadingGradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT)
   loadingGradient.addColorStop(0, '#111827')
@@ -719,16 +730,72 @@ export const BACKGROUNDS = RAW_BACKGROUNDS.map(
   },
 )
 
+function drawGroundLine(ctx: CanvasRenderingContext2D) {
+  ctx.strokeStyle = '#00000022'
+  ctx.beginPath()
+  ctx.moveTo(0, CANVAS_HEIGHT - 4)
+  ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT - 4)
+  ctx.stroke()
+}
+
 export function drawBackground(
   ctx: CanvasRenderingContext2D,
   stageIndex: number,
 ) {
   const draw = BACKGROUNDS[stageIndex % BACKGROUNDS.length]
   draw(ctx)
+  drawGroundLine(ctx)
+}
 
-  ctx.strokeStyle = '#00000022'
-  ctx.beginPath()
-  ctx.moveTo(0, CANVAS_HEIGHT - 4)
-  ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT - 4)
-  ctx.stroke()
+// Placeholder shown for a stage the player hasn't cleared yet — cycles
+// through the 10 hand-drawn Canvas scenes (the only ones left after the
+// illustrated-background pass replaced every other stage's Canvas
+// function) rather than trying to fake per-stage uniqueness with no art
+// to back it. Clearing the stage swaps this out for its real illustrated
+// image (see the reveal transition in App.tsx).
+export function drawUnrevealedBackground(
+  ctx: CanvasRenderingContext2D,
+  stageIndex: number,
+) {
+  ctx.save()
+  ctx.filter = 'saturate(0.76) brightness(0.96)'
+  BASE_BACKGROUNDS[stageIndex % BASE_BACKGROUNDS.length](ctx)
+  ctx.restore()
+  drawGroundLine(ctx)
+}
+
+export type StageChapter = {
+  name: string
+  start: number
+  end: number
+}
+
+// Groups the flat stage list into named chapters — stages 1-30 (World
+// Tour + World Tour II) don't share a common name suffix (each has its
+// own country), everything after is derived from the shared
+// "(Chapter Name)" suffix already in STAGE_NAMES, so a new chapter added
+// there is picked up automatically with no separate range table to keep
+// in sync.
+export function getStageChapters(): StageChapter[] {
+  // Stages 1-30 (World Tour + World Tour II) each carry their own
+  // per-stage country in parens, not a shared chapter suffix like every
+  // block after — so both ranges are hardcoded rather than derived.
+  const chapters: StageChapter[] = [
+    { name: 'World Tour', start: 0, end: 19 },
+    { name: 'World Tour II', start: 20, end: 29 },
+  ]
+  let i = 30
+  while (i < STAGE_NAMES.length) {
+    const label = STAGE_NAMES[i].match(/\(([^)]+)\)$/)?.[1] ?? 'Unknown'
+    let end = i
+    while (
+      end + 1 < STAGE_NAMES.length &&
+      (STAGE_NAMES[end + 1].match(/\(([^)]+)\)$/)?.[1] ?? 'Unknown') === label
+    ) {
+      end += 1
+    }
+    chapters.push({ name: label, start: i, end })
+    i = end + 1
+  }
+  return chapters
 }
