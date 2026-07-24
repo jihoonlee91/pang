@@ -1,16 +1,6 @@
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from './constants'
-import neuschwansteinUrl from '../assets/backgrounds/stage11-neuschwanstein.webp'
-import colosseumUrl from '../assets/backgrounds/stage12-colosseum.webp'
-import santoriniUrl from '../assets/backgrounds/stage13-santorini.webp'
-import sagradaFamiliaUrl from '../assets/backgrounds/stage14-sagrada-familia.webp'
-import marrakeshUrl from '../assets/backgrounds/stage15-marrakesh.webp'
-import serengetiUrl from '../assets/backgrounds/stage16-serengeti.webp'
-import rioUrl from '../assets/backgrounds/stage17-rio.webp'
-import machuPicchuUrl from '../assets/backgrounds/stage18-machu-picchu.webp'
-import grandCanyonUrl from '../assets/backgrounds/stage19-grand-canyon.webp'
-import auroraVillageUrl from '../assets/backgrounds/stage20-aurora-village.webp'
-const UNIQUE_STAGE_IMAGE_URLS = import.meta.glob(
-  '../assets/backgrounds/illustrated/stage*.webp',
+const STAGE_IMAGE_URLS = import.meta.glob(
+  '../assets/backgrounds/stages/stage*.webp',
   {
     eager: true,
     query: '?url',
@@ -245,15 +235,25 @@ function drawGround(
   ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, CANVAS_HEIGHT - GROUND_Y)
 }
 
+function fillEllipse(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  radiusX: number,
+  radiusY: number,
+) {
+  ctx.beginPath()
+  ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2)
+  ctx.fill()
+}
+
 function drawJapanBackground(ctx: CanvasRenderingContext2D) {
   drawSky(ctx, '#7dc8f0', '#cdeafd')
 
   ctx.fillStyle = '#ffffffaa'
-  ctx.beginPath()
-  ctx.ellipse(120, 90, 34, 16, 0, 0, Math.PI * 2)
-  ctx.ellipse(160, 80, 26, 14, 0, 0, Math.PI * 2)
-  ctx.ellipse(740, 130, 30, 15, 0, 0, Math.PI * 2)
-  ctx.fill()
+  fillEllipse(ctx, 120, 90, 34, 16)
+  fillEllipse(ctx, 160, 80, 26, 14)
+  fillEllipse(ctx, 740, 130, 30, 15)
 
   const baseY = GROUND_Y
   const topY = baseY - 220
@@ -317,10 +317,8 @@ function drawGuilinBackground(ctx: CanvasRenderingContext2D) {
   drawSky(ctx, '#bfe3e0', '#eaf6f2')
 
   ctx.fillStyle = '#ffffff88'
-  ctx.beginPath()
-  ctx.ellipse(700, 110, 60, 14, 0, 0, Math.PI * 2)
-  ctx.ellipse(150, 160, 70, 16, 0, 0, Math.PI * 2)
-  ctx.fill()
+  fillEllipse(ctx, 700, 110, 60, 14)
+  fillEllipse(ctx, 150, 160, 70, 16)
 
   const baseY = GROUND_Y
   const farPeaks = [
@@ -664,74 +662,6 @@ const BASE_BACKGROUNDS = [
   drawRedSquareBackground,
 ]
 
-const NIGHT_TINTS = [
-  '#17255466',
-  '#134e4a55',
-  '#581c8755',
-  '#7c2d1255',
-  '#1e3a8a55',
-]
-
-const NIGHT_BACKGROUNDS = BASE_BACKGROUNDS.map(
-  (draw, index) => (ctx: CanvasRenderingContext2D) => {
-    draw(ctx)
-    ctx.save()
-    ctx.fillStyle = NIGHT_TINTS[index % NIGHT_TINTS.length]
-    ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y)
-    ctx.fillStyle = '#fffde8'
-    for (let star = 0; star < 18; star += 1) {
-      const x = (star * 137 + index * 71) % CANVAS_WIDTH
-      const y = 28 + ((star * 53 + index * 31) % 170)
-      ctx.globalAlpha = 0.35 + (star % 4) * 0.14
-      ctx.fillRect(x, y, 2, 2)
-    }
-    ctx.restore()
-  },
-)
-
-const LATE_STAGE_IMAGE_URLS = [
-  neuschwansteinUrl,
-  colosseumUrl,
-  santoriniUrl,
-  sagradaFamiliaUrl,
-  marrakeshUrl,
-  serengetiUrl,
-  rioUrl,
-  machuPicchuUrl,
-  grandCanyonUrl,
-  auroraVillageUrl,
-]
-
-function createIllustratedBackground(
-  src: string,
-  fallback: (ctx: CanvasRenderingContext2D) => void,
-) {
-  let image: HTMLImageElement | null = null
-
-  return (ctx: CanvasRenderingContext2D) => {
-    if (image?.complete && image.naturalWidth > 0) {
-      ctx.drawImage(image, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
-      return
-    }
-
-    fallback(ctx)
-    if (image || typeof Image === 'undefined') return
-
-    image = new Image()
-    image.decoding = 'async'
-    image.addEventListener('load', () => {
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event(BACKGROUND_READY_EVENT))
-      }
-    })
-    image.src = src
-  }
-}
-
-const ILLUSTRATED_BACKGROUNDS = LATE_STAGE_IMAGE_URLS.map((src, index) =>
-  createIllustratedBackground(src, NIGHT_BACKGROUNDS[index]),
-)
-
 function drawIllustrationLoadingBackground(ctx: CanvasRenderingContext2D) {
   const loadingGradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT)
   loadingGradient.addColorStop(0, '#111827')
@@ -768,25 +698,17 @@ function createUniqueIllustratedBackground(src: string) {
   }
 }
 
-const UNIQUE_LATE_STAGE_BACKGROUNDS = Array.from(
-  { length: 181 },
-  (_, index) => {
-    const stageNumber = index + 21
-    const key = `../assets/backgrounds/illustrated/stage${String(
-      stageNumber,
-    ).padStart(3, '0')}.webp`
-    const src = UNIQUE_STAGE_IMAGE_URLS[key]
-    return src
-      ? createUniqueIllustratedBackground(src)
-      : drawIllustrationLoadingBackground
-  },
-)
-
-const RAW_BACKGROUNDS = [
-  ...BASE_BACKGROUNDS,
-  ...ILLUSTRATED_BACKGROUNDS,
-  ...UNIQUE_LATE_STAGE_BACKGROUNDS,
-]
+const RAW_BACKGROUNDS = STAGE_NAMES.map((_, index) => {
+  const stageNumber = index + 1
+  const key = `../assets/backgrounds/stages/stage${String(stageNumber).padStart(
+    3,
+    '0',
+  )}.webp`
+  const src = STAGE_IMAGE_URLS[key]
+  return src
+    ? createUniqueIllustratedBackground(src)
+    : (BASE_BACKGROUNDS[index] ?? drawIllustrationLoadingBackground)
+})
 
 export const BACKGROUNDS = RAW_BACKGROUNDS.map(
   (draw) => (ctx: CanvasRenderingContext2D) => {

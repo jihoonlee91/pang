@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './Intro.css'
-import castleUrl from './assets/backgrounds/stage11-neuschwanstein.webp'
-import greatWallUrl from './assets/backgrounds/illustrated/stage021.webp'
-import dimensionUrl from './assets/backgrounds/illustrated/stage041.webp'
-import abyssUrl from './assets/backgrounds/illustrated/stage061.webp'
-import voidUrl from './assets/backgrounds/illustrated/stage091.webp'
-import solarUrl from './assets/backgrounds/illustrated/stage121.webp'
-import riftUrl from './assets/backgrounds/illustrated/stage151.webp'
-import finaleUrl from './assets/backgrounds/illustrated/stage200.webp'
+import castleUrl from './assets/backgrounds/stages/stage011.webp'
+import greatWallUrl from './assets/backgrounds/stages/stage021.webp'
+import dimensionUrl from './assets/backgrounds/stages/stage041.webp'
+import abyssUrl from './assets/backgrounds/stages/stage061.webp'
+import voidUrl from './assets/backgrounds/stages/stage091.webp'
+import solarUrl from './assets/backgrounds/stages/stage121.webp'
+import riftUrl from './assets/backgrounds/stages/stage151.webp'
+import finaleUrl from './assets/backgrounds/stages/stage200.webp'
 
 type IntroProps = {
   onComplete: () => void
