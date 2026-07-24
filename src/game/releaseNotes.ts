@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.29.0',
+    date: '2026-07-24',
+    notes: [
+      'Fixed cleared stages showing dim/grayed-out on the Stage Map — they now stay at full brightness with a small green highlight, so completing a stage reads as an achievement instead of looking disabled.',
+    ],
+  },
+  {
     version: '1.28.3',
     date: '2026-07-24',
     notes: [

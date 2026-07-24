@@ -1038,8 +1038,12 @@
   width: 100%;
 }
 
+/* Cleared stages should read as an achievement, not a spent/inactive
+   one — full brightness plus a small success-green glow, instead of the
+   dimmed look (which visually reads as "locked" or "disabled"). */
 .stage-map-card-cleared {
-  opacity: 0.58;
+  border-color: rgba(74, 222, 128, 0.45);
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.15);
 }
 
 .stage-map-card-current {
@@ -1893,8 +1897,9 @@
 }
 
 .stage-map-card-cleared {
-  opacity: 0.44;
-  filter: saturate(0.55);
+  border-color: rgba(74, 222, 128, 0.5);
+  background: rgba(22, 101, 52, 0.28);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.18);
 }
 
 .stage-map-card-current {
@@ -2909,6 +2914,13 @@
   border-radius: 3px;
   background: #111638;
   box-shadow: 5px 6px 0 rgba(5, 5, 20, 0.62);
+}
+
+#root .stage-map-card-cleared {
+  border-color: #4ade80;
+  box-shadow:
+    5px 6px 0 rgba(5, 5, 20, 0.62),
+    0 0 0 2px rgba(74, 222, 128, 0.4);
 }
 
 #root .stage-map-card p {
