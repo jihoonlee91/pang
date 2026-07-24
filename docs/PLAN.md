@@ -253,3 +253,13 @@ A file laying out the goals for each phase.
   details while keeping one recognizable character identity
 - Upgrade normal, Power Wire, Vulcan, and Piercer shots with distinct animated
   launch effects, cable materials, projectile silhouettes, and glow colors
+
+### Phase 6-11. Chapter World-Jump Transition
+
+- After every 10-stage milestone certificate, play a short portal traversal
+  before the normal next-stage countdown
+- Show the departing and arriving chapter names, the next stage number, and a
+  destination-colored world silhouette so the player feels the environment
+  change rather than seeing an abrupt screen swap
+- Auto-advance after the animation while keeping Space/click as an immediate
+  skip, and honor reduced-motion preferences
