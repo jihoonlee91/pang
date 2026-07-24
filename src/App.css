@@ -465,20 +465,16 @@
   touch-action: none;
 }
 
-/* Movement's flex item in the touch-controls row. Vertical climb buttons
-   (when present) stack above the left/right pair as one D-pad-shaped
-   cluster, so they inherit the same clickability and position as normal
-   movement instead of floating as a separate flex child (which used to
-   land dead-center of the screen and end up behind the landscape
-   overlay's pointer-events:none). */
+/* Movement's flex item in the touch-controls row. On stages without a
+   ladder this is just the left/right pair; with a ladder it switches to
+   a cross-shaped D-pad (.touch-dpad below) — the standard layout mobile
+   games use for 4-directional input, with left/right kept at the same
+   spot either way so the player's thumb doesn't have to relearn where
+   they are. All of it lives inside .touch-move so it inherits that
+   element's own clickability and position (important in landscape mode,
+   see the media query below — a separate flex sibling here used to land
+   dead-center of the screen and stay inert to taps). */
 .touch-move {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-}
-
-.touch-lr {
   display: flex;
   gap: 0;
 }
@@ -517,18 +513,51 @@
   background: rgba(220, 38, 38, var(--touch-opacity));
 }
 
-.touch-vertical {
-  display: flex;
-  flex-direction: column;
+/* Classic virtual-D-pad cross: Up centered above, Down centered below,
+   Left/Right flanking an empty middle cell. */
+.touch-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  grid-template-areas:
+    '.    up    .'
+    'left .     right'
+    '.    down  .';
   gap: 4px;
+  justify-items: center;
+  align-items: center;
 }
 
-.touch-up {
-  border-radius: 18px 18px 0 0;
+/* Up/Down are the occasional-use half of the pad (climbing a ladder is
+   rarer than the constant left/right dodging) — sized down a bit from
+   Left/Right so the cross doesn't grow tall enough to crowd the canvas
+   in normal portrait flow, where touch-controls isn't an overlay and
+   really does take up its own vertical space. */
+.touch-dpad .touch-up,
+.touch-dpad .touch-down {
+  width: calc(var(--touch-size) * 0.62);
+  height: calc(var(--touch-size) * 0.62);
+  min-width: 44px;
+  min-height: 44px;
 }
 
-.touch-down {
-  border-radius: 0 0 18px 18px;
+.touch-dpad .touch-up {
+  grid-area: up;
+}
+
+.touch-dpad .touch-left {
+  grid-area: left;
+  margin-left: 0;
+  border-radius: 18px;
+}
+
+.touch-dpad .touch-right {
+  grid-area: right;
+  margin-left: 0;
+  border-radius: 18px;
+}
+
+.touch-dpad .touch-down {
+  grid-area: down;
 }
 
 .touch-hint {
@@ -785,18 +814,15 @@
     min-height: 68px;
   }
 
-  /* Screen height is scarce in this mode — keep the climb pair small so
-     stacking them above the move buttons doesn't push the cluster off
-     the bottom edge. */
-  .touch-move {
-    gap: 4px;
-  }
-
-  .touch-vertical {
+  /* Screen height is scarce in this mode — keep Up/Down small so the
+     3-row D-pad cross doesn't push past the bottom edge. Left/Right
+     stay full-size since they're the buttons used every second. */
+  .touch-dpad {
     gap: 3px;
   }
 
-  .touch-vertical .touch-button {
+  .touch-dpad .touch-up,
+  .touch-dpad .touch-down {
     width: 42px;
     height: 42px;
     min-width: 42px;

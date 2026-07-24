@@ -9,6 +9,13 @@ export type ReleaseNote = {
 // recent releases are kept; older entries can be dropped.
 export const RELEASE_NOTES: ReleaseNote[] = [
   {
+    version: '1.28.3',
+    date: '2026-07-24',
+    notes: [
+      'The ladder touch controls are now a proper D-pad cross (Up above, Down below, Left/Right on the sides) instead of a stacked pair, so climbing feels like a natural extension of moving instead of a separate control to hunt for.',
+    ],
+  },
+  {
     version: '1.28.2',
     date: '2026-07-24',
     notes: [

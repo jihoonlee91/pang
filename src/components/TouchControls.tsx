@@ -43,45 +43,43 @@ export default function TouchControls({
       aria-label="Touch controls"
     >
       <div
-        className="touch-move"
+        className={hasLadder ? 'touch-move touch-dpad' : 'touch-move'}
         aria-label={
           hasLadder ? 'Move, and climb the ladder' : 'Move left or right'
         }
       >
         {hasLadder && (
-          <div className="touch-vertical" aria-label="Climb ladder">
-            <button
-              type="button"
-              className="touch-button touch-up"
-              {...bind('up', 'Climb up')}
-            >
-              ↑
-            </button>
-            <button
-              type="button"
-              className="touch-button touch-down"
-              {...bind('down', 'Climb down')}
-            >
-              ↓
-            </button>
-          </div>
+          <button
+            type="button"
+            className="touch-button touch-up"
+            {...bind('up', 'Climb up')}
+          >
+            ↑
+          </button>
         )}
-        <div className="touch-lr">
+        <button
+          type="button"
+          className="touch-button touch-left"
+          {...bind('left', 'Move left')}
+        >
+          ←
+        </button>
+        {hasLadder && (
           <button
             type="button"
-            className="touch-button touch-left"
-            {...bind('left', 'Move left')}
+            className="touch-button touch-down"
+            {...bind('down', 'Climb down')}
           >
-            ←
+            ↓
           </button>
-          <button
-            type="button"
-            className="touch-button touch-right"
-            {...bind('right', 'Move right')}
-          >
-            →
-          </button>
-        </div>
+        )}
+        <button
+          type="button"
+          className="touch-button touch-right"
+          {...bind('right', 'Move right')}
+        >
+          →
+        </button>
       </div>
       <button
         type="button"
