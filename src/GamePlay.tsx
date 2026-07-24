@@ -1752,6 +1752,15 @@ const AI_FLOOD_BALL_COUNT = 10
 // skip the full simulation entirely.
 const AI_PREFILTER_DRIFT_SLACK = 160
 const HIT_EFFECT_MS = 350
+// A first-ever stage clear crossfades the background from the Canvas
+// placeholder to the real illustrated art right on the gameplay canvas —
+// hold the placeholder briefly so it actually registers, crossfade,
+// hold the reveal, then let the stage-clear flow (TIME BONUS popup et al.
+// already run alongside) continue. ~3s total, comfortably in the "not too
+// short" range for a real reward beat, not a jump-cut.
+const CLEAR_REVEAL_HOLD_MS = 700
+const CLEAR_REVEAL_CROSSFADE_MS = 1400
+const CLEAR_REVEAL_SETTLE_MS = 900
 
 type BuffDisplay = {
   doubleWire: number
@@ -1905,6 +1914,13 @@ function GamePlay({
   const lastFireAtRef = useRef(0)
   const itemNoticeTimerRef = useRef<number | null>(null)
   const endedRef = useRef(false)
+  // Set the instant the stage is cleared for the first time (cleared prop
+  // still false) — while non-null, the background draw crossfades from
+  // the Canvas placeholder to the real illustrated art instead of firing
+  // onClear immediately. Stays null on a replay clear (cleared already
+  // true), which just calls onClear right away as before.
+  const clearedAtRef = useRef<number | null>(null)
+  const pendingClearScoreRef = useRef<number | null>(null)
   const particlesRef = useRef<Particle[]>([])
   const popupsRef = useRef<Popup[]>([])
   const pickupEffectsRef = useRef<PickupEffect[]>([])
@@ -1971,6 +1987,8 @@ function GamePlay({
       comboRef.current = 0
       lastHitAtRef.current = 0
       endedRef.current = false
+      clearedAtRef.current = null
+      pendingClearScoreRef.current = null
       particlesRef.current = []
       popupsRef.current = []
       pickupEffectsRef.current = []
@@ -3435,7 +3453,15 @@ function GamePlay({
             })
             playClearSound()
             if (settings.vibration) navigator.vibrate?.([40, 30, 100])
-            onClear(scoreRef.current)
+            // A first-ever clear plays the Canvas -> illustrated crossfade
+            // (see the background draw below) before actually calling
+            // onClear; a replay of an already-cleared stage has nothing to
+            // reveal, so it advances immediately like before.
+            if (cleared) onClear(scoreRef.current)
+            else {
+              clearedAtRef.current = time
+              pendingClearScoreRef.current = scoreRef.current
+            }
           }
         }
 
@@ -3474,8 +3500,40 @@ function GamePlay({
         )
       }
 
-      if (cleared) drawBackground(ctx, stageIndex)
-      else drawUnrevealedBackground(ctx, stageIndex)
+      if (clearedAtRef.current !== null) {
+        const revealElapsed = time - clearedAtRef.current
+        if (revealElapsed < CLEAR_REVEAL_HOLD_MS) {
+          drawUnrevealedBackground(ctx, stageIndex)
+        } else if (
+          revealElapsed <
+          CLEAR_REVEAL_HOLD_MS + CLEAR_REVEAL_CROSSFADE_MS
+        ) {
+          drawUnrevealedBackground(ctx, stageIndex)
+          ctx.save()
+          ctx.globalAlpha =
+            (revealElapsed - CLEAR_REVEAL_HOLD_MS) / CLEAR_REVEAL_CROSSFADE_MS
+          drawBackground(ctx, stageIndex)
+          ctx.restore()
+        } else {
+          drawBackground(ctx, stageIndex)
+          if (
+            revealElapsed >=
+              CLEAR_REVEAL_HOLD_MS +
+                CLEAR_REVEAL_CROSSFADE_MS +
+                CLEAR_REVEAL_SETTLE_MS &&
+            pendingClearScoreRef.current !== null
+          ) {
+            const clearedScore = pendingClearScoreRef.current
+            clearedAtRef.current = null
+            pendingClearScoreRef.current = null
+            onClear(clearedScore)
+          }
+        }
+      } else if (cleared) {
+        drawBackground(ctx, stageIndex)
+      } else {
+        drawUnrevealedBackground(ctx, stageIndex)
+      }
       if (activeHiddenFinalePhase?.current) {
         drawCurrentFlow(
           ctx,
@@ -3870,10 +3928,13 @@ function GamePlay({
               className="stage-start-countdown"
               role="status"
               aria-live="polite"
-              aria-label={`Stage ${stageIndex + 1} starts in ${startCountdown}`}
+              aria-label={`Stage ${stageIndex + 1}, ${STAGE_NAMES[stageIndex % STAGE_NAMES.length]} starts in ${startCountdown}`}
             >
               <div className="stage-start-countdown-panel">
                 <span>Stage {stageIndex + 1}</span>
+                <span className="stage-start-countdown-name">
+                  {STAGE_NAMES[stageIndex % STAGE_NAMES.length]}
+                </span>
                 <strong>{startCountdown}</strong>
                 <small>GET READY</small>
               </div>

@@ -662,6 +662,383 @@ const BASE_BACKGROUNDS = [
   drawRedSquareBackground,
 ]
 
+// One hand-drawn Canvas scene per chapter (World Tour excluded — it
+// already cycles through the 10 landmark scenes above), used as the
+// "not cleared yet" placeholder so it actually reads as that chapter's
+// theme instead of a random earlier landmark.
+
+function drawWorldTour2Background(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#f6c893', '#fde8c8')
+  ctx.fillStyle = '#ffffffaa'
+  fillEllipse(ctx, 150, 100, 40, 18)
+  fillEllipse(ctx, 700, 140, 36, 16)
+  const cx = CANVAS_WIDTH / 2
+  const baseY = GROUND_Y
+  ctx.fillStyle = '#8a7358'
+  ctx.fillRect(cx - 16, baseY - 180, 32, 180)
+  ctx.beginPath()
+  ctx.moveTo(cx - 40, baseY - 180)
+  ctx.lineTo(cx, baseY - 240)
+  ctx.lineTo(cx + 40, baseY - 180)
+  ctx.closePath()
+  ctx.fill()
+  drawGround(ctx, '#d8c79a', '#b8a479')
+}
+
+function drawDimensionXBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#1b1035', '#3a1d5c')
+  ctx.strokeStyle = '#ff2fd0aa'
+  ctx.lineWidth = 2
+  for (let i = -4; i <= 4; i += 1) {
+    ctx.beginPath()
+    ctx.moveTo(CANVAS_WIDTH / 2 + i * 80, GROUND_Y)
+    ctx.lineTo(CANVAS_WIDTH / 2 + i * 220, GROUND_Y - 260)
+    ctx.stroke()
+  }
+  ctx.fillStyle = '#4dfff2aa'
+  fillEllipse(ctx, 180, 120, 30, 30)
+  fillEllipse(ctx, 760, 90, 22, 22)
+  drawGround(ctx, '#150a28', '#0a0518')
+}
+
+function drawTrenchBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a3350', '#0c5a7a')
+  ctx.fillStyle = '#ffffff33'
+  for (const [x, y, r] of [
+    [120, 300, 6],
+    [260, 220, 4],
+    [500, 340, 5],
+    [680, 180, 3],
+    [820, 280, 5],
+  ]) {
+    fillEllipse(ctx, x, y, r, r)
+  }
+  ctx.fillStyle = '#04283f'
+  ctx.beginPath()
+  ctx.moveTo(340, GROUND_Y)
+  ctx.lineTo(420, GROUND_Y - 60)
+  ctx.lineTo(520, GROUND_Y - 30)
+  ctx.lineTo(600, GROUND_Y)
+  ctx.closePath()
+  ctx.fill()
+  drawGround(ctx, '#062338', '#03141f')
+}
+
+function drawStellarForgeBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a0714', '#241030')
+  ctx.fillStyle = '#ffffff'
+  for (const [x, y] of [
+    [100, 80],
+    [220, 140],
+    [360, 60],
+    [600, 110],
+    [760, 70],
+    [840, 160],
+  ]) {
+    fillEllipse(ctx, x, y, 2, 2)
+  }
+  const glow = ctx.createRadialGradient(
+    CANVAS_WIDTH / 2,
+    220,
+    10,
+    CANVAS_WIDTH / 2,
+    220,
+    140,
+  )
+  glow.addColorStop(0, '#ffd27a')
+  glow.addColorStop(1, '#ffd27a00')
+  ctx.fillStyle = glow
+  ctx.fillRect(CANVAS_WIDTH / 2 - 140, 80, 280, 280)
+  ctx.fillStyle = '#ff9d3d'
+  fillEllipse(ctx, CANVAS_WIDTH / 2, 220, 46, 46)
+  drawGround(ctx, '#2a1a12', '#160c08')
+}
+
+function drawCosmicFrontierBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#170a2e', '#3a1a5c')
+  ctx.fillStyle = '#a855f755'
+  fillEllipse(ctx, 260, 160, 140, 70)
+  ctx.fillStyle = '#38bdf855'
+  fillEllipse(ctx, 620, 220, 160, 80)
+  ctx.fillStyle = '#fef08a'
+  fillEllipse(ctx, CANVAS_WIDTH / 2, 250, 30, 30)
+  drawGround(ctx, '#1a0f2e', '#0d0818')
+}
+
+function drawVortexFrontierBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#050510', '#1a0a2e')
+  const cx = CANVAS_WIDTH / 2
+  const cy = 240
+  ctx.strokeStyle = '#c084fc88'
+  ctx.lineWidth = 4
+  for (let r = 30; r < 160; r += 30) {
+    ctx.beginPath()
+    ctx.ellipse(cx, cy, r, r * 0.4, 0.4, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.fillStyle = '#f5f3ff'
+  fillEllipse(ctx, cx, cy, 14, 14)
+  drawGround(ctx, '#0d0818', '#05030c')
+}
+
+function drawHellBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#3a0a0a', '#8a2b12')
+  const baseY = GROUND_Y
+  const peaks: [number, number][] = [
+    [80, 60],
+    [220, 140],
+    [380, 90],
+    [540, 160],
+    [700, 100],
+    [860, 70],
+  ]
+  ctx.fillStyle = '#1a0503'
+  ctx.beginPath()
+  ctx.moveTo(0, baseY)
+  for (const [x, h] of peaks) ctx.lineTo(x, baseY - h)
+  ctx.lineTo(CANVAS_WIDTH, baseY)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = '#ff7a1e'
+  for (const [x] of peaks) fillEllipse(ctx, x, baseY - 10, 5, 5)
+  drawGround(ctx, '#3a0e04', '#170502')
+}
+
+function drawVoidBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#030308', '#0a0a14')
+  ctx.fillStyle = '#ffffff'
+  for (const [x, y] of [
+    [100, 90],
+    [300, 180],
+    [500, 60],
+    [700, 220],
+    [820, 120],
+    [180, 260],
+    [600, 300],
+  ]) {
+    fillEllipse(ctx, x, y, 1.5, 1.5)
+  }
+  drawGround(ctx, '#08080f', '#020204')
+}
+
+function drawToxicMarshBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#33401c', '#6b7a2e')
+  ctx.fillStyle = '#1c2b12'
+  fillEllipse(ctx, 700, GROUND_Y - 10, 220, 26)
+  fillEllipse(ctx, 200, GROUND_Y - 20, 180, 20)
+  ctx.strokeStyle = '#0a1206'
+  ctx.lineWidth = 6
+  for (const x of [140, 260, 620, 780]) {
+    ctx.beginPath()
+    ctx.moveTo(x, GROUND_Y)
+    ctx.lineTo(x - 10, GROUND_Y - 90)
+    ctx.stroke()
+  }
+  drawGround(ctx, '#4c5a22', '#2c3714')
+}
+
+function drawFrozenSummitBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#bfe3f5', '#eef8ff')
+  const baseY = GROUND_Y
+  const peaks: [number, number][] = [
+    [100, 180],
+    [300, 260],
+    [500, 200],
+    [700, 280],
+    [880, 160],
+  ]
+  ctx.fillStyle = '#c9e6f5'
+  ctx.beginPath()
+  ctx.moveTo(0, baseY)
+  for (const [x, h] of peaks) ctx.lineTo(x, baseY - h)
+  ctx.lineTo(CANVAS_WIDTH, baseY)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = '#ffffff'
+  for (const [x, h] of peaks) fillEllipse(ctx, x, baseY - h + 10, 14, 8)
+  drawGround(ctx, '#eaf6ff', '#c8e4f2')
+}
+
+function drawSolarStormBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#3a0f00', '#ff8a1e')
+  const cx = CANVAS_WIDTH / 2
+  const cy = 220
+  const glow = ctx.createRadialGradient(cx, cy, 10, cx, cy, 220)
+  glow.addColorStop(0, '#fff3c4')
+  glow.addColorStop(1, '#fff3c400')
+  ctx.fillStyle = glow
+  ctx.fillRect(cx - 220, cy - 220, 440, 440)
+  ctx.strokeStyle = '#ffd27a'
+  ctx.lineWidth = 3
+  for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+    ctx.beginPath()
+    ctx.moveTo(cx + Math.cos(a) * 60, cy + Math.sin(a) * 60)
+    ctx.lineTo(cx + Math.cos(a) * 180, cy + Math.sin(a) * 180)
+    ctx.stroke()
+  }
+  ctx.fillStyle = '#fff7de'
+  fillEllipse(ctx, cx, cy, 50, 50)
+  drawGround(ctx, '#4a1400', '#220900')
+}
+
+function drawQuantumRiftBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a0f1e', '#141b33')
+  ctx.strokeStyle = '#4dfff2'
+  ctx.lineWidth = 2
+  ctx.strokeRect(140, 80, 220, 180)
+  ctx.strokeStyle = '#ff2fd0'
+  ctx.strokeRect(170, 110, 220, 180)
+  ctx.strokeStyle = '#facc15'
+  ctx.strokeRect(560, 140, 200, 160)
+  drawGround(ctx, '#0d1226', '#060a14')
+}
+
+function drawOverdriveNexusBackground(ctx: CanvasRenderingContext2D) {
+  const cx = CANVAS_WIDTH / 2
+  const sky = ctx.createLinearGradient(0, 0, CANVAS_WIDTH, 0)
+  sky.addColorStop(0, '#3f0f1c')
+  sky.addColorStop(0.5, '#150a28')
+  sky.addColorStop(1, '#0a1a3f')
+  ctx.fillStyle = sky
+  ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y)
+  ctx.fillStyle = '#e83e48'
+  fillEllipse(ctx, cx - 140, 220, 36, 36)
+  ctx.fillStyle = '#38bdf8'
+  fillEllipse(ctx, cx + 140, 220, 36, 36)
+  drawGround(ctx, '#1a0a1e', '#0a0512')
+}
+
+function drawFracturedGatewayBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#2a0a1e', '#0a1a3f')
+  const cx = CANVAS_WIDTH / 2
+  ctx.strokeStyle = '#e879f9'
+  ctx.lineWidth = 6
+  ctx.beginPath()
+  ctx.moveTo(cx - 120, GROUND_Y)
+  ctx.quadraticCurveTo(cx - 120, 100, cx, 80)
+  ctx.quadraticCurveTo(cx + 120, 100, cx + 120, GROUND_Y)
+  ctx.stroke()
+  ctx.strokeStyle = '#38bdf8aa'
+  ctx.lineWidth = 2
+  ctx.beginPath()
+  ctx.moveTo(cx - 30, 150)
+  ctx.lineTo(cx + 10, 220)
+  ctx.lineTo(cx - 10, 260)
+  ctx.stroke()
+  drawGround(ctx, '#1a0a18', '#0a0410')
+}
+
+function drawStormCitadelBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#1a2438', '#38506e')
+  const cx = CANVAS_WIDTH / 2
+  ctx.fillStyle = '#0f1622'
+  ctx.fillRect(cx - 30, GROUND_Y - 200, 60, 200)
+  ctx.fillRect(cx - 90, GROUND_Y - 120, 40, 120)
+  ctx.fillRect(cx + 50, GROUND_Y - 140, 40, 140)
+  ctx.strokeStyle = '#fef08a'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(300, 60)
+  ctx.lineTo(330, 140)
+  ctx.lineTo(310, 140)
+  ctx.lineTo(340, 220)
+  ctx.stroke()
+  drawGround(ctx, '#2a3548', '#141c2a')
+}
+
+function drawMoltenMaelstromBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#2a0500', '#7a2000')
+  const cx = CANVAS_WIDTH / 2
+  const cy = 240
+  ctx.strokeStyle = '#ff7a1eaa'
+  ctx.lineWidth = 5
+  for (let r = 20; r < 160; r += 28) {
+    ctx.beginPath()
+    ctx.ellipse(cx, cy, r, r * 0.5, 0.3, 0, Math.PI * 2)
+    ctx.stroke()
+  }
+  ctx.fillStyle = '#ffd27a'
+  fillEllipse(ctx, cx, cy, 16, 16)
+  drawGround(ctx, '#3a0a00', '#1a0400')
+}
+
+function drawPrismCollapseBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#0a0a1e', '#1a1030')
+  const shards: [string, number, number][] = [
+    ['#38bdf8', 160, 120],
+    ['#e879f9', 360, 90],
+    ['#facc15', 560, 140],
+    ['#4ade80', 740, 110],
+  ]
+  for (const [color, x, y] of shards) {
+    ctx.fillStyle = color + 'aa'
+    ctx.beginPath()
+    ctx.moveTo(x, y - 40)
+    ctx.lineTo(x + 28, y)
+    ctx.lineTo(x, y + 50)
+    ctx.lineTo(x - 28, y)
+    ctx.closePath()
+    ctx.fill()
+  }
+  drawGround(ctx, '#100a20', '#080512')
+}
+
+function drawFinalSingularityBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#fff7de', '#ffd27a')
+  const cx = CANVAS_WIDTH / 2
+  const cy = 230
+  const glow = ctx.createRadialGradient(cx, cy, 4, cx, cy, 240)
+  glow.addColorStop(0, '#ffffff')
+  glow.addColorStop(0.4, '#fff3c4')
+  glow.addColorStop(1, '#fff3c400')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, CANVAS_WIDTH, GROUND_Y)
+  ctx.fillStyle = '#ffffff'
+  fillEllipse(ctx, cx, cy, 26, 26)
+  drawGround(ctx, '#ffe9b8', '#f4c877')
+}
+
+function drawHiddenFinaleBackground(ctx: CanvasRenderingContext2D) {
+  drawSky(ctx, '#000000', '#0a0510')
+  const cx = CANVAS_WIDTH / 2
+  const cy = 230
+  ctx.strokeStyle = '#facc15'
+  ctx.lineWidth = 6
+  ctx.beginPath()
+  ctx.arc(cx, cy, 70, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.fillStyle = '#000000'
+  fillEllipse(ctx, cx, cy, 64, 64)
+  drawGround(ctx, '#050208', '#000000')
+}
+
+// Keyed by chapter name (getStageChapters()) rather than position, so
+// reordering/inserting chapters there can't silently desync this list.
+const CHAPTER_UNREVEALED_BACKGROUNDS: Record<
+  string,
+  (ctx: CanvasRenderingContext2D) => void
+> = {
+  'World Tour II': drawWorldTour2Background,
+  'Dimension X': drawDimensionXBackground,
+  'The Trench': drawTrenchBackground,
+  'Stellar Forge': drawStellarForgeBackground,
+  'Cosmic Frontier': drawCosmicFrontierBackground,
+  'Vortex Frontier': drawVortexFrontierBackground,
+  Hell: drawHellBackground,
+  Void: drawVoidBackground,
+  'Toxic Marsh': drawToxicMarshBackground,
+  'Frozen Summit': drawFrozenSummitBackground,
+  'Solar Storm': drawSolarStormBackground,
+  'Quantum Rift': drawQuantumRiftBackground,
+  'Overdrive Nexus': drawOverdriveNexusBackground,
+  'Fractured Gateway': drawFracturedGatewayBackground,
+  'Storm Citadel': drawStormCitadelBackground,
+  'Molten Maelstrom': drawMoltenMaelstromBackground,
+  'Prism Collapse': drawPrismCollapseBackground,
+  'Final Singularity': drawFinalSingularityBackground,
+  'Hidden Finale': drawHiddenFinaleBackground,
+}
+
 // Raw URL for a stage's illustrated image, if it has one — used outside
 // the Canvas renderer (e.g. an <img> for the clear-reveal transition).
 export function getStageImageUrl(stageIndex: number): string | undefined {
@@ -759,7 +1136,14 @@ export function drawUnrevealedBackground(
 ) {
   ctx.save()
   ctx.filter = 'saturate(0.76) brightness(0.96)'
-  BASE_BACKGROUNDS[stageIndex % BASE_BACKGROUNDS.length](ctx)
+  const chapter = getStageChapters().find(
+    (c) => stageIndex >= c.start && stageIndex <= c.end,
+  )
+  const themed = chapter
+    ? CHAPTER_UNREVEALED_BACKGROUNDS[chapter.name]
+    : undefined
+  if (themed) themed(ctx)
+  else BASE_BACKGROUNDS[stageIndex % BASE_BACKGROUNDS.length](ctx)
   ctx.restore()
   drawGroundLine(ctx)
 }

@@ -438,6 +438,13 @@
   font-size: var(--fs-xs);
 }
 
+.stage-start-countdown-name {
+  max-width: 240px;
+  font-size: var(--fs-xs);
+  opacity: 0.85;
+  white-space: normal;
+}
+
 .canvas-column canvas {
   display: block;
   width: min(100%, calc((100dvh - 180px) * 16 / 9));
